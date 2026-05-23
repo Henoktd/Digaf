@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { pool } from "./db/pool";
+import { entityRoutes } from "./routes/entityRoutes";
+import { shareClassRoutes } from "./routes/shareClassRoutes";
 
 dotenv.config();
 
@@ -43,6 +45,9 @@ app.get("/health/db", async (_req, res) => {
     });
   }
 });
+
+app.use("/api/entities", entityRoutes);
+app.use("/api/share-classes", shareClassRoutes);
 
 app.listen(port, () => {
   console.log(`SVH Governance Platform API running on port ${port}`);

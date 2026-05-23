@@ -28,7 +28,7 @@ export default async function Home() {
   const primaryEntity = entities[0];
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8 text-slate-900">
+    <main className="p-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <section className="rounded-2xl bg-white p-8 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">

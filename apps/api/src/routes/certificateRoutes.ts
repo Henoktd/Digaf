@@ -1,5 +1,10 @@
 import { Router } from "express";
 import { pool } from "../db/pool";
+import {
+  buildCanonicalCertificateString,
+  generateCertificateHash,
+  generateSignatureToken,
+} from "../services/certificateCrypto";
 
 export const certificateRoutes = Router();
 
@@ -43,6 +48,115 @@ certificateRoutes.get("/", async (_req, res) => {
   }
 });
 
+
+certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { certificateId } = req.params;
+
+    await client.query("BEGIN");
+
+    const certificateResult = await client.query(
+      `
+      SELECT
+        c.certificate_id,
+        c.entity_id,
+        c.serial_number,
+        c.shareholder_id,
+        c.share_class_id,
+        c.quantity,
+        c.issue_date,
+        e.legal_name AS issuing_authority
+      FROM share_certificate c
+      JOIN entity e ON e.entity_id = c.entity_id
+      WHERE c.certificate_id = $1
+      FOR UPDATE
+      `,
+      [certificateId]
+    );
+
+    if (certificateResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        error: "Certificate not found",
+      });
+    }
+
+    const certificate = certificateResult.rows[0];
+
+    if (!certificate.issue_date) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        error: "Certificate issue_date is required before hash generation",
+      });
+    }
+
+    const canonicalString = buildCanonicalCertificateString({
+      entityId: certificate.entity_id,
+      serialNumber: certificate.serial_number,
+      shareholderId: certificate.shareholder_id,
+      shareClassId: certificate.share_class_id,
+      quantity: certificate.quantity,
+      issueDate: certificate.issue_date.toISOString().slice(0, 10),
+      issuingAuthority: certificate.issuing_authority,
+    });
+
+    const certificateHash = generateCertificateHash(canonicalString);
+    const signatureToken = generateSignatureToken(certificateHash);
+
+    const updateResult = await client.query(
+      `
+      UPDATE share_certificate
+      SET
+        certificate_hash = $1,
+        hash_algorithm = 'SHA-256',
+        hash_generated_at = now(),
+        signature_token = $2,
+        qr_token = $2
+      WHERE certificate_id = $3
+      RETURNING
+        certificate_id,
+        serial_number,
+        certificate_hash,
+        hash_algorithm,
+        hash_generated_at,
+        signature_token
+      `,
+      [certificateHash, signatureToken, certificateId]
+    );
+
+    await client.query(
+      `
+      INSERT INTO certificate_event (
+        certificate_id,
+        event_type,
+        actor_id,
+        notes
+      )
+      VALUES ($1, 'hash_generated', 'system.local_dev', 'SHA-256 hash and HMAC signature generated')
+      `,
+      [certificateId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      data: updateResult.rows[0],
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    res.status(500).json({
+      error: "Failed to generate certificate hash",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
 certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
   try {
     const { serialNumber } = req.params;
@@ -50,19 +164,21 @@ certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
     const result = await pool.query(
       `
       SELECT
+        c.certificate_id,
+        c.entity_id,
         c.serial_number,
-        e.legal_name AS issuing_company,
-        sc.class_name AS share_class,
+        c.shareholder_id,
+        c.share_class_id,
         c.quantity,
         c.issue_date,
         c.status,
         c.revocation_status,
+        c.certificate_hash,
         c.hash_algorithm,
         c.hash_generated_at,
-        CASE
-          WHEN c.certificate_hash IS NOT NULL THEN 'hash_available'
-          ELSE 'hash_missing'
-        END AS hash_verification_result,
+        c.signature_token,
+        e.legal_name AS issuing_company,
+        sc.class_name AS share_class,
         now() AS verification_timestamp
       FROM share_certificate c
       JOIN entity e ON e.entity_id = c.entity_id
@@ -81,8 +197,51 @@ certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
       });
     }
 
+    const certificate = result.rows[0];
+
+    let hashVerificationResult = "hash_missing";
+
+    if (certificate.certificate_hash && certificate.issue_date) {
+      const canonicalString = buildCanonicalCertificateString({
+        entityId: certificate.entity_id,
+        serialNumber: certificate.serial_number,
+        shareholderId: certificate.shareholder_id,
+        shareClassId: certificate.share_class_id,
+        quantity: certificate.quantity,
+        issueDate: certificate.issue_date.toISOString().slice(0, 10),
+        issuingAuthority: certificate.issuing_company,
+      });
+
+      const recomputedHash = generateCertificateHash(canonicalString);
+      const recomputedSignatureToken = generateSignatureToken(recomputedHash);
+
+      const hashMatches = recomputedHash === certificate.certificate_hash;
+      const tokenMatches = recomputedSignatureToken === certificate.signature_token;
+
+      if (hashMatches && tokenMatches) {
+        hashVerificationResult = "valid";
+      } else {
+        hashVerificationResult = "tamper_detected";
+      }
+    }
+
     res.json({
-      data: result.rows[0],
+      data: {
+        serial_number: certificate.serial_number,
+        issuing_company: certificate.issuing_company,
+        share_class: certificate.share_class,
+        quantity: certificate.quantity,
+        issue_date: certificate.issue_date,
+        status:
+          hashVerificationResult === "tamper_detected"
+            ? "tampered"
+            : certificate.status,
+        revocation_status: certificate.revocation_status,
+        hash_algorithm: certificate.hash_algorithm,
+        hash_generated_at: certificate.hash_generated_at,
+        hash_verification_result: hashVerificationResult,
+        verification_timestamp: certificate.verification_timestamp,
+      },
     });
   } catch (error) {
     res.status(500).json({

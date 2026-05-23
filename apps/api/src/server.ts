@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { pool } from "./db/pool";
 
 dotenv.config();
 
@@ -24,6 +25,23 @@ app.get("/health", (_req, res) => {
     status: "ok",
     timestampUtc: new Date().toISOString(),
   });
+});
+
+app.get("/health/db", async (_req, res) => {
+  try {
+    const result = await pool.query("select now() as database_time");
+    res.json({
+      status: "ok",
+      database: "connected",
+      databaseTime: result.rows[0].database_time,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      database: "not connected",
+      message: error instanceof Error ? error.message : "Unknown database error",
+    });
+  }
 });
 
 app.listen(port, () => {

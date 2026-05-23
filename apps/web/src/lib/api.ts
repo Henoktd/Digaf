@@ -37,3 +37,15 @@ export async function fetchShareholders() {
 
   return response.json();
 }
+
+export async function fetchCapTable() {
+  const response = await fetch(`${API_BASE_URL}/api/cap-table`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch cap table");
+  }
+
+  return response.json();
+}

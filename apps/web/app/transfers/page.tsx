@@ -1,10 +1,172 @@
-export default function TransfersPage() {
+import { fetchTransfers } from "@/src/lib/api";
+
+type Transfer = {
+  transfer_id: string;
+  entity_name: string;
+  transferor_name: string;
+  transferee_name: string;
+  shares: string;
+  status: string;
+  maker_id: string | null;
+  checker1_id: string | null;
+  checker2_id: string | null;
+  board_approval_required: boolean;
+  board_approval_ref: string | null;
+  encumbrance_check_status: string;
+  kyc_check_status: string;
+  bo_reverification_required: boolean;
+  freeze_reference: string | null;
+  supporting_documents: unknown[];
+  effective_date: string | null;
+  created_at: string;
+  approval_request_id: string | null;
+  approval_stage: string | null;
+  current_approver: string | null;
+  sla_due_date: string | null;
+  escalation_level: number | null;
+};
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "Not set";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function formatLabel(value: string | null) {
+  return value ? value.replaceAll("_", " ") : "Not set";
+}
+
+function formatShares(value: string) {
+  return Number(value).toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+  });
+}
+
+export default async function TransfersPage() {
+  const response = await fetchTransfers();
+  const transfers: Transfer[] = response.data;
+
   return (
-    <main className="min-h-screen bg-slate-100 p-8 text-slate-900">
-      <h1 className="text-3xl font-bold">Share Transfers</h1>
-      <p className="mt-2 text-slate-600">
-        Manage transfer requests, maker-checker-checker approvals, KYC checks, freeze checks, and encumbrance checks.
-      </p>
+    <main className="p-8">
+      <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Share Transfers</h1>
+            <p className="mt-2 text-slate-600">
+              Manage transfer requests, maker-checker-checker approvals, KYC
+              checks, freeze checks, and encumbrance checks.
+            </p>
+          </div>
+
+          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            {transfers.length} Transfer Requests
+          </div>
+        </div>
+
+        <div className="mb-8 grid gap-4 lg:grid-cols-3">
+          {transfers.map((transfer) => (
+            <article
+              key={transfer.transfer_id}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-5"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-slate-500">{transfer.entity_name}</p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-900">
+                    {formatShares(transfer.shares)} shares
+                  </h2>
+                </div>
+                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold capitalize text-amber-800">
+                  {formatLabel(transfer.status)}
+                </span>
+              </div>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-slate-500">Transferor</p>
+                  <p className="font-semibold text-slate-900">
+                    {transfer.transferor_name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-500">Transferee</p>
+                  <p className="font-semibold text-slate-900">
+                    {transfer.transferee_name}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-2 text-xs font-semibold sm:grid-cols-3">
+                <span className="rounded-full bg-emerald-100 px-3 py-2 capitalize text-emerald-800">
+                  KYC: {formatLabel(transfer.kyc_check_status)}
+                </span>
+                <span className="rounded-full bg-emerald-100 px-3 py-2 capitalize text-emerald-800">
+                  Encumbrance: {formatLabel(transfer.encumbrance_check_status)}
+                </span>
+                <span className="rounded-full bg-slate-200 px-3 py-2 text-slate-700">
+                  Board: {transfer.board_approval_required ? "Required" : "Not required"}
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-slate-200">
+          <table className="w-full border-collapse text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="border-b border-slate-200 px-4 py-3">Transferor</th>
+                <th className="border-b border-slate-200 px-4 py-3">Transferee</th>
+                <th className="border-b border-slate-200 px-4 py-3">Shares</th>
+                <th className="border-b border-slate-200 px-4 py-3">Stage</th>
+                <th className="border-b border-slate-200 px-4 py-3">Current Approver</th>
+                <th className="border-b border-slate-200 px-4 py-3">SLA Due</th>
+                <th className="border-b border-slate-200 px-4 py-3">Maker</th>
+                <th className="border-b border-slate-200 px-4 py-3">Checker 1</th>
+                <th className="border-b border-slate-200 px-4 py-3">Checker 2</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transfers.map((transfer) => (
+                <tr key={transfer.transfer_id}>
+                  <td className="border-b border-slate-100 px-4 py-3 font-medium">
+                    {transfer.transferor_name}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {transfer.transferee_name}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {formatShares(transfer.shares)}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3 capitalize">
+                    {formatLabel(transfer.approval_stage)}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {transfer.current_approver || "Not assigned"}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {formatDate(transfer.sla_due_date)}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {transfer.maker_id || "Not assigned"}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {transfer.checker1_id || "Pending"}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    {transfer.checker2_id || "Pending"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </main>
   );
 }

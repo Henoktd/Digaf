@@ -50,6 +50,17 @@ export async function fetchCapTable() {
   return response.json();
 }
 
+export async function fetchTransfers() {
+  const response = await fetch(`${API_BASE_URL}/api/transfers`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch transfers");
+  }
+
+  return response.json();
+}
 export async function fetchCertificates() {
   const response = await fetch(`${API_BASE_URL}/api/certificates`, {
     cache: "no-store",

@@ -24,3 +24,16 @@ export async function fetchShareClasses() {
 
   return response.json();
 }
+
+
+export async function fetchShareholders() {
+  const response = await fetch(`${API_BASE_URL}/api/shareholders`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch shareholders");
+  }
+
+  return response.json();
+}

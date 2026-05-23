@@ -62,6 +62,21 @@ export async function fetchCertificates() {
   return response.json();
 }
 
+export async function fetchCertificateEvents(certificateId: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/certificates/${certificateId}/events`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch certificate events");
+  }
+
+  return response.json();
+}
+
 export async function verifyCertificate(serialNumber: string) {
   const response = await fetch(
     `${API_BASE_URL}/api/certificates/verify/${serialNumber}`,

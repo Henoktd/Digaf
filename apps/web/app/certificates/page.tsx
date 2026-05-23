@@ -1,4 +1,4 @@
-import { fetchCertificates } from "@/src/lib/api";
+import { fetchCertificateEvents, fetchCertificates } from "@/src/lib/api";
 
 type Certificate = {
   certificate_id: string;
@@ -13,9 +13,23 @@ type Certificate = {
   revocation_status: string | null;
 };
 
+type CertificateEvent = {
+  id: string;
+  certificate_id: string;
+  event_type: string;
+  actor_id: string;
+  timestamp_utc: string;
+  notes: string | null;
+};
+
 export default async function CertificatesPage() {
   const response = await fetchCertificates();
   const certificates: Certificate[] = response.data;
+  const firstCertificate = certificates[0];
+  const eventResponse = firstCertificate
+    ? await fetchCertificateEvents(firstCertificate.certificate_id)
+    : { data: [] };
+  const events: CertificateEvent[] = eventResponse.data;
 
   return (
     <main className="p-8">
@@ -90,6 +104,49 @@ export default async function CertificatesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
+          <div className="mb-5">
+            <h2 className="text-xl font-bold">Event Timeline</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {firstCertificate
+                ? firstCertificate.serial_number
+                : "No certificate selected"}
+            </p>
+          </div>
+
+          {events.length > 0 ? (
+            <ol className="space-y-4">
+              {events.map((event) => (
+                <li key={event.id} className="flex gap-3">
+                  <div className="mt-1 h-3 w-3 rounded-full bg-slate-900" />
+                  <div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <p className="font-semibold capitalize text-slate-900">
+                        {event.event_type.replaceAll("_", " ")}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {event.timestamp_utc}
+                      </p>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Actor: {event.actor_id}
+                    </p>
+                    {event.notes ? (
+                      <p className="mt-1 text-sm text-slate-700">
+                        {event.notes}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-slate-600">
+              No certificate events found.
+            </p>
+          )}
         </div>
       </section>
     </main>

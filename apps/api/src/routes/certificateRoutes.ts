@@ -48,6 +48,175 @@ certificateRoutes.get("/", async (_req, res) => {
   }
 });
 
+certificateRoutes.get("/:certificateId/events", async (req, res) => {
+  try {
+    const { certificateId } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        certificate_id,
+        event_type,
+        actor_id,
+        timestamp_utc,
+        notes
+      FROM certificate_event
+      WHERE certificate_id = $1
+      ORDER BY timestamp_utc ASC
+      `,
+      [certificateId]
+    );
+
+    res.json({
+      data: result.rows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to fetch certificate events",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
+  const { certificateId } = req.params;
+  const body = req.body as
+    | {
+        actorId?: unknown;
+        reason?: unknown;
+      }
+    | undefined;
+  const actorId = body?.actorId;
+  const reason = body?.reason;
+
+  if (
+    typeof actorId !== "string" ||
+    actorId.trim() === "" ||
+    typeof reason !== "string" ||
+    reason.trim() === ""
+  ) {
+    return res.status(400).json({
+      error: "actorId and reason are required",
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const certificateResult = await client.query(
+      `
+      SELECT
+        certificate_id,
+        entity_id,
+        status,
+        revocation_status
+      FROM share_certificate
+      WHERE certificate_id = $1
+      FOR UPDATE
+      `,
+      [certificateId]
+    );
+
+    if (certificateResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        error: "Certificate not found",
+      });
+    }
+
+    const certificate = certificateResult.rows[0];
+
+    if (
+      certificate.status === "revoked" ||
+      certificate.revocation_status === "revoked"
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: "Certificate is already revoked",
+      });
+    }
+
+    const updateResult = await client.query(
+      `
+      UPDATE share_certificate
+      SET
+        status = 'revoked',
+        revocation_status = 'revoked'
+      WHERE certificate_id = $1
+      RETURNING
+        certificate_id,
+        entity_id,
+        serial_number,
+        status,
+        revocation_status
+      `,
+      [certificateId]
+    );
+
+    await client.query(
+      `
+      INSERT INTO certificate_event (
+        certificate_id,
+        event_type,
+        actor_id,
+        notes
+      )
+      VALUES ($1, 'revoked', $2, $3)
+      `,
+      [certificateId, actorId.trim(), reason.trim()]
+    );
+
+    await client.query(
+      `
+      INSERT INTO audit_log (
+        entity_id,
+        actor_id,
+        action,
+        table_name,
+        record_id,
+        old_value_json,
+        new_value_json,
+        source_ip
+      )
+      VALUES ($1, $2, 'certificate_revoked', 'share_certificate', $3, $4::jsonb, $5::jsonb, $6)
+      `,
+      [
+        certificate.entity_id,
+        actorId.trim(),
+        certificateId,
+        JSON.stringify({
+          status: certificate.status,
+          revocation_status: certificate.revocation_status,
+        }),
+        JSON.stringify({
+          status: "revoked",
+          revocation_status: "revoked",
+          reason: reason.trim(),
+        }),
+        req.ip,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      data: updateResult.rows[0],
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    res.status(500).json({
+      error: "Failed to revoke certificate",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  } finally {
+    client.release();
+  }
+});
+
 
 certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
   const client = await pool.connect();

@@ -8,6 +8,7 @@ const navItems = [
   { href: "/transfers", label: "Transfers" },
   { href: "/approvals", label: "Approvals" },
   { href: "/legal-holds", label: "Legal Holds" },
+  { href: "/communications", label: "Communications" },
   { href: "/sla-monitor", label: "SLA Monitor" },
   { href: "/audit-log", label: "Audit Log" },
   { href: "/qr", label: "QR Verify" },

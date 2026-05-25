@@ -9,6 +9,7 @@ const navItems = [
   { href: "/approvals", label: "Approvals" },
   { href: "/legal-holds", label: "Legal Holds" },
   { href: "/communications", label: "Communications" },
+  { href: "/documents", label: "Documents" },
   { href: "/sla-monitor", label: "SLA Monitor" },
   { href: "/audit-log", label: "Audit Log" },
   { href: "/qr", label: "QR Verify" },

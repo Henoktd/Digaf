@@ -146,6 +146,18 @@ export async function approveChecker2(
   return response.json();
 }
 
+export async function fetchAuditLogs() {
+  const response = await fetch(`${API_BASE_URL}/api/audit-logs`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch audit logs");
+  }
+
+  return response.json();
+}
+
 export async function fetchCertificates() {
   const response = await fetch(`${API_BASE_URL}/api/certificates`, {
     cache: "no-store",

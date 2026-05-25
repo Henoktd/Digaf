@@ -74,6 +74,42 @@ export async function fetchApprovals() {
   return response.json();
 }
 
+export async function approveChecker1(
+  approvalId: string,
+  actorId: string,
+  decisionNotes: string
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/approvals/${approvalId}/approve-checker-1`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        actorId,
+        decisionNotes,
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to approve Checker 1";
+
+    try {
+      const body = await response.json();
+      message = body.message || body.error || message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function fetchCertificates() {
   const response = await fetch(`${API_BASE_URL}/api/certificates`, {
     cache: "no-store",

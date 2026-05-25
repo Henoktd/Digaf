@@ -1,10 +1,11 @@
 import { fetchApprovals } from "@/src/lib/api";
+import { ApprovalActions } from "@/src/components/ApprovalActions";
 
 type Approval = {
   id: string;
   entity_name: string;
   request_type: string;
-  reference_id: string;
+  reference_id: string | null;
   stage: string;
   current_approver_id: string | null;
   status: string;
@@ -22,16 +23,33 @@ type Approval = {
   board_approval_required: boolean | null;
 };
 
+type ApprovalResponse = {
+  data: Approval[];
+  generated_at: string;
+};
+
 function formatLabel(value: string | null) {
   if (!value) return "Not set";
   return value.replaceAll("_", " ");
 }
 
-export default async function ApprovalsPage() {
-  const response = await fetchApprovals();
-  const approvals: Approval[] = response.data;
+function formatDate(value: string | null) {
+  if (!value) return "Not set";
 
-  const now = new Date();
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function canApproveChecker1(approval: Approval) {
+  return approval.status === "pending" && approval.stage === "checker_1_review";
+}
+
+export default async function ApprovalsPage() {
+  const response: ApprovalResponse = await fetchApprovals();
+  const approvals: Approval[] = response.data;
+  const generatedAt = Date.parse(response.generated_at);
 
   const pendingApprovals = approvals.filter(
     (approval) => approval.status === "pending"
@@ -39,7 +57,7 @@ export default async function ApprovalsPage() {
 
   const overdueApprovals = approvals.filter((approval) => {
     if (!approval.sla_due_date || approval.status !== "pending") return false;
-    return new Date(approval.sla_due_date) < now;
+    return Date.parse(approval.sla_due_date) < generatedAt;
   });
 
   return (
@@ -119,6 +137,9 @@ export default async function ApprovalsPage() {
                   <th className="border-b border-slate-200 px-4 py-3">
                     Checker 2
                   </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
@@ -135,9 +156,7 @@ export default async function ApprovalsPage() {
                       {approval.current_approver_id || "Not assigned"}
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
-                      {approval.sla_due_date
-                        ? new Date(approval.sla_due_date).toLocaleString()
-                        : "Not set"}
+                      {formatDate(approval.sla_due_date)}
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3 capitalize">
                       {formatLabel(approval.status)}
@@ -158,6 +177,13 @@ export default async function ApprovalsPage() {
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
                       {approval.checker2_id || "Pending"}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      {canApproveChecker1(approval) ? (
+                        <ApprovalActions approvalId={approval.id} />
+                      ) : (
+                        <span className="text-slate-400">Not available</span>
+                      )}
                     </td>
                   </tr>
                 ))}

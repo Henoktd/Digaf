@@ -8,6 +8,7 @@ import { shareholderRoutes } from "./routes/shareholderRoutes";
 import { capTableRoutes } from "./routes/capTableRoutes";
 import { certificateRoutes } from "./routes/certificateRoutes";
 import { transferRoutes } from "./routes/transferRoutes";
+import { approvalRoutes } from "./routes/approvalRoutes";
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ app.use("/api/shareholders", shareholderRoutes);
 app.use("/api/cap-table", capTableRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/transfers", transferRoutes);
+app.use("/api/approvals", approvalRoutes);
 
 app.listen(port, () => {
   console.log(`SVH Governance Platform API running on port ${port}`);

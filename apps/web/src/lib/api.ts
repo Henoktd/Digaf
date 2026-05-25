@@ -61,6 +61,19 @@ export async function fetchTransfers() {
 
   return response.json();
 }
+
+export async function fetchApprovals() {
+  const response = await fetch(`${API_BASE_URL}/api/approvals`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch approvals");
+  }
+
+  return response.json();
+}
+
 export async function fetchCertificates() {
   const response = await fetch(`${API_BASE_URL}/api/certificates`, {
     cache: "no-store",

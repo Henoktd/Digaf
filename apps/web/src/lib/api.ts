@@ -170,6 +170,18 @@ export async function fetchSlaMonitor() {
   return response.json();
 }
 
+export async function fetchLegalHolds() {
+  const response = await fetch(`${API_BASE_URL}/api/legal-holds`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch legal holds");
+  }
+
+  return response.json();
+}
+
 export async function fetchCertificates() {
   const response = await fetch(`${API_BASE_URL}/api/certificates`, {
     cache: "no-store",

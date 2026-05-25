@@ -11,6 +11,7 @@ import { transferRoutes } from "./routes/transferRoutes";
 import { approvalRoutes } from "./routes/approvalRoutes";
 import { auditLogRoutes } from "./routes/auditLogRoutes";
 import { slaRoutes } from "./routes/slaRoutes";
+import { legalHoldRoutes } from "./routes/legalHoldRoutes";
 
 dotenv.config();
 
@@ -62,6 +63,7 @@ app.use("/api/transfers", transferRoutes);
 app.use("/api/approvals", approvalRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
 app.use("/api/sla-monitor", slaRoutes);
+app.use("/api/legal-holds", legalHoldRoutes);
 
 app.listen(port, () => {
   console.log(`SVH Governance Platform API running on port ${port}`);

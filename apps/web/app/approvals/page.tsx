@@ -46,6 +46,10 @@ function canApproveChecker1(approval: Approval) {
   return approval.status === "pending" && approval.stage === "checker_1_review";
 }
 
+function canApproveChecker2(approval: Approval) {
+  return approval.status === "pending" && approval.stage === "checker_2_review";
+}
+
 export default async function ApprovalsPage() {
   const response: ApprovalResponse = await fetchApprovals();
   const approvals: Approval[] = response.data;
@@ -180,9 +184,19 @@ export default async function ApprovalsPage() {
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
                       {canApproveChecker1(approval) ? (
-                        <ApprovalActions approvalId={approval.id} />
+                        <ApprovalActions
+                          actionType="checker_1"
+                          approvalId={approval.id}
+                        />
+                      ) : canApproveChecker2(approval) ? (
+                        <ApprovalActions
+                          actionType="checker_2"
+                          approvalId={approval.id}
+                        />
                       ) : (
-                        <span className="text-slate-400">Not available</span>
+                        <span className="text-slate-400">
+                          No action available
+                        </span>
                       )}
                     </td>
                   </tr>

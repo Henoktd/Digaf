@@ -27,7 +27,7 @@ SELECT
   s.shareholder_id,
   o.share_class_id,
   CASE
-    WHEN s.legal_name = 'SVH Strategic Holdings' THEN 6000
+    WHEN s.legal_name = 'Digaf Founding Shareholder Group' THEN 6000
     WHEN s.legal_name = 'Abebe Kebede' THEN 2500
     WHEN s.legal_name = 'Hana Tesfaye' THEN 1500
     ELSE 0

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { fetchShareholders } from "@/src/lib/api";
 
 type Shareholder = {
@@ -56,7 +57,12 @@ export default async function ShareholdersPage() {
               {shareholders.map((shareholder) => (
                 <tr key={shareholder.shareholder_id}>
                   <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                    {shareholder.legal_name}
+                    <Link
+                      href={`/shareholders/${shareholder.shareholder_id}`}
+                      className="text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-600"
+                    >
+                      {shareholder.legal_name}
+                    </Link>
                   </td>
                   <td className="border-b border-slate-100 px-4 py-3 capitalize">
                     {shareholder.type}

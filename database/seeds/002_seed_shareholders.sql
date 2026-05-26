@@ -64,10 +64,10 @@ INSERT INTO shareholder (
 )
 SELECT
   entity_id,
-  'SVH Strategic Holdings',
+  'Digaf Founding Shareholder Group',
   'institution',
   'active',
-  '{"email":"governance@svh.example.com","phone":"+251900000003"}',
+  '{"email":"governance@digaf.example.com","phone":"+251900000003"}',
   'verified',
   '2027-09-30',
   'low',

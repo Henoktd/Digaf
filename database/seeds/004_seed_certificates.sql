@@ -13,7 +13,7 @@ target_shareholder AS (
   SELECT shareholder_id
   FROM shareholder
   WHERE entity_id = (SELECT entity_id FROM digaf)
-    AND legal_name = 'SVH Strategic Holdings'
+    AND legal_name = 'Digaf Founding Shareholder Group'
 )
 INSERT INTO share_certificate (
   entity_id,

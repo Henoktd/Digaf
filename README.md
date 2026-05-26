@@ -19,3 +19,11 @@ Production readiness, demo flow, and reviewer instructions are documented in [do
 ## Feedback and Backlog
 
 Feedback capture, triage, and MVP backlog planning are documented in [docs/feedback-capture-template.md](docs/feedback-capture-template.md), [docs/feedback-triage-process.md](docs/feedback-triage-process.md), and [docs/mvp-backlog.md](docs/mvp-backlog.md).
+
+## Testing and Release
+
+Testing strategy, end-to-end test planning, API smoke tests, and release validation are documented in [docs/testing-strategy.md](docs/testing-strategy.md), [docs/e2e-test-plan.md](docs/e2e-test-plan.md), [docs/api-smoke-tests.md](docs/api-smoke-tests.md), and [docs/release-checklist.md](docs/release-checklist.md).
+
+## Operations and Handover
+
+Data backup/restore, environment synchronization, operations, and admin handover are documented in [docs/data-backup-restore-plan.md](docs/data-backup-restore-plan.md), [docs/environment-sync-plan.md](docs/environment-sync-plan.md), [docs/operations-runbook.md](docs/operations-runbook.md), and [docs/admin-handover-guide.md](docs/admin-handover-guide.md).

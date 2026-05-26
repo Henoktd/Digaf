@@ -78,6 +78,10 @@ app.use("/api/legal-holds", legalHoldRoutes);
 app.use("/api/communications", communicationRoutes);
 app.use("/api/documents", documentRoutes);
 
-app.listen(port, () => {
-  console.log(`Digaf Shareholder Governance Platform API running on port ${port}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`Digaf Governance Platform API running on port ${port}`);
+  });
+}
+
+export default app;

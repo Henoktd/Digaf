@@ -20,6 +20,7 @@ const legalHoldRoutes_1 = require("./routes/legalHoldRoutes");
 const communicationRoutes_1 = require("./routes/communicationRoutes");
 const documentRoutes_1 = require("./routes/documentRoutes");
 const dashboardRoutes_1 = require("./routes/dashboardRoutes");
+const integrationRoutes_1 = require("./routes/integrationRoutes");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",")
@@ -90,6 +91,7 @@ app.use("/api/legal-holds", legalHoldRoutes_1.legalHoldRoutes);
 app.use("/api/communications", communicationRoutes_1.communicationRoutes);
 app.use("/api/documents", documentRoutes_1.documentRoutes);
 app.use("/api/dashboard", dashboardRoutes_1.dashboardRoutes);
+app.use("/api/integrations", integrationRoutes_1.integrationRoutes);
 if (process.env.NODE_ENV !== "production") {
     app.listen(port, () => {
         console.log(`Digaf Governance Platform API running on port ${port}`);

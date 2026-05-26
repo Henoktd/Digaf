@@ -31,3 +31,7 @@ Data backup/restore, environment synchronization, operations, and admin handover
 ## Reporting
 
 Dashboard metrics and future reporting planning are documented in [docs/reporting-and-dashboard-plan.md](docs/reporting-and-dashboard-plan.md).
+
+## Microsoft 365 Integration Planning
+
+SharePoint, Power Automate notification, and Power BI reporting integration plans are documented in [docs/sharepoint-integration-plan.md](docs/sharepoint-integration-plan.md), [docs/power-automate-notification-plan.md](docs/power-automate-notification-plan.md), and [docs/power-bi-reporting-plan.md](docs/power-bi-reporting-plan.md).

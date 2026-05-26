@@ -76,6 +76,35 @@ export async function fetchDashboardSummary() {
   return response.json();
 }
 
+export type IntegrationStatus = {
+  sharePoint: {
+    configured: boolean;
+    siteUrlPresent: boolean;
+    documentLibraryPresent: boolean;
+  };
+  powerAutomate: {
+    configured: boolean;
+    notificationWebhookPresent: boolean;
+  };
+  powerBi: {
+    configured: boolean;
+    workspaceIdPresent: boolean;
+    reportIdPresent: boolean;
+  };
+};
+
+export async function fetchIntegrationStatus() {
+  const response = await fetch(`${API_BASE_URL}/api/integrations/status`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch integration status");
+  }
+
+  return response.json();
+}
+
 
 export async function fetchShareholders() {
   const response = await fetch(`${API_BASE_URL}/api/shareholders`, {

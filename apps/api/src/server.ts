@@ -15,6 +15,7 @@ import { legalHoldRoutes } from "./routes/legalHoldRoutes";
 import { communicationRoutes } from "./routes/communicationRoutes";
 import { documentRoutes } from "./routes/documentRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
+import { integrationRoutes } from "./routes/integrationRoutes";
 
 dotenv.config();
 
@@ -97,6 +98,7 @@ app.use("/api/legal-holds", legalHoldRoutes);
 app.use("/api/communications", communicationRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/integrations", integrationRoutes);
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {

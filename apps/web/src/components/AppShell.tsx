@@ -13,6 +13,7 @@ const navItems = [
   { href: "/sla-monitor", label: "SLA Monitor" },
   { href: "/audit-log", label: "Audit Log" },
   { href: "/qr", label: "QR Verify" },
+  { href: "/integrations", label: "Integrations" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

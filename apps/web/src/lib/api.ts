@@ -166,6 +166,85 @@ export async function fetchTransfers() {
   return response.json();
 }
 
+export type TransferGuardInput = {
+  entityId: string;
+  transferorId: string;
+  transfereeId: string;
+  shares: number;
+  actorId: string;
+};
+
+export type CreateTransferInput = TransferGuardInput & {
+  supportingDocuments?: unknown[];
+};
+
+export async function checkTransferEligibility(input: TransferGuardInput) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/transfers/eligibility-check`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to check transfer eligibility";
+
+    try {
+      const body = await response.json();
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+export async function createTransfer(input: CreateTransferInput) {
+  const response = await fetch(`${API_BASE_URL}/api/transfers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let message = "Failed to create transfer";
+
+    try {
+      const body = await response.json();
+      const blockingReasons = body?.error?.details?.blockingReasons;
+      message =
+        body?.error?.message ||
+        (Array.isArray(blockingReasons)
+          ? `Transfer blocked: ${blockingReasons.join(", ")}`
+          : undefined) ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function fetchApprovals() {
   const response = await fetch(`${API_BASE_URL}/api/approvals`, {
     cache: "no-store",

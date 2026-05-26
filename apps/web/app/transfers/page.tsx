@@ -1,4 +1,5 @@
-import { fetchTransfers } from "@/src/lib/api";
+import { CreateTransferForm } from "@/src/components/CreateTransferForm";
+import { fetchShareholders, fetchTransfers } from "@/src/lib/api";
 
 type Transfer = {
   transfer_id: string;
@@ -26,6 +27,14 @@ type Transfer = {
   escalation_level: number | null;
 };
 
+type Shareholder = {
+  shareholder_id: string;
+  entity_id: string;
+  legal_name: string;
+  kyc_status: string;
+  risk_classification: string | null;
+};
+
 function formatDate(value: string | null) {
   if (!value) {
     return "Not set";
@@ -48,8 +57,12 @@ function formatShares(value: string) {
 }
 
 export default async function TransfersPage() {
-  const response = await fetchTransfers();
-  const transfers: Transfer[] = response.data;
+  const [transferResponse, shareholderResponse] = await Promise.all([
+    fetchTransfers(),
+    fetchShareholders(),
+  ]);
+  const transfers: Transfer[] = transferResponse.data;
+  const shareholders: Shareholder[] = shareholderResponse.data;
 
   return (
     <main className="p-8">
@@ -67,6 +80,8 @@ export default async function TransfersPage() {
             {transfers.length} Transfer Requests
           </div>
         </div>
+
+        <CreateTransferForm shareholders={shareholders} />
 
         <div className="mb-8 grid gap-4 lg:grid-cols-3">
           {transfers.map((transfer) => (

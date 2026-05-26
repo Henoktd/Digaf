@@ -25,6 +25,57 @@ export async function fetchShareClasses() {
   return response.json();
 }
 
+export type DashboardSummary = {
+  entity_count: number;
+  shareholder_count: number;
+  active_shareholder_count: number;
+  total_shares: number;
+  certificate_count: number;
+  issued_certificate_count: number;
+  revoked_certificate_count: number;
+  transfer_count: number;
+  pending_transfer_count: number;
+  completed_transfer_count: number;
+  pending_approval_count: number;
+  approved_approval_count: number;
+  overdue_approval_count: number;
+  active_legal_hold_count: number;
+  active_transfer_freeze_count: number;
+  audit_log_count: number;
+  document_reference_count: number;
+  communication_count: number;
+  top_ownership_rows: {
+    shareholder_name: string;
+    quantity: number;
+    ownership_percentage: number;
+  }[];
+  recent_audit_actions: {
+    actor_id: string;
+    action: string;
+    table_name: string;
+    timestamp_utc: string;
+  }[];
+  sla_snapshot: {
+    request_type: string;
+    stage: string;
+    status: string;
+    sla_due_date: string | null;
+    computed_sla_status: string;
+  }[];
+};
+
+export async function fetchDashboardSummary() {
+  const response = await fetch(`${API_BASE_URL}/api/dashboard/summary`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch dashboard summary");
+  }
+
+  return response.json();
+}
+
 
 export async function fetchShareholders() {
   const response = await fetch(`${API_BASE_URL}/api/shareholders`, {

@@ -27,3 +27,7 @@ Testing strategy, end-to-end test planning, API smoke tests, and release validat
 ## Operations and Handover
 
 Data backup/restore, environment synchronization, operations, and admin handover are documented in [docs/data-backup-restore-plan.md](docs/data-backup-restore-plan.md), [docs/environment-sync-plan.md](docs/environment-sync-plan.md), [docs/operations-runbook.md](docs/operations-runbook.md), and [docs/admin-handover-guide.md](docs/admin-handover-guide.md).
+
+## Reporting
+
+Dashboard metrics and future reporting planning are documented in [docs/reporting-and-dashboard-plan.md](docs/reporting-and-dashboard-plan.md).

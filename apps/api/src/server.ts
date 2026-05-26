@@ -14,6 +14,7 @@ import { slaRoutes } from "./routes/slaRoutes";
 import { legalHoldRoutes } from "./routes/legalHoldRoutes";
 import { communicationRoutes } from "./routes/communicationRoutes";
 import { documentRoutes } from "./routes/documentRoutes";
+import { dashboardRoutes } from "./routes/dashboardRoutes";
 
 dotenv.config();
 
@@ -95,6 +96,7 @@ app.use("/api/sla-monitor", slaRoutes);
 app.use("/api/legal-holds", legalHoldRoutes);
 app.use("/api/communications", communicationRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {

@@ -59,7 +59,10 @@ export async function createShareholder(input: CreateShareholderInput) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      ...input,
+      actorRole: "maker",
+    }),
     cache: "no-store",
   });
 
@@ -117,7 +120,10 @@ export async function updateShareholderKyc(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        ...input,
+        actorRole: "compliance_officer",
+      }),
       cache: "no-store",
     }
   );
@@ -217,7 +223,10 @@ export async function createTransfer(input: CreateTransferInput) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      ...input,
+      actorRole: "maker",
+    }),
     cache: "no-store",
   });
 
@@ -271,6 +280,7 @@ export async function approveChecker1(
       },
       body: JSON.stringify({
         actorId,
+        actorRole: "checker_1",
         decisionNotes,
       }),
       cache: "no-store",
@@ -311,6 +321,7 @@ export async function approveChecker2(
       },
       body: JSON.stringify({
         actorId,
+        actorRole: "checker_2",
         decisionNotes,
       }),
       cache: "no-store",

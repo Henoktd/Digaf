@@ -4,6 +4,7 @@ exports.shareholderRoutes = void 0;
 const express_1 = require("express");
 const pool_1 = require("../db/pool");
 const apiError_1 = require("../utils/apiError");
+const roles_1 = require("../utils/roles");
 const validation_1 = require("../utils/validation");
 exports.shareholderRoutes = (0, express_1.Router)();
 const shareholderTypes = new Set(["individual", "institution"]);
@@ -37,6 +38,12 @@ function normalizeOptionalBoolean(value, fieldName, defaultValue) {
         throw new Error(`${fieldName} must be a boolean`);
     }
     return value;
+}
+function sendRoleFailure(res, role, message) {
+    const normalizedRole = typeof role === "string" ? role.trim() : role;
+    return (0, roles_1.isAllowedRole)(normalizedRole)
+        ? (0, apiError_1.sendForbidden)(res, message)
+        : (0, apiError_1.sendBadRequest)(res, message);
 }
 exports.shareholderRoutes.get("/", async (_req, res) => {
     try {
@@ -109,6 +116,13 @@ exports.shareholderRoutes.post("/", async (req, res) => {
     }
     catch (error) {
         return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid shareholder create request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
     }
     const client = await pool_1.pool.connect();
     try {
@@ -255,6 +269,13 @@ exports.shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
     }
     catch (error) {
         return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid shareholder KYC request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "compliance_officer",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
     }
     const client = await pool_1.pool.connect();
     try {

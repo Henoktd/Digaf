@@ -2,9 +2,11 @@ import { Router } from "express";
 import { pool } from "../db/pool";
 import {
   sendBadRequest,
+  sendForbidden,
   sendNotFound,
   sendServerError,
 } from "../utils/apiError";
+import { isAllowedRole, requireRole } from "../utils/roles";
 import {
   normalizeActorId,
   requireNonEmptyString,
@@ -62,6 +64,14 @@ function normalizeOptionalBoolean(
   }
 
   return value;
+}
+
+function sendRoleFailure(res: any, role: unknown, message: string) {
+  const normalizedRole = typeof role === "string" ? role.trim() : role;
+
+  return isAllowedRole(normalizedRole)
+    ? sendForbidden(res, message)
+    : sendBadRequest(res, message);
 }
 
 shareholderRoutes.get("/", async (_req, res) => {
@@ -159,6 +169,15 @@ shareholderRoutes.post("/", async (req, res) => {
       res,
       error instanceof Error ? error.message : "Invalid shareholder create request"
     );
+  }
+
+  const roleResult = requireRole(req.body?.actorRole, [
+    "maker",
+    "governance_admin",
+  ]);
+
+  if (!roleResult.ok) {
+    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -339,6 +358,15 @@ shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
       res,
       error instanceof Error ? error.message : "Invalid shareholder KYC request"
     );
+  }
+
+  const roleResult = requireRole(req.body?.actorRole, [
+    "compliance_officer",
+    "governance_admin",
+  ]);
+
+  if (!roleResult.ok) {
+    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
   }
 
   const client = await pool.connect();

@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { pool } from "../db/pool";
-import { sendBadRequest, sendServerError } from "../utils/apiError";
+import {
+  sendBadRequest,
+  sendForbidden,
+  sendServerError,
+} from "../utils/apiError";
+import { isAllowedRole, requireRole } from "../utils/roles";
 import { normalizeActorId, requireUuid } from "../utils/validation";
 
 export const transferRoutes = Router();
@@ -67,6 +72,14 @@ function parseTransferRequestBody(body: Record<string, unknown> | undefined) {
     shares,
     actorId,
   };
+}
+
+function sendRoleFailure(res: any, role: unknown, message: string) {
+  const normalizedRole = typeof role === "string" ? role.trim() : role;
+
+  return isAllowedRole(normalizedRole)
+    ? sendForbidden(res, message)
+    : sendBadRequest(res, message);
 }
 
 async function buildTransferEligibility(
@@ -297,6 +310,21 @@ transferRoutes.get("/", async (_req, res) => {
 transferRoutes.post("/eligibility-check", async (req, res) => {
   let input;
 
+  if (req.body?.actorRole !== undefined) {
+    const roleResult = requireRole(req.body.actorRole, [
+      "maker",
+      "checker_1",
+      "checker_2",
+      "governance_admin",
+      "compliance_officer",
+      "viewer",
+    ]);
+
+    if (!roleResult.ok) {
+      return sendRoleFailure(res, req.body.actorRole, roleResult.message);
+    }
+  }
+
   try {
     input = parseTransferRequestBody(req.body);
   } catch (error) {
@@ -333,6 +361,15 @@ transferRoutes.post("/", async (req, res) => {
       res,
       error instanceof Error ? error.message : "Invalid transfer create request"
     );
+  }
+
+  const roleResult = requireRole(req.body?.actorRole, [
+    "maker",
+    "governance_admin",
+  ]);
+
+  if (!roleResult.ok) {
+    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
   }
 
   const client = await pool.connect();

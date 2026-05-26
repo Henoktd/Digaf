@@ -4,6 +4,7 @@ exports.transferRoutes = void 0;
 const express_1 = require("express");
 const pool_1 = require("../db/pool");
 const apiError_1 = require("../utils/apiError");
+const roles_1 = require("../utils/roles");
 const validation_1 = require("../utils/validation");
 exports.transferRoutes = (0, express_1.Router)();
 const checker1ApproverId = "governance.officer.local_dev";
@@ -43,6 +44,12 @@ function parseTransferRequestBody(body) {
         shares,
         actorId,
     };
+}
+function sendRoleFailure(res, role, message) {
+    const normalizedRole = typeof role === "string" ? role.trim() : role;
+    return (0, roles_1.isAllowedRole)(normalizedRole)
+        ? (0, apiError_1.sendForbidden)(res, message)
+        : (0, apiError_1.sendBadRequest)(res, message);
 }
 async function buildTransferEligibility(client, input) {
     const blockingReasons = [];
@@ -221,6 +228,19 @@ exports.transferRoutes.get("/", async (_req, res) => {
 });
 exports.transferRoutes.post("/eligibility-check", async (req, res) => {
     let input;
+    if (req.body?.actorRole !== undefined) {
+        const roleResult = (0, roles_1.requireRole)(req.body.actorRole, [
+            "maker",
+            "checker_1",
+            "checker_2",
+            "governance_admin",
+            "compliance_officer",
+            "viewer",
+        ]);
+        if (!roleResult.ok) {
+            return sendRoleFailure(res, req.body.actorRole, roleResult.message);
+        }
+    }
     try {
         input = parseTransferRequestBody(req.body);
     }
@@ -248,6 +268,13 @@ exports.transferRoutes.post("/", async (req, res) => {
     }
     catch (error) {
         return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid transfer create request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
     }
     const client = await pool_1.pool.connect();
     try {

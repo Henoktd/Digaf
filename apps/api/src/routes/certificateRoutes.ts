@@ -418,14 +418,3 @@ certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
     return sendServerError(res, "Failed to verify certificate", error);
   }
 });
-export async function fetchApprovals() {
-  const response = await fetch(`${API_BASE_URL}/api/approvals`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch approvals");
-  }
-
-  return response.json();
-}

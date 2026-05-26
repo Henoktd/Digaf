@@ -40,6 +40,14 @@ export function sendConflict(
   return sendApiError(res, 409, "CONFLICT", message, details);
 }
 
+export function sendForbidden(
+  res: Response,
+  message: string,
+  details?: unknown
+) {
+  return sendApiError(res, 403, "FORBIDDEN", message, details);
+}
+
 export function sendServerError(
   res: Response,
   message: string,

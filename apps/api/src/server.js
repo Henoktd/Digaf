@@ -21,7 +21,20 @@ const communicationRoutes_1 = require("./routes/communicationRoutes");
 const documentRoutes_1 = require("./routes/documentRoutes");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+app.use(allowedOrigins?.length
+    ? (0, cors_1.default)({
+        origin(origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+                return;
+            }
+            callback(null, false);
+        },
+    })
+    : (0, cors_1.default)());
 app.use(express_1.default.json());
 const port = process.env.PORT || 4000;
 app.get("/", (_req, res) => {
@@ -58,8 +71,9 @@ app.get("/api/version", (_req, res) => {
     res.json({
         name: "Digaf Shareholder Governance Platform API",
         architecture: "Final v3 - No Dataverse",
-        environment: "local",
+        environment: process.env.NODE_ENV || "local",
         status: "ok",
+        timestampUtc: new Date().toISOString(),
     });
 });
 app.use("/api/entities", entityRoutes_1.entityRoutes);

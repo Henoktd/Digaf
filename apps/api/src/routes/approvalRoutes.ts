@@ -3,9 +3,11 @@ import { pool } from "../db/pool";
 import {
   sendBadRequest,
   sendConflict,
+  sendForbidden,
   sendNotFound,
   sendServerError,
 } from "../utils/apiError";
+import { isAllowedRole, requireRole } from "../utils/roles";
 import {
   normalizeActorId,
   requireNonEmptyString,
@@ -83,6 +85,14 @@ function sendAlreadyCompletedConflict(res: any, approval: any) {
   });
 }
 
+function sendRoleFailure(res: any, role: unknown, message: string) {
+  const normalizedRole = typeof role === "string" ? role.trim() : role;
+
+  return isAllowedRole(normalizedRole)
+    ? sendForbidden(res, message)
+    : sendBadRequest(res, message);
+}
+
 approvalRoutes.get("/", async (_req, res) => {
   try {
     const result = await pool.query(`
@@ -156,6 +166,15 @@ approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
       res,
       error instanceof Error ? error.message : "Invalid approval request"
     );
+  }
+
+  const roleResult = requireRole(req.body?.actorRole, [
+    "checker_1",
+    "governance_admin",
+  ]);
+
+  if (!roleResult.ok) {
+    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -333,6 +352,15 @@ approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
       res,
       error instanceof Error ? error.message : "Invalid approval request"
     );
+  }
+
+  const roleResult = requireRole(req.body?.actorRole, [
+    "checker_2",
+    "governance_admin",
+  ]);
+
+  if (!roleResult.ok) {
+    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
   }
 
   const client = await pool.connect();

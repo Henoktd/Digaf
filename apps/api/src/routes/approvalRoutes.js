@@ -4,9 +4,75 @@ exports.approvalRoutes = void 0;
 const express_1 = require("express");
 const pool_1 = require("../db/pool");
 const apiError_1 = require("../utils/apiError");
+const roles_1 = require("../utils/roles");
 const validation_1 = require("../utils/validation");
 exports.approvalRoutes = (0, express_1.Router)();
 const checker2ApproverId = "senior.governance.local_dev";
+async function getApprovalActionSummary(client, approvalId) {
+    const summaryResult = await client.query(`
+      SELECT
+        ar.id AS approval_id,
+        ar.stage,
+        ar.status AS approval_status,
+        ar.checker1_id,
+        ar.checker2_id,
+        st.id AS transfer_id,
+        st.status AS transfer_status
+      FROM approval_request ar
+      LEFT JOIN share_transfer st
+        ON ar.request_type = 'share_transfer'
+        AND st.id = ar.reference_id
+      WHERE ar.id = $1
+    `, [approvalId]);
+    const summary = summaryResult.rows[0];
+    return {
+        approval: {
+            id: summary.approval_id,
+            stage: summary.stage,
+            status: summary.approval_status,
+            checker1_id: summary.checker1_id,
+            checker2_id: summary.checker2_id,
+        },
+        transfer: {
+            id: summary.transfer_id,
+            status: summary.transfer_status,
+        },
+    };
+}
+function buildApprovalActionResponse(summary, extraData = {}) {
+    return {
+        id: summary.approval.id,
+        stage: summary.approval.stage,
+        status: summary.approval.status,
+        checker1_id: summary.approval.checker1_id,
+        checker2_id: summary.approval.checker2_id,
+        transfer_id: summary.transfer.id,
+        transfer_status: summary.transfer.status,
+        approval: summary.approval,
+        transfer: summary.transfer,
+        ...extraData,
+    };
+}
+function sendAlreadyCompletedConflict(res, approval) {
+    return (0, apiError_1.sendConflict)(res, "Approval request is already completed", {
+        approval: {
+            id: approval.id,
+            stage: approval.stage,
+            status: approval.status,
+            checker1_id: approval.checker1_id,
+            checker2_id: approval.checker2_id,
+        },
+        transfer: {
+            id: approval.reference_id,
+        },
+    });
+}
+function sendRoleFailure(res, role, message) {
+    const normalizedRole = typeof role === "string" ? role.trim() : role;
+    return (0, roles_1.isAllowedRole)(normalizedRole)
+        ? (0, apiError_1.sendForbidden)(res, message)
+        : (0, apiError_1.sendBadRequest)(res, message);
+}
 exports.approvalRoutes.get("/", async (_req, res) => {
     try {
         const result = await pool_1.pool.query(`
@@ -74,6 +140,13 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) =
     catch (error) {
         return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid approval request");
     }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "checker_1",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
     const client = await pool_1.pool.connect();
     try {
         await client.query("BEGIN");
@@ -87,7 +160,8 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) =
           current_approver_id,
           status,
           maker_id,
-          checker1_id
+          checker1_id,
+          checker2_id
         FROM approval_request
         WHERE id = $1
         FOR UPDATE
@@ -100,6 +174,10 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) =
         if (approval.request_type !== "share_transfer") {
             await client.query("ROLLBACK");
             return (0, apiError_1.sendConflict)(res, "Approval request is not for a share transfer");
+        }
+        if (approval.status === "approved" || approval.stage === "completed") {
+            await client.query("ROLLBACK");
+            return sendAlreadyCompletedConflict(res, approval);
         }
         if (approval.status !== "pending") {
             await client.query("ROLLBACK");
@@ -142,7 +220,7 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) =
           checker1_id = $2,
           status = 'pending_checker_2'
         WHERE id = $1
-        RETURNING status
+        RETURNING id, status
       `, [approval.reference_id, actorId]);
         if (transferResult.rowCount === 0) {
             await client.query("ROLLBACK");
@@ -177,37 +255,10 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) =
             JSON.stringify(newValue),
             req.ip ?? null,
         ]);
-        const updatedResult = await client.query(`
-        SELECT
-          ar.id,
-          ar.entity_id,
-          e.legal_name AS entity_name,
-          ar.request_type,
-          ar.reference_id,
-          ar.stage,
-          ar.current_approver_id,
-          ar.status,
-          ar.maker_id,
-          ar.checker1_id,
-          ar.checker2_id,
-          ar.sla_due_date,
-          ar.escalation_level,
-          ar.escalation_triggered_at,
-          ar.escalation_recipient,
-          ar.decision_notes,
-          ar.board_resolution_ref,
-          ar.created_at,
-          st.status AS transfer_status
-        FROM approval_request ar
-        JOIN entity e ON e.entity_id = ar.entity_id
-        LEFT JOIN share_transfer st
-          ON ar.request_type = 'share_transfer'
-          AND st.id = ar.reference_id
-        WHERE ar.id = $1
-      `, [approvalId]);
+        const summary = await getApprovalActionSummary(client, approvalId);
         await client.query("COMMIT");
         return res.json({
-            data: updatedResult.rows[0],
+            data: buildApprovalActionResponse(summary),
         });
     }
     catch (error) {
@@ -229,6 +280,13 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) =
     }
     catch (error) {
         return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid approval request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "checker_2",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
     }
     const client = await pool_1.pool.connect();
     try {
@@ -258,6 +316,10 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) =
             await client.query("ROLLBACK");
             return (0, apiError_1.sendConflict)(res, "Approval request is not for a share transfer");
         }
+        if (approval.status === "approved" || approval.stage === "completed") {
+            await client.query("ROLLBACK");
+            return sendAlreadyCompletedConflict(res, approval);
+        }
         if (approval.status !== "pending") {
             await client.query("ROLLBACK");
             return (0, apiError_1.sendConflict)(res, "Approval request is not pending");
@@ -273,6 +335,10 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) =
         if (actorId === approval.checker1_id) {
             await client.query("ROLLBACK");
             return (0, apiError_1.sendConflict)(res, "Checker 1 cannot approve as Checker 2");
+        }
+        if (!approval.checker1_id) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendConflict)(res, "Checker 1 approval is required first");
         }
         const transferResult = await client.query(`
         SELECT
@@ -526,8 +592,21 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) =
         WHERE ar.id = $1
       `, [approvalId]);
         await client.query("COMMIT");
+        const summary = {
+            approval: {
+                id: summaryResult.rows[0].approval_id,
+                stage: summaryResult.rows[0].stage,
+                status: summaryResult.rows[0].approval_status,
+                checker1_id: summaryResult.rows[0].checker1_id,
+                checker2_id: summaryResult.rows[0].checker2_id,
+            },
+            transfer: {
+                id: summaryResult.rows[0].transfer_id,
+                status: summaryResult.rows[0].transfer_status,
+            },
+        };
         return res.json({
-            data: {
+            data: buildApprovalActionResponse(summary, {
                 approval: {
                     id: summaryResult.rows[0].approval_id,
                     entity_id: summaryResult.rows[0].entity_id,
@@ -559,7 +638,7 @@ exports.approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) =
                     transferee_before_qty: transfereeBeforeQuantity,
                     transferee_after_qty: transfereeAfterQuantity,
                 },
-            },
+            }),
         });
     }
     catch (error) {

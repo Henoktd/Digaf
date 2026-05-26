@@ -54,6 +54,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="text-xs text-slate-400">
                 Final v3 — No Dataverse
               </p>
+              <p className="mt-1 text-xs font-medium text-slate-500">
+                Local prototype roles: maker / checker / compliance
+              </p>
             </div>
 
             <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">

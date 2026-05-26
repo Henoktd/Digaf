@@ -19,7 +19,24 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  allowedOrigins?.length
+    ? cors({
+        origin(origin, callback) {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+          }
+
+          callback(null, false);
+        },
+      })
+    : cors()
+);
 app.use(express.json());
 
 const port = process.env.PORT || 4000;
@@ -60,8 +77,9 @@ app.get("/api/version", (_req, res) => {
   res.json({
     name: "Digaf Shareholder Governance Platform API",
     architecture: "Final v3 - No Dataverse",
-    environment: "local",
+    environment: process.env.NODE_ENV || "local",
     status: "ok",
+    timestampUtc: new Date().toISOString(),
   });
 });
 

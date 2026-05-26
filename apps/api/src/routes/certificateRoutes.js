@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.certificateRoutes = void 0;
-exports.fetchApprovals = fetchApprovals;
 const express_1 = require("express");
 const pool_1 = require("../db/pool");
 const certificateCrypto_1 = require("../services/certificateCrypto");
@@ -332,13 +331,4 @@ exports.certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
         return (0, apiError_1.sendServerError)(res, "Failed to verify certificate", error);
     }
 });
-async function fetchApprovals() {
-    const response = await fetch(`${API_BASE_URL}/api/approvals`, {
-        cache: "no-store",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to fetch approvals");
-    }
-    return response.json();
-}
 //# sourceMappingURL=certificateRoutes.js.map

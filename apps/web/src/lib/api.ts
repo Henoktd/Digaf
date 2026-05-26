@@ -282,7 +282,11 @@ export async function approveChecker1(
 
     try {
       const body = await response.json();
-      message = body.message || body.error || message;
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
     } catch {
       // Keep the generic message if the API did not return JSON.
     }
@@ -318,7 +322,11 @@ export async function approveChecker2(
 
     try {
       const body = await response.json();
-      message = body.message || body.error || message;
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
     } catch {
       // Keep the generic message if the API did not return JSON.
     }

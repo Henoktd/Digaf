@@ -42,14 +42,6 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function canApproveChecker1(approval: Approval) {
-  return approval.status === "pending" && approval.stage === "checker_1_review";
-}
-
-function canApproveChecker2(approval: Approval) {
-  return approval.status === "pending" && approval.stage === "checker_2_review";
-}
-
 export default async function ApprovalsPage() {
   const response: ApprovalResponse = await fetchApprovals();
   const approvals: Approval[] = response.data;
@@ -107,8 +99,8 @@ export default async function ApprovalsPage() {
             No approval requests found.
           </div>
         ) : (
-          <div className="mt-6 overflow-hidden rounded-xl border border-slate-200">
-            <table className="w-full border-collapse text-left text-sm">
+          <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="min-w-[1320px] w-full border-collapse text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
                   <th className="border-b border-slate-200 px-4 py-3">
@@ -141,7 +133,7 @@ export default async function ApprovalsPage() {
                   <th className="border-b border-slate-200 px-4 py-3">
                     Checker 2
                   </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
+                  <th className="sticky right-0 z-10 min-w-52 border-b border-l border-slate-200 bg-slate-50 px-4 py-3">
                     Action
                   </th>
                 </tr>
@@ -182,22 +174,12 @@ export default async function ApprovalsPage() {
                     <td className="border-b border-slate-100 px-4 py-3">
                       {approval.checker2_id || "Pending"}
                     </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {canApproveChecker1(approval) ? (
-                        <ApprovalActions
-                          actionType="checker_1"
-                          approvalId={approval.id}
-                        />
-                      ) : canApproveChecker2(approval) ? (
-                        <ApprovalActions
-                          actionType="checker_2"
-                          approvalId={approval.id}
-                        />
-                      ) : (
-                        <span className="text-slate-400">
-                          No action available
-                        </span>
-                      )}
+                    <td className="sticky right-0 min-w-52 border-b border-l border-slate-100 bg-white px-4 py-3">
+                      <ApprovalActions
+                        approvalId={approval.id}
+                        stage={approval.stage}
+                        status={approval.status}
+                      />
                     </td>
                   </tr>
                 ))}

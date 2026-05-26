@@ -11,3 +11,7 @@ The local RBAC prototype roles and permission matrix are documented in [docs/rol
 ## Authentication Planning
 
 Microsoft Entra ID authentication planning is documented in [docs/entra-authentication-plan.md](docs/entra-authentication-plan.md). Future frontend authentication UI changes are planned in [docs/frontend-auth-ui-plan.md](docs/frontend-auth-ui-plan.md).
+
+## Demo and Readiness
+
+Production readiness, demo flow, and reviewer instructions are documented in [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md), [docs/demo-script.md](docs/demo-script.md), and [docs/reviewer-guide.md](docs/reviewer-guide.md).

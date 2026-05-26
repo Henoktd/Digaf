@@ -21,10 +21,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-slate-200 bg-white p-6 lg:block">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-            SVH Governance
+            Digaf Governance Portal
           </p>
           <h1 className="mt-2 text-xl font-bold leading-tight">
-            Shareholder Platform
+            Shareholder Governance Platform
           </h1>
           <p className="mt-2 text-sm text-slate-500">
             Digaf Microcredit Provider SC

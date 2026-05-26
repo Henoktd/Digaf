@@ -3,7 +3,7 @@
 
 ## Architecture Rule
 
-The backend API is the control layer of the SVH Governance Platform.
+The backend API is the control layer of the Digaf Shareholder Governance Platform.
 
 It will handle:
 - Authentication and authorization

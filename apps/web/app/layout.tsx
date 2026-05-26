@@ -3,8 +3,9 @@ import "./globals.css";
 import { AppShell } from "@/src/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "SVH Governance Platform",
-  description: "Shareholder Governance and Engagement Platform",
+  title: "Digaf Shareholder Governance Platform",
+  description:
+    "Shareholder governance and engagement portal for Digaf Microcredit Provider SC",
 };
 
 export default function RootLayout({

@@ -1,1 +1,1 @@
-"# SVH Governance Platform" 
+"# Digaf Shareholder Governance Platform" 

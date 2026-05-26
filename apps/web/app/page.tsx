@@ -32,11 +32,11 @@ export default async function Home() {
       <div className="mx-auto max-w-7xl space-y-8">
         <section className="rounded-2xl bg-white p-8 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            SVH Governance Platform
+            Digaf Governance Portal
           </p>
 
           <h1 className="mt-2 text-3xl font-bold">
-            Shareholder Governance & Engagement Platform
+            Digaf Shareholder Governance Platform
           </h1>
 
           <p className="mt-3 max-w-3xl text-slate-600">

@@ -26,7 +26,7 @@ const port = process.env.PORT || 4000;
 
 app.get("/", (_req, res) => {
   res.json({
-    service: "SVH Governance Platform API",
+    service: "Digaf Shareholder Governance Platform API",
     architecture: "Final v3 - No Dataverse",
     status: "running",
   });
@@ -58,7 +58,7 @@ app.get("/health/db", async (_req, res) => {
 
 app.get("/api/version", (_req, res) => {
   res.json({
-    name: "SVH Governance Platform API",
+    name: "Digaf Shareholder Governance Platform API",
     architecture: "Final v3 - No Dataverse",
     environment: "local",
     status: "ok",
@@ -79,5 +79,5 @@ app.use("/api/communications", communicationRoutes);
 app.use("/api/documents", documentRoutes);
 
 app.listen(port, () => {
-  console.log(`SVH Governance Platform API running on port ${port}`);
+  console.log(`Digaf Shareholder Governance Platform API running on port ${port}`);
 });

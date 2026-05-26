@@ -15,3 +15,7 @@ Microsoft Entra ID authentication planning is documented in [docs/entra-authenti
 ## Demo and Readiness
 
 Production readiness, demo flow, and reviewer instructions are documented in [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md), [docs/demo-script.md](docs/demo-script.md), and [docs/reviewer-guide.md](docs/reviewer-guide.md).
+
+## Feedback and Backlog
+
+Feedback capture, triage, and MVP backlog planning are documented in [docs/feedback-capture-template.md](docs/feedback-capture-template.md), [docs/feedback-triage-process.md](docs/feedback-triage-process.md), and [docs/mvp-backlog.md](docs/mvp-backlog.md).

@@ -1,4 +1,8 @@
-import { fetchCertificateEvents, fetchCertificates } from "@/src/lib/api";
+import {
+  fetchCertificateEvents,
+  fetchCertificateRenderData,
+  fetchCertificates,
+} from "@/src/lib/api";
 
 type Certificate = {
   certificate_id: string;
@@ -22,14 +26,49 @@ type CertificateEvent = {
   notes: string | null;
 };
 
+type CertificateRenderData = {
+  certificate_id: string;
+  serial_number: string;
+  issuing_company: string;
+  shareholder_name: string;
+  share_class: string;
+  quantity: string;
+  issue_date: string | null;
+  status: string;
+  revocation_status: string | null;
+  certificate_hash: string | null;
+  hash_algorithm: string | null;
+  hash_generated_at: string | null;
+  qr_token: string | null;
+  public_verification_url: string;
+  render_metadata: {
+    certificate_title: string;
+    template_version: string;
+    generated_at: string;
+    disclaimer: string;
+  };
+};
+
+function formatDate(value: string | null) {
+  if (!value) return "Not set";
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+  }).format(new Date(value));
+}
+
 export default async function CertificatesPage() {
   const response = await fetchCertificates();
   const certificates: Certificate[] = response.data;
   const firstCertificate = certificates[0];
-  const eventResponse = firstCertificate
-    ? await fetchCertificateEvents(firstCertificate.certificate_id)
-    : { data: [] };
+  const [eventResponse, renderDataResponse] = firstCertificate
+    ? await Promise.all([
+        fetchCertificateEvents(firstCertificate.certificate_id),
+        fetchCertificateRenderData(firstCertificate.certificate_id),
+      ])
+    : [{ data: [] }, { data: null }];
   const events: CertificateEvent[] = eventResponse.data;
+  const renderData: CertificateRenderData | null = renderDataResponse.data;
 
   return (
     <main className="p-8">
@@ -105,6 +144,96 @@ export default async function CertificatesPage() {
             </tbody>
           </table>
         </div>
+
+        {renderData ? (
+          <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase text-slate-500">
+                  Certificate Render Preview
+                </p>
+                <h2 className="mt-2 text-2xl font-bold">
+                  {renderData.render_metadata.certificate_title}
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                  PDF-ready render data for a future certificate template. This
+                  is not a generated PDF yet.
+                </p>
+              </div>
+
+              <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                {renderData.render_metadata.template_version}
+              </div>
+            </div>
+
+            <dl className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Serial Number</dt>
+                <dd className="mt-1 font-semibold">
+                  {renderData.serial_number}
+                </dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Issuing Company</dt>
+                <dd className="mt-1 font-semibold">
+                  {renderData.issuing_company}
+                </dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Shareholder</dt>
+                <dd className="mt-1 font-semibold">
+                  {renderData.shareholder_name}
+                </dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Share Class</dt>
+                <dd className="mt-1 font-semibold">{renderData.share_class}</dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Quantity</dt>
+                <dd className="mt-1 font-semibold">{renderData.quantity}</dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Issue Date</dt>
+                <dd className="mt-1 font-semibold">
+                  {formatDate(renderData.issue_date)}
+                </dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Status</dt>
+                <dd className="mt-1 font-semibold capitalize">
+                  {renderData.status}
+                </dd>
+              </div>
+
+              <div className="rounded-xl bg-white p-4">
+                <dt className="text-sm text-slate-500">Hash Algorithm</dt>
+                <dd className="mt-1 font-semibold">
+                  {renderData.hash_algorithm || "Not generated"}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="mt-4 rounded-xl bg-white p-4">
+              <p className="text-sm text-slate-500">
+                Public Verification URL
+              </p>
+              <p className="mt-1 break-all font-mono text-sm text-slate-900">
+                {renderData.public_verification_url}
+              </p>
+            </div>
+
+            <p className="mt-4 text-sm text-slate-600">
+              {renderData.render_metadata.disclaimer}
+            </p>
+          </div>
+        ) : null}
 
         <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
           <div className="mb-5">

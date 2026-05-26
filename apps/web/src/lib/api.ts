@@ -500,6 +500,21 @@ export async function fetchCertificates() {
   return response.json();
 }
 
+export async function fetchCertificateRenderData(certificateId: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/certificates/${certificateId}/render-data`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch certificate render data");
+  }
+
+  return response.json();
+}
+
 export async function fetchCertificateEvents(certificateId: string) {
   const response = await fetch(
     `${API_BASE_URL}/api/certificates/${certificateId}/events`,
@@ -517,14 +532,41 @@ export async function fetchCertificateEvents(certificateId: string) {
 
 export async function verifyCertificate(serialNumber: string) {
   const response = await fetch(
-    `${API_BASE_URL}/api/certificates/verify/${serialNumber}`,
+    `${API_BASE_URL}/api/certificates/verify/${encodeURIComponent(
+      serialNumber
+    )}`,
     {
       cache: "no-store",
     }
   );
 
+  if (response.status === 404) {
+    return response.json();
+  }
+
   if (!response.ok) {
     throw new Error("Failed to verify certificate");
+  }
+
+  return response.json();
+}
+
+export async function verifyCertificateByToken(qrToken: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/certificates/verify/by-token/${encodeURIComponent(
+      qrToken
+    )}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (response.status === 404) {
+    return response.json();
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to verify certificate token");
   }
 
   return response.json();

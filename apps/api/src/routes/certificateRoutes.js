@@ -7,6 +7,72 @@ const certificateCrypto_1 = require("../services/certificateCrypto");
 const apiError_1 = require("../utils/apiError");
 const validation_1 = require("../utils/validation");
 exports.certificateRoutes = (0, express_1.Router)();
+function buildPublicVerificationResponse(certificate) {
+    let hashVerificationResult = "hash_missing";
+    if (certificate.certificate_hash && certificate.issue_date) {
+        const canonicalString = (0, certificateCrypto_1.buildCanonicalCertificateString)({
+            entityId: certificate.entity_id,
+            serialNumber: certificate.serial_number,
+            shareholderId: certificate.shareholder_id,
+            shareClassId: certificate.share_class_id,
+            quantity: certificate.quantity,
+            issueDate: certificate.issue_date.toISOString().slice(0, 10),
+            issuingAuthority: certificate.issuing_company,
+        });
+        const recomputedHash = (0, certificateCrypto_1.generateCertificateHash)(canonicalString);
+        const recomputedSignatureToken = (0, certificateCrypto_1.generateSignatureToken)(recomputedHash);
+        const hashMatches = recomputedHash === certificate.certificate_hash;
+        const tokenMatches = recomputedSignatureToken === certificate.signature_token;
+        if (hashMatches && tokenMatches) {
+            hashVerificationResult = "valid";
+        }
+        else {
+            hashVerificationResult = "tamper_detected";
+        }
+    }
+    return {
+        serial_number: certificate.serial_number,
+        issuing_company: certificate.issuing_company,
+        share_class: certificate.share_class,
+        quantity: certificate.quantity,
+        issue_date: certificate.issue_date,
+        status: hashVerificationResult === "tamper_detected"
+            ? "tampered"
+            : certificate.status,
+        revocation_status: certificate.revocation_status,
+        hash_algorithm: certificate.hash_algorithm,
+        hash_generated_at: certificate.hash_generated_at,
+        hash_verification_result: hashVerificationResult,
+        verification_timestamp: certificate.verification_timestamp,
+    };
+}
+async function fetchPublicVerificationCertificate(whereClause, value) {
+    const result = await pool_1.pool.query(`
+    SELECT
+      c.certificate_id,
+      c.entity_id,
+      c.serial_number,
+      c.shareholder_id,
+      c.share_class_id,
+      c.quantity,
+      c.issue_date,
+      c.status,
+      c.revocation_status,
+      c.certificate_hash,
+      c.hash_algorithm,
+      c.hash_generated_at,
+      c.signature_token,
+      e.legal_name AS issuing_company,
+      sc.class_name AS share_class,
+      now() AS verification_timestamp
+    FROM share_certificate c
+    JOIN entity e ON e.entity_id = c.entity_id
+    JOIN share_class sc ON sc.share_class_id = c.share_class_id
+    WHERE ${whereClause}
+    LIMIT 1
+    `, [value]);
+    return result.rows[0];
+}
 exports.certificateRoutes.get("/", async (_req, res) => {
     try {
         const result = await pool_1.pool.query(`
@@ -44,6 +110,84 @@ exports.certificateRoutes.get("/", async (_req, res) => {
             error: "Failed to fetch certificates",
             message: error instanceof Error ? error.message : "Unknown error",
         });
+    }
+});
+exports.certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
+    try {
+        const certificateId = (0, validation_1.requireUuid)(req.params.certificateId, "certificateId");
+        const result = await pool_1.pool.query(`
+      SELECT
+        c.certificate_id,
+        c.serial_number,
+        e.legal_name AS issuing_company,
+        s.legal_name AS shareholder_name,
+        sc.class_name AS share_class,
+        c.quantity,
+        c.issue_date,
+        c.status,
+        c.revocation_status,
+        c.certificate_hash,
+        c.hash_algorithm,
+        c.hash_generated_at,
+        c.qr_token
+      FROM share_certificate c
+      JOIN entity e ON e.entity_id = c.entity_id
+      JOIN shareholder s ON s.shareholder_id = c.shareholder_id
+      JOIN share_class sc ON sc.share_class_id = c.share_class_id
+      WHERE c.certificate_id = $1
+      LIMIT 1
+      `, [certificateId]);
+        if (result.rowCount === 0) {
+            return (0, apiError_1.sendNotFound)(res, "Certificate not found");
+        }
+        const certificate = result.rows[0];
+        const generatedAt = new Date().toISOString();
+        void pool_1.pool
+            .query(`
+        INSERT INTO certificate_event (
+          certificate_id,
+          event_type,
+          actor_id,
+          notes
+        )
+        VALUES (
+          $1,
+          'render_data_accessed',
+          'system.render_preview',
+          'Certificate render data accessed for PDF preview'
+        )
+        `, [certificateId])
+            .catch(() => undefined);
+        res.json({
+            data: {
+                certificate_id: certificate.certificate_id,
+                serial_number: certificate.serial_number,
+                issuing_company: certificate.issuing_company,
+                shareholder_name: certificate.shareholder_name,
+                share_class: certificate.share_class,
+                quantity: certificate.quantity,
+                issue_date: certificate.issue_date,
+                status: certificate.status,
+                revocation_status: certificate.revocation_status,
+                certificate_hash: certificate.certificate_hash,
+                hash_algorithm: certificate.hash_algorithm,
+                hash_generated_at: certificate.hash_generated_at,
+                qr_token: certificate.qr_token,
+                public_verification_url: `/qr?serialNumber=${encodeURIComponent(certificate.serial_number)}`,
+                render_metadata: {
+                    certificate_title: "Share Certificate",
+                    template_version: "pdf-preview-v1",
+                    generated_at: generatedAt,
+                    disclaimer: "PDF generation is not implemented yet. This payload is certificate-safe render data for future PDF template generation.",
+                },
+            },
+        });
+    }
+    catch (error) {
+        if (error instanceof Error && error.message.includes("certificateId")) {
+            return (0, apiError_1.sendBadRequest)(res, error.message);
+        }
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch certificate render data", error);
     }
 });
 exports.certificateRoutes.get("/:certificateId/events", async (req, res) => {
@@ -257,78 +401,35 @@ exports.certificateRoutes.post("/:certificateId/generate-hash", async (req, res)
 exports.certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
     try {
         const { serialNumber } = req.params;
-        const result = await pool_1.pool.query(`
-      SELECT
-        c.certificate_id,
-        c.entity_id,
-        c.serial_number,
-        c.shareholder_id,
-        c.share_class_id,
-        c.quantity,
-        c.issue_date,
-        c.status,
-        c.revocation_status,
-        c.certificate_hash,
-        c.hash_algorithm,
-        c.hash_generated_at,
-        c.signature_token,
-        e.legal_name AS issuing_company,
-        sc.class_name AS share_class,
-        now() AS verification_timestamp
-      FROM share_certificate c
-      JOIN entity e ON e.entity_id = c.entity_id
-      JOIN share_class sc ON sc.share_class_id = c.share_class_id
-      WHERE c.serial_number = $1
-      LIMIT 1
-      `, [serialNumber]);
-        if (result.rowCount === 0) {
+        const certificate = await fetchPublicVerificationCertificate("c.serial_number = $1", serialNumber);
+        if (!certificate) {
             return (0, apiError_1.sendNotFound)(res, "Certificate not found", {
                 verificationTimestamp: new Date().toISOString(),
             });
         }
-        const certificate = result.rows[0];
-        let hashVerificationResult = "hash_missing";
-        if (certificate.certificate_hash && certificate.issue_date) {
-            const canonicalString = (0, certificateCrypto_1.buildCanonicalCertificateString)({
-                entityId: certificate.entity_id,
-                serialNumber: certificate.serial_number,
-                shareholderId: certificate.shareholder_id,
-                shareClassId: certificate.share_class_id,
-                quantity: certificate.quantity,
-                issueDate: certificate.issue_date.toISOString().slice(0, 10),
-                issuingAuthority: certificate.issuing_company,
-            });
-            const recomputedHash = (0, certificateCrypto_1.generateCertificateHash)(canonicalString);
-            const recomputedSignatureToken = (0, certificateCrypto_1.generateSignatureToken)(recomputedHash);
-            const hashMatches = recomputedHash === certificate.certificate_hash;
-            const tokenMatches = recomputedSignatureToken === certificate.signature_token;
-            if (hashMatches && tokenMatches) {
-                hashVerificationResult = "valid";
-            }
-            else {
-                hashVerificationResult = "tamper_detected";
-            }
-        }
         res.json({
-            data: {
-                serial_number: certificate.serial_number,
-                issuing_company: certificate.issuing_company,
-                share_class: certificate.share_class,
-                quantity: certificate.quantity,
-                issue_date: certificate.issue_date,
-                status: hashVerificationResult === "tamper_detected"
-                    ? "tampered"
-                    : certificate.status,
-                revocation_status: certificate.revocation_status,
-                hash_algorithm: certificate.hash_algorithm,
-                hash_generated_at: certificate.hash_generated_at,
-                hash_verification_result: hashVerificationResult,
-                verification_timestamp: certificate.verification_timestamp,
-            },
+            data: buildPublicVerificationResponse(certificate),
         });
     }
     catch (error) {
         return (0, apiError_1.sendServerError)(res, "Failed to verify certificate", error);
+    }
+});
+exports.certificateRoutes.get("/verify/by-token/:qrToken", async (req, res) => {
+    try {
+        const { qrToken } = req.params;
+        const certificate = await fetchPublicVerificationCertificate("(c.qr_token = $1 OR c.signature_token = $1)", qrToken);
+        if (!certificate) {
+            return (0, apiError_1.sendNotFound)(res, "Certificate not found", {
+                verificationTimestamp: new Date().toISOString(),
+            });
+        }
+        res.json({
+            data: buildPublicVerificationResponse(certificate),
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to verify certificate token", error);
     }
 });
 //# sourceMappingURL=certificateRoutes.js.map

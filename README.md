@@ -35,3 +35,7 @@ Dashboard metrics and future reporting planning are documented in [docs/reportin
 ## Microsoft 365 Integration Planning
 
 SharePoint, Power Automate notification, and Power BI reporting integration plans are documented in [docs/sharepoint-integration-plan.md](docs/sharepoint-integration-plan.md), [docs/power-automate-notification-plan.md](docs/power-automate-notification-plan.md), and [docs/power-bi-reporting-plan.md](docs/power-bi-reporting-plan.md).
+
+## Certificate PDF and QR Planning
+
+Certificate PDF generation preparation and QR verification hardening are documented in [docs/certificate-pdf-and-qr-plan.md](docs/certificate-pdf-and-qr-plan.md).

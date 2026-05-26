@@ -1,5 +1,16 @@
 import { Router } from "express";
 import { pool } from "../db/pool";
+import {
+  sendBadRequest,
+  sendConflict,
+  sendNotFound,
+  sendServerError,
+} from "../utils/apiError";
+import {
+  normalizeActorId,
+  requireNonEmptyString,
+  requireUuid,
+} from "../utils/validation";
 
 export const approvalRoutes = Router();
 
@@ -62,24 +73,22 @@ approvalRoutes.get("/", async (_req, res) => {
 });
 
 approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
-  const { approvalId } = req.params;
-  const actorId =
-    typeof req.body?.actorId === "string" ? req.body.actorId.trim() : "";
-  const decisionNotes =
-    typeof req.body?.decisionNotes === "string"
-      ? req.body.decisionNotes.trim()
-      : "";
+  let approvalId = "";
+  let actorId = "";
+  let decisionNotes = "";
 
-  if (!actorId) {
-    return res.status(400).json({
-      error: "actorId is required",
-    });
-  }
-
-  if (!decisionNotes) {
-    return res.status(400).json({
-      error: "decisionNotes is required",
-    });
+  try {
+    approvalId = requireUuid(req.params.approvalId, "approvalId");
+    actorId = normalizeActorId(req.body?.actorId);
+    decisionNotes = requireNonEmptyString(
+      req.body?.decisionNotes,
+      "decisionNotes"
+    );
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid approval request"
+    );
   }
 
   const client = await pool.connect();
@@ -110,37 +119,33 @@ approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
 
     if (!approval) {
       await client.query("ROLLBACK");
-      return res.status(404).json({
-        error: "Approval request not found",
-      });
+      return sendNotFound(res, "Approval request not found");
     }
 
     if (approval.request_type !== "share_transfer") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Approval request is not for a share transfer",
-      });
+      return sendConflict(
+        res,
+        "Approval request is not for a share transfer"
+      );
     }
 
     if (approval.status !== "pending") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Approval request is not pending",
-      });
+      return sendConflict(res, "Approval request is not pending");
     }
 
     if (approval.stage !== "checker_1_review") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Approval request is not at Checker 1 review",
-      });
+      return sendConflict(
+        res,
+        "Approval request is not at Checker 1 review"
+      );
     }
 
     if (actorId === approval.maker_id) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Maker cannot approve their own request",
-      });
+      return sendConflict(res, "Maker cannot approve their own request");
     }
 
     const oldValue = {
@@ -186,9 +191,7 @@ approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
 
     if (transferResult.rowCount === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({
-        error: "Linked share transfer not found",
-      });
+      return sendNotFound(res, "Linked share transfer not found");
     }
 
     await client.query(
@@ -264,34 +267,29 @@ approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    return res.status(500).json({
-      error: "Failed to approve Checker 1",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    return sendServerError(res, "Failed to approve Checker 1", error);
   } finally {
     client.release();
   }
 });
 
 approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
-  const { approvalId } = req.params;
-  const actorId =
-    typeof req.body?.actorId === "string" ? req.body.actorId.trim() : "";
-  const decisionNotes =
-    typeof req.body?.decisionNotes === "string"
-      ? req.body.decisionNotes.trim()
-      : "";
+  let approvalId = "";
+  let actorId = "";
+  let decisionNotes = "";
 
-  if (!actorId) {
-    return res.status(400).json({
-      error: "actorId is required",
-    });
-  }
-
-  if (!decisionNotes) {
-    return res.status(400).json({
-      error: "decisionNotes is required",
-    });
+  try {
+    approvalId = requireUuid(req.params.approvalId, "approvalId");
+    actorId = normalizeActorId(req.body?.actorId);
+    decisionNotes = requireNonEmptyString(
+      req.body?.decisionNotes,
+      "decisionNotes"
+    );
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid approval request"
+    );
   }
 
   const client = await pool.connect();
@@ -323,44 +321,38 @@ approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
 
     if (!approval) {
       await client.query("ROLLBACK");
-      return res.status(404).json({
-        error: "Approval request not found",
-      });
+      return sendNotFound(res, "Approval request not found");
     }
 
     if (approval.request_type !== "share_transfer") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Approval request is not for a share transfer",
-      });
+      return sendConflict(
+        res,
+        "Approval request is not for a share transfer"
+      );
     }
 
     if (approval.status !== "pending") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Approval request is not pending",
-      });
+      return sendConflict(res, "Approval request is not pending");
     }
 
     if (approval.stage !== "checker_2_review") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Approval request is not at Checker 2 review",
-      });
+      return sendConflict(
+        res,
+        "Approval request is not at Checker 2 review"
+      );
     }
 
     if (actorId === approval.maker_id) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Maker cannot approve their own request",
-      });
+      return sendConflict(res, "Maker cannot approve their own request");
     }
 
     if (actorId === approval.checker1_id) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Checker 1 cannot approve as Checker 2",
-      });
+      return sendConflict(res, "Checker 1 cannot approve as Checker 2");
     }
 
     const transferResult = await client.query(
@@ -390,44 +382,35 @@ approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
 
     if (!transfer) {
       await client.query("ROLLBACK");
-      return res.status(404).json({
-        error: "Linked share transfer not found",
-      });
+      return sendNotFound(res, "Linked share transfer not found");
     }
 
     if (transfer.status !== "pending_checker_2") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Share transfer is not pending Checker 2",
-      });
+      return sendConflict(res, "Share transfer is not pending Checker 2");
     }
 
     if (transfer.kyc_check_status !== "passed") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "KYC check has not passed",
-      });
+      return sendConflict(res, "KYC check has not passed");
     }
 
     if (transfer.encumbrance_check_status !== "passed") {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Encumbrance check has not passed",
-      });
+      return sendConflict(res, "Encumbrance check has not passed");
     }
 
     if (transfer.freeze_reference !== null) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Share transfer is blocked by a freeze reference",
-      });
+      return sendConflict(
+        res,
+        "Share transfer is blocked by a freeze reference"
+      );
     }
 
     if (transfer.board_approval_required && !transfer.board_approval_ref) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Board approval reference is required",
-      });
+      return sendConflict(res, "Board approval reference is required");
     }
 
     const transferorOwnershipResult = await client.query(
@@ -454,9 +437,10 @@ approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
 
     if (!transferorOwnership) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Transferor does not have enough available shares",
-      });
+      return sendConflict(
+        res,
+        "Transferor does not have enough available shares"
+      );
     }
 
     const transferorUpdateResult = await client.query(
@@ -723,10 +707,7 @@ approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    return res.status(500).json({
-      error: "Failed to approve Checker 2",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    return sendServerError(res, "Failed to approve Checker 2", error);
   } finally {
     client.release();
   }

@@ -5,6 +5,17 @@ import {
   generateCertificateHash,
   generateSignatureToken,
 } from "../services/certificateCrypto";
+import {
+  sendBadRequest,
+  sendConflict,
+  sendNotFound,
+  sendServerError,
+} from "../utils/apiError";
+import {
+  normalizeActorId,
+  requireNonEmptyString,
+  requireUuid,
+} from "../utils/validation";
 
 export const certificateRoutes = Router();
 
@@ -50,7 +61,7 @@ certificateRoutes.get("/", async (_req, res) => {
 
 certificateRoutes.get("/:certificateId/events", async (req, res) => {
   try {
-    const { certificateId } = req.params;
+    const certificateId = requireUuid(req.params.certificateId, "certificateId");
 
     const result = await pool.query(
       `
@@ -72,33 +83,28 @@ certificateRoutes.get("/:certificateId/events", async (req, res) => {
       data: result.rows,
     });
   } catch (error) {
-    res.status(500).json({
-      error: "Failed to fetch certificate events",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    if (error instanceof Error && error.message.includes("certificateId")) {
+      return sendBadRequest(res, error.message);
+    }
+
+    return sendServerError(res, "Failed to fetch certificate events", error);
   }
 });
 
 certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
-  const { certificateId } = req.params;
-  const body = req.body as
-    | {
-        actorId?: unknown;
-        reason?: unknown;
-      }
-    | undefined;
-  const actorId = body?.actorId;
-  const reason = body?.reason;
+  let certificateId = "";
+  let actorId = "";
+  let reason = "";
 
-  if (
-    typeof actorId !== "string" ||
-    actorId.trim() === "" ||
-    typeof reason !== "string" ||
-    reason.trim() === ""
-  ) {
-    return res.status(400).json({
-      error: "actorId and reason are required",
-    });
+  try {
+    certificateId = requireUuid(req.params.certificateId, "certificateId");
+    actorId = normalizeActorId(req.body?.actorId);
+    reason = requireNonEmptyString(req.body?.reason, "reason");
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid certificate revoke request"
+    );
   }
 
   const client = await pool.connect();
@@ -122,9 +128,7 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
 
     if (certificateResult.rowCount === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({
-        error: "Certificate not found",
-      });
+      return sendNotFound(res, "Certificate not found");
     }
 
     const certificate = certificateResult.rows[0];
@@ -134,9 +138,7 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
       certificate.revocation_status === "revoked"
     ) {
       await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "Certificate is already revoked",
-      });
+      return sendConflict(res, "Certificate is already revoked");
     }
 
     const updateResult = await client.query(
@@ -166,7 +168,7 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
       )
       VALUES ($1, 'revoked', $2, $3)
       `,
-      [certificateId, actorId.trim(), reason.trim()]
+      [certificateId, actorId, reason]
     );
 
     await client.query(
@@ -185,7 +187,7 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
       `,
       [
         certificate.entity_id,
-        actorId.trim(),
+        actorId,
         certificateId,
         JSON.stringify({
           status: certificate.status,
@@ -194,7 +196,7 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
         JSON.stringify({
           status: "revoked",
           revocation_status: "revoked",
-          reason: reason.trim(),
+          reason,
         }),
         req.ip,
       ]
@@ -208,10 +210,7 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    res.status(500).json({
-      error: "Failed to revoke certificate",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    return sendServerError(res, "Failed to revoke certificate", error);
   } finally {
     client.release();
   }
@@ -219,11 +218,20 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
 
 
 certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
+  let certificateId = "";
+
+  try {
+    certificateId = requireUuid(req.params.certificateId, "certificateId");
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid certificate hash request"
+    );
+  }
+
   const client = await pool.connect();
 
   try {
-    const { certificateId } = req.params;
-
     await client.query("BEGIN");
 
     const certificateResult = await client.query(
@@ -247,18 +255,17 @@ certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
 
     if (certificateResult.rowCount === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({
-        error: "Certificate not found",
-      });
+      return sendNotFound(res, "Certificate not found");
     }
 
     const certificate = certificateResult.rows[0];
 
     if (!certificate.issue_date) {
       await client.query("ROLLBACK");
-      return res.status(400).json({
-        error: "Certificate issue_date is required before hash generation",
-      });
+      return sendBadRequest(
+        res,
+        "Certificate issue_date is required before hash generation"
+      );
     }
 
     const canonicalString = buildCanonicalCertificateString({
@@ -316,10 +323,7 @@ certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    res.status(500).json({
-      error: "Failed to generate certificate hash",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    return sendServerError(res, "Failed to generate certificate hash", error);
   } finally {
     client.release();
   }
@@ -359,9 +363,7 @@ certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({
-        status: "not_found",
-        message: "Certificate not found",
+      return sendNotFound(res, "Certificate not found", {
         verificationTimestamp: new Date().toISOString(),
       });
     }
@@ -413,10 +415,7 @@ certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      error: "Failed to verify certificate",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    return sendServerError(res, "Failed to verify certificate", error);
   }
 });
 export async function fetchApprovals() {

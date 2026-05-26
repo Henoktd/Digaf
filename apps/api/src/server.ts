@@ -56,6 +56,15 @@ app.get("/health/db", async (_req, res) => {
   }
 });
 
+app.get("/api/version", (_req, res) => {
+  res.json({
+    name: "SVH Governance Platform API",
+    architecture: "Final v3 - No Dataverse",
+    environment: "local",
+    status: "ok",
+  });
+});
+
 app.use("/api/entities", entityRoutes);
 app.use("/api/share-classes", shareClassRoutes);
 app.use("/api/shareholders", shareholderRoutes);

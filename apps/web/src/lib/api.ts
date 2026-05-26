@@ -98,6 +98,50 @@ export async function fetchShareholderProfile(shareholderId: string) {
   return response.json();
 }
 
+export type UpdateShareholderKycInput = {
+  kycStatus: "not_started" | "pending" | "verified" | "expired";
+  kycExpiry?: string;
+  riskClassification: "low" | "medium" | "high";
+  actorId: string;
+  decisionNotes: string;
+};
+
+export async function updateShareholderKyc(
+  shareholderId: string,
+  input: UpdateShareholderKycInput
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/shareholders/${shareholderId}/kyc`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to update shareholder KYC";
+
+    try {
+      const body = await response.json();
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function fetchCapTable() {
   const response = await fetch(`${API_BASE_URL}/api/cap-table`, {
     cache: "no-store",

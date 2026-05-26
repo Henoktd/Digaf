@@ -301,6 +301,237 @@ shareholderRoutes.post("/", async (req, res) => {
   }
 });
 
+shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
+  let shareholderId = "";
+  let kycStatus = "";
+  let kycExpiry: string | null = null;
+  let riskClassification = "";
+  let actorId = "";
+  let decisionNotes = "";
+
+  try {
+    shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
+    kycStatus = requireNonEmptyString(req.body?.kycStatus, "kycStatus");
+
+    if (!kycStatuses.has(kycStatus)) {
+      throw new Error(
+        "kycStatus must be one of: not_started, pending, verified, expired"
+      );
+    }
+
+    kycExpiry = normalizeOptionalDateString(req.body?.kycExpiry, "kycExpiry");
+    riskClassification = requireNonEmptyString(
+      req.body?.riskClassification,
+      "riskClassification"
+    );
+
+    if (!riskClassifications.has(riskClassification)) {
+      throw new Error("riskClassification must be one of: low, medium, high");
+    }
+
+    actorId = normalizeActorId(req.body?.actorId);
+    decisionNotes = requireNonEmptyString(
+      req.body?.decisionNotes,
+      "decisionNotes"
+    );
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid shareholder KYC request"
+    );
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const shareholderResult = await client.query(
+      `
+      SELECT
+        shareholder_id,
+        entity_id,
+        legal_name,
+        kyc_status,
+        kyc_expiry,
+        risk_classification
+      FROM shareholder
+      WHERE shareholder_id = $1
+      FOR UPDATE
+      `,
+      [shareholderId]
+    );
+
+    if (shareholderResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return sendNotFound(res, "Shareholder not found");
+    }
+
+    const shareholder = shareholderResult.rows[0];
+    const oldValue = {
+      kyc_status: shareholder.kyc_status,
+      kyc_expiry: shareholder.kyc_expiry,
+      risk_classification: shareholder.risk_classification,
+    };
+
+    const updateResult = await client.query(
+      `
+      UPDATE shareholder
+      SET
+        kyc_status = $2,
+        kyc_expiry = $3::date,
+        risk_classification = $4
+      WHERE shareholder_id = $1
+      RETURNING
+        shareholder_id,
+        entity_id,
+        legal_name,
+        kyc_status,
+        kyc_expiry,
+        risk_classification
+      `,
+      [shareholderId, kycStatus, kycExpiry, riskClassification]
+    );
+
+    const kycRecordResult = await client.query(
+      `
+      SELECT id
+      FROM kyc_record
+      WHERE shareholder_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+      FOR UPDATE
+      `,
+      [shareholderId]
+    );
+
+    let kycRecord;
+
+    if (kycRecordResult.rowCount === 0) {
+      const insertKycResult = await client.query(
+        `
+        INSERT INTO kyc_record (
+          shareholder_id,
+          kyc_status,
+          expiry_date,
+          reviewer_id,
+          approval_date,
+          last_review_date
+        )
+        VALUES (
+          $1,
+          $2,
+          $3::date,
+          $4,
+          CASE WHEN $2 = 'verified' THEN CURRENT_DATE ELSE null END,
+          CURRENT_DATE
+        )
+        RETURNING
+          id,
+          kyc_status,
+          expiry_date,
+          reviewer_id,
+          approval_date,
+          last_review_date
+        `,
+        [shareholderId, kycStatus, kycExpiry, actorId]
+      );
+
+      kycRecord = insertKycResult.rows[0];
+    } else {
+      const updateKycResult = await client.query(
+        `
+        UPDATE kyc_record
+        SET
+          kyc_status = $2,
+          expiry_date = $3::date,
+          reviewer_id = $4,
+          approval_date = CASE
+            WHEN $2 = 'verified' THEN CURRENT_DATE
+            ELSE null
+          END,
+          last_review_date = CURRENT_DATE
+        WHERE id = $1
+        RETURNING
+          id,
+          kyc_status,
+          expiry_date,
+          reviewer_id,
+          approval_date,
+          last_review_date
+        `,
+        [kycRecordResult.rows[0].id, kycStatus, kycExpiry, actorId]
+      );
+
+      kycRecord = updateKycResult.rows[0];
+    }
+
+    const updatedShareholder = updateResult.rows[0];
+    const newValue = {
+      kyc_status: updatedShareholder.kyc_status,
+      kyc_expiry: updatedShareholder.kyc_expiry,
+      risk_classification: updatedShareholder.risk_classification,
+      decisionNotes,
+    };
+
+    await client.query(
+      `
+      INSERT INTO audit_log (
+        entity_id,
+        actor_id,
+        action,
+        table_name,
+        record_id,
+        old_value_json,
+        new_value_json,
+        source_ip
+      )
+      VALUES (
+        $1,
+        $2,
+        'shareholder_kyc_updated',
+        'shareholder',
+        $3,
+        $4::jsonb,
+        $5::jsonb,
+        $6
+      )
+      `,
+      [
+        updatedShareholder.entity_id,
+        actorId,
+        shareholderId,
+        JSON.stringify(oldValue),
+        JSON.stringify(newValue),
+        req.ip ?? null,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    return res.json({
+      data: {
+        shareholder_id: updatedShareholder.shareholder_id,
+        entity_id: updatedShareholder.entity_id,
+        legal_name: updatedShareholder.legal_name,
+        kyc_status: updatedShareholder.kyc_status,
+        kyc_expiry: updatedShareholder.kyc_expiry,
+        risk_classification: updatedShareholder.risk_classification,
+        kyc_record_id: kycRecord.id,
+        reviewer_id: kycRecord.reviewer_id,
+        approval_date: kycRecord.approval_date,
+        last_review_date: kycRecord.last_review_date,
+      },
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    return sendServerError(res, "Failed to update shareholder KYC", error);
+  } finally {
+    client.release();
+  }
+});
+
 shareholderRoutes.get("/:shareholderId", async (req, res) => {
   let shareholderId = "";
 

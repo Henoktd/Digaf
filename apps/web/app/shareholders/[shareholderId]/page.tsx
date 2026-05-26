@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { UpdateKycForm } from "@/src/components/UpdateKycForm";
 import { fetchShareholderProfile } from "@/src/lib/api";
 
 type ContactDetails = Record<string, string | number | boolean | null>;
+type KycStatus = "not_started" | "pending" | "verified" | "expired";
+type RiskClassification = "low" | "medium" | "high";
 
 type ShareholderProfile = {
   shareholder_id: string;
@@ -11,9 +14,9 @@ type ShareholderProfile = {
   type: string;
   status: string;
   contact_details: ContactDetails;
-  kyc_status: string;
+  kyc_status: KycStatus;
   kyc_expiry: string | null;
-  risk_classification: string | null;
+  risk_classification: RiskClassification | null;
   proxy_eligible: boolean;
   relationship_start_date: string | null;
   created_at: string;
@@ -281,6 +284,13 @@ export default async function ShareholderProfilePage({
               </p>
             </div>
           </div>
+
+          <UpdateKycForm
+            shareholderId={profile.shareholder_id}
+            currentKycStatus={profile.kyc_status}
+            currentKycExpiry={profile.kyc_expiry}
+            currentRiskClassification={profile.risk_classification}
+          />
 
           <div className="mt-6">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">

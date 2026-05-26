@@ -38,6 +38,51 @@ export async function fetchShareholders() {
   return response.json();
 }
 
+export type CreateShareholderInput = {
+  entityId: string;
+  legalName: string;
+  type: "individual" | "institution";
+  status?: string;
+  email?: string;
+  phone?: string;
+  kycStatus?: "not_started" | "pending" | "verified" | "expired";
+  kycExpiry?: string;
+  riskClassification?: "low" | "medium" | "high";
+  proxyEligible?: boolean;
+  relationshipStartDate?: string;
+  actorId: string;
+};
+
+export async function createShareholder(input: CreateShareholderInput) {
+  const response = await fetch(`${API_BASE_URL}/api/shareholders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let message = "Failed to create shareholder";
+
+    try {
+      const body = await response.json();
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function fetchShareholderProfile(shareholderId: string) {
   const response = await fetch(
     `${API_BASE_URL}/api/shareholders/${shareholderId}`,

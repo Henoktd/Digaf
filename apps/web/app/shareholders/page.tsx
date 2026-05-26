@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { fetchShareholders } from "@/src/lib/api";
+import { CreateShareholderForm } from "@/src/components/CreateShareholderForm";
+import { fetchEntities, fetchShareholders } from "@/src/lib/api";
 
 type Shareholder = {
   shareholder_id: string;
@@ -12,9 +13,18 @@ type Shareholder = {
   proxy_eligible: boolean;
 };
 
+type Entity = {
+  entity_id: string;
+};
+
 export default async function ShareholdersPage() {
-  const response = await fetchShareholders();
-  const shareholders: Shareholder[] = response.data;
+  const [shareholderResponse, entityResponse] = await Promise.all([
+    fetchShareholders(),
+    fetchEntities(),
+  ]);
+  const shareholders: Shareholder[] = shareholderResponse.data;
+  const entities: Entity[] = entityResponse.data;
+  const entityId = entities[0]?.entity_id ?? null;
 
   return (
     <main className="p-8">
@@ -32,6 +42,8 @@ export default async function ShareholdersPage() {
             {shareholders.length} Shareholders
           </div>
         </div>
+
+        <CreateShareholderForm entityId={entityId} />
 
         <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="w-full border-collapse text-left text-sm">

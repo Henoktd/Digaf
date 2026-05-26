@@ -5,9 +5,64 @@ import {
   sendNotFound,
   sendServerError,
 } from "../utils/apiError";
-import { requireUuid } from "../utils/validation";
+import {
+  normalizeActorId,
+  requireNonEmptyString,
+  requireString,
+  requireUuid,
+} from "../utils/validation";
 
 export const shareholderRoutes = Router();
+
+const shareholderTypes = new Set(["individual", "institution"]);
+const kycStatuses = new Set(["not_started", "pending", "verified", "expired"]);
+const riskClassifications = new Set(["low", "medium", "high"]);
+
+function normalizeOptionalString(value: unknown, fieldName: string) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const stringValue = requireString(value, fieldName).trim();
+
+  return stringValue || null;
+}
+
+function normalizeOptionalDateString(value: unknown, fieldName: string) {
+  const dateString = normalizeOptionalString(value, fieldName);
+
+  if (!dateString) {
+    return null;
+  }
+
+  const parsedDate = new Date(`${dateString}T00:00:00.000Z`);
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(dateString) ||
+    Number.isNaN(parsedDate.getTime()) ||
+    parsedDate.toISOString().slice(0, 10) !== dateString
+  ) {
+    throw new Error(`${fieldName} must be a valid date string`);
+  }
+
+  return dateString;
+}
+
+function normalizeOptionalBoolean(
+  value: unknown,
+  fieldName: string,
+  defaultValue: boolean
+) {
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+
+  if (typeof value !== "boolean") {
+    throw new Error(`${fieldName} must be a boolean`);
+  }
+
+  return value;
+}
 
 shareholderRoutes.get("/", async (_req, res) => {
   try {
@@ -37,6 +92,212 @@ shareholderRoutes.get("/", async (_req, res) => {
       error: "Failed to fetch shareholders",
       message: error instanceof Error ? error.message : "Unknown error",
     });
+  }
+});
+
+shareholderRoutes.post("/", async (req, res) => {
+  let entityId = "";
+  let legalName = "";
+  let type = "";
+  let status = "";
+  let email: string | null = null;
+  let phone: string | null = null;
+  let kycStatus = "";
+  let kycExpiry: string | null = null;
+  let riskClassification: string | null = null;
+  let proxyEligible = false;
+  let relationshipStartDate: string | null = null;
+  let actorId = "";
+
+  try {
+    entityId = requireUuid(req.body?.entityId, "entityId");
+    legalName = requireNonEmptyString(req.body?.legalName, "legalName");
+    type = requireNonEmptyString(req.body?.type, "type");
+
+    if (!shareholderTypes.has(type)) {
+      throw new Error("type must be one of: individual, institution");
+    }
+
+    status = normalizeOptionalString(req.body?.status, "status") ?? "active";
+    email = normalizeOptionalString(req.body?.email, "email");
+    phone = normalizeOptionalString(req.body?.phone, "phone");
+    kycStatus =
+      normalizeOptionalString(req.body?.kycStatus, "kycStatus") ??
+      "not_started";
+
+    if (!kycStatuses.has(kycStatus)) {
+      throw new Error(
+        "kycStatus must be one of: not_started, pending, verified, expired"
+      );
+    }
+
+    kycExpiry = normalizeOptionalDateString(req.body?.kycExpiry, "kycExpiry");
+    riskClassification = normalizeOptionalString(
+      req.body?.riskClassification,
+      "riskClassification"
+    );
+
+    if (
+      riskClassification !== null &&
+      !riskClassifications.has(riskClassification)
+    ) {
+      throw new Error("riskClassification must be one of: low, medium, high");
+    }
+
+    proxyEligible = normalizeOptionalBoolean(
+      req.body?.proxyEligible,
+      "proxyEligible",
+      false
+    );
+    relationshipStartDate = normalizeOptionalDateString(
+      req.body?.relationshipStartDate,
+      "relationshipStartDate"
+    );
+    actorId = normalizeActorId(req.body?.actorId);
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid shareholder create request"
+    );
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const entityResult = await client.query(
+      `
+      SELECT entity_id
+      FROM entity
+      WHERE entity_id = $1
+      LIMIT 1
+      `,
+      [entityId]
+    );
+
+    if (entityResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return sendNotFound(res, "Entity not found");
+    }
+
+    const contactDetails = {
+      email,
+      phone,
+    };
+
+    const insertResult = await client.query(
+      `
+      INSERT INTO shareholder (
+        entity_id,
+        legal_name,
+        type,
+        status,
+        contact_details,
+        kyc_status,
+        kyc_expiry,
+        risk_classification,
+        proxy_eligible,
+        relationship_start_date
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5::jsonb,
+        $6,
+        $7::date,
+        $8,
+        $9,
+        $10::date
+      )
+      RETURNING
+        shareholder_id,
+        entity_id,
+        legal_name,
+        type,
+        status,
+        contact_details,
+        kyc_status,
+        kyc_expiry,
+        risk_classification,
+        proxy_eligible,
+        relationship_start_date,
+        created_at
+      `,
+      [
+        entityId,
+        legalName,
+        type,
+        status,
+        JSON.stringify(contactDetails),
+        kycStatus,
+        kycExpiry,
+        riskClassification,
+        proxyEligible,
+        relationshipStartDate,
+      ]
+    );
+
+    const shareholder = insertResult.rows[0];
+    const shareholderSummary = {
+      shareholder_id: shareholder.shareholder_id,
+      entity_id: shareholder.entity_id,
+      legal_name: shareholder.legal_name,
+      type: shareholder.type,
+      status: shareholder.status,
+      contact_details: shareholder.contact_details,
+      kyc_status: shareholder.kyc_status,
+      kyc_expiry: shareholder.kyc_expiry,
+      risk_classification: shareholder.risk_classification,
+      proxy_eligible: shareholder.proxy_eligible,
+      relationship_start_date: shareholder.relationship_start_date,
+    };
+
+    await client.query(
+      `
+      INSERT INTO audit_log (
+        entity_id,
+        actor_id,
+        action,
+        table_name,
+        record_id,
+        old_value_json,
+        new_value_json,
+        source_ip
+      )
+      VALUES (
+        $1,
+        $2,
+        'shareholder_created',
+        'shareholder',
+        $3,
+        null,
+        $4::jsonb,
+        $5
+      )
+      `,
+      [
+        entityId,
+        actorId,
+        shareholder.shareholder_id,
+        JSON.stringify(shareholderSummary),
+        req.ip ?? null,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    return res.status(201).json({
+      data: shareholder,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    return sendServerError(res, "Failed to create shareholder", error);
+  } finally {
+    client.release();
   }
 });
 

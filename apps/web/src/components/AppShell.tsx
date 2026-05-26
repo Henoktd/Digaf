@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 Final v3 — No Dataverse
               </p>
               <p className="mt-1 text-xs font-medium text-slate-500">
-                Local prototype roles: maker / checker / compliance
+                Local RBAC prototype: maker, checker, compliance, admin
               </p>
             </div>
 

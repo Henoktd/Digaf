@@ -60,3 +60,14 @@ This keeps the Final v3 No-Dataverse API aligned with a regulated microfinance
 governance posture: explicit input validation, consistent failure semantics,
 clear accountability for actors, and conservative workflow enforcement through
 the backend control layer.
+
+## Role-Based Access Control Foundation
+
+Stage 32 introduced the local prototype `actorRole` foundation for selected
+mutation endpoints, including shareholder creation, KYC updates, transfer
+creation, and checker approvals. The local role model is documented in
+[role-permission-matrix.md](role-permission-matrix.md).
+
+This is a prototype-only request-body role model. Production authorization must
+derive roles from authenticated identity claims and later map them to Microsoft
+Entra ID groups.

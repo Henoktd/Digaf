@@ -1,6 +1,7 @@
 import { fetchSlaMonitor } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
@@ -79,19 +80,19 @@ export default async function SlaMonitorPage() {
   ).length;
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="SLA Monitor"
           description="Track governance SLA targets, breaches, escalation history, and approval process performance."
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               Read-only monitor
             </div>
           }
         />
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-8 grid gap-4 md:grid-cols-4">
           <KpiCard
             label="Total Tracked"
@@ -118,7 +119,7 @@ export default async function SlaMonitorPage() {
           />
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
           {slaItems.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
@@ -207,6 +208,6 @@ export default async function SlaMonitorPage() {
         </div>
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

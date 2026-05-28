@@ -97,7 +97,7 @@ export function CreateShareholderForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5"
+      className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
     >
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -108,7 +108,7 @@ export function CreateShareholderForm({
             Add a controlled shareholder master record to the governance ledger.
           </p>
         </div>
-        <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
+        <span className="max-w-full break-all rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
           Actor: {actorId}
         </span>
       </div>

@@ -32,7 +32,7 @@ Approval rejection and transfer cancellation workflow rules are documented in [d
 
 ## UI Reviewer Experience
 
-UI polish, status badges, empty states, and reviewer-facing prototype notices are documented in [docs/ui-reviewer-experience-notes.md](docs/ui-reviewer-experience-notes.md).
+UI polish, mobile responsiveness, status badges, empty states, and reviewer-facing prototype notices are documented in [docs/ui-reviewer-experience-notes.md](docs/ui-reviewer-experience-notes.md) and [docs/mobile-responsive-review-notes.md](docs/mobile-responsive-review-notes.md).
 
 ## Operations and Handover
 

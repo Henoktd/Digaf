@@ -18,8 +18,8 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-slate-200 bg-white p-6 lg:block">
+    <div className="min-h-screen overflow-x-hidden bg-slate-100 text-slate-900">
+      <aside className="fixed inset-y-0 left-0 hidden w-72 overflow-y-auto border-r border-slate-200 bg-white p-6 lg:block">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
             Digaf Governance Portal
@@ -45,10 +45,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <div className="lg:pl-72">
-        <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur sm:px-8">
+      <div className="min-w-0 lg:pl-72">
+        <header className="sticky top-0 z-10 max-w-full border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-700 lg:hidden">
+                Digaf Governance Portal
+              </p>
               <p className="text-sm font-semibold text-slate-500">
                 Internal Governance Admin Portal
               </p>
@@ -60,17 +63,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             </div>
 
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="shrink-0 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               MVP Prototype
             </div>
           </div>
 
-          <nav className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+          <nav className="-mx-4 mt-3 flex max-w-[100vw] gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
+                className="shrink-0 whitespace-nowrap rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
               >
                 {item.label}
               </Link>

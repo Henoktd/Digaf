@@ -1,5 +1,6 @@
 import { CreateTransferForm } from "@/src/components/CreateTransferForm";
 import { EmptyState } from "@/src/components/EmptyState";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { TransferActions } from "@/src/components/TransferActions";
@@ -71,19 +72,19 @@ export default async function TransfersPage() {
   const shareholders: Shareholder[] = shareholderResponse.data;
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="Share Transfers"
           description="Manage transfer requests, maker-checker-checker approvals, KYC checks, freeze checks, and encumbrance checks."
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               {transfers.length} Transfer Requests
             </div>
           }
         />
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <CreateTransferForm shareholders={shareholders} />
 
         {transfers.length > 0 ? (
@@ -213,6 +214,6 @@ export default async function TransfersPage() {
         ) : null}
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

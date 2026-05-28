@@ -1,6 +1,7 @@
 import { fetchCapTable } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
@@ -24,19 +25,19 @@ export default async function CapTablePage() {
   const totalShares = rows[0]?.total_entity_shares || "0";
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="Cap Table"
           description="View ownership, share classes, concentration, pledged shares, encumbered shares, and historical snapshots."
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               Total Shares: {totalShares}
             </div>
           }
         />
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="grid gap-4 md:grid-cols-3">
           {rows.slice(0, 3).map((row) => (
             <KpiCard
@@ -117,6 +118,6 @@ export default async function CapTablePage() {
         </div>
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

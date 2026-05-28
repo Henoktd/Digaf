@@ -2,6 +2,7 @@ import { fetchApprovals } from "@/src/lib/api";
 import { ApprovalActions } from "@/src/components/ApprovalActions";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
@@ -61,19 +62,19 @@ export default async function ApprovalsPage() {
   });
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="Approval Queue"
           description="Review pending governance approvals, SLA due dates, escalation status, and decision notes."
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               {approvals.length} Approval Requests
             </div>
           }
         />
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="grid gap-4 md:grid-cols-3">
           <KpiCard label="Total Approvals" value={approvals.length} />
           <KpiCard label="Pending" value={pendingApprovals.length} tone="warning" />
@@ -179,6 +180,6 @@ export default async function ApprovalsPage() {
         )}
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

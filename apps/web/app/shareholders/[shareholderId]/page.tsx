@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { UpdateKycForm } from "@/src/components/UpdateKycForm";
@@ -174,7 +175,7 @@ export default async function ShareholderProfilePage({
   ).length;
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="mx-auto max-w-7xl space-y-8">
         <Link
           href="/shareholders"
@@ -188,7 +189,7 @@ export default async function ShareholderProfilePage({
           title={profile.legal_name}
           description={`${formatLabel(profile.type)} shareholder profile with KYC, ownership, certificate, transfer, legal hold, document, and communication history.`}
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               Read-only profile
             </div>
           }
@@ -220,7 +221,7 @@ export default async function ShareholderProfilePage({
           ))}
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Profile & KYC</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
@@ -267,7 +268,7 @@ export default async function ShareholderProfilePage({
                     <dt className="text-sm capitalize text-slate-500">
                       {formatLabel(key)}
                     </dt>
-                    <dd className="mt-1 font-semibold text-slate-900">
+                    <dd className="mt-1 break-words font-semibold text-slate-900">
                       {String(value ?? "Not set")}
                     </dd>
                   </div>
@@ -279,7 +280,7 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Ownership</h2>
           <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
             {ownership.length > 0 ? (
@@ -341,7 +342,7 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Certificates</h2>
           <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
             {certificates.length > 0 ? (
@@ -410,7 +411,7 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Transfer History</h2>
           <div className="mt-5 grid gap-6 lg:grid-cols-2">
             <div>
@@ -515,7 +516,7 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Legal Holds</h2>
           <div className="mt-5 space-y-3">
             {legalHolds.length > 0 ? (
@@ -529,13 +530,13 @@ export default async function ShareholderProfilePage({
                       <h3 className="font-semibold capitalize text-slate-900">
                         {formatLabel(legalHold.hold_type)}
                       </h3>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 break-words text-sm text-slate-600">
                         {legalHold.reason}
                       </p>
                     </div>
                     <StatusBadge status={legalHold.status} tone="danger" />
                   </div>
-                  <p className="mt-3 text-sm text-slate-600">
+                  <p className="mt-3 break-words text-sm text-slate-600">
                     Authority: {legalHold.authority_reference || "Not set"} |
                     Imposed by {legalHold.imposed_by} on{" "}
                     {formatDateTime(legalHold.imposed_at)}
@@ -548,7 +549,7 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Documents</h2>
           <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
             {documents.length > 0 ? (
@@ -609,7 +610,7 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Communications</h2>
           <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
             {communications.length > 0 ? (
@@ -663,6 +664,6 @@ export default async function ShareholderProfilePage({
           </div>
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

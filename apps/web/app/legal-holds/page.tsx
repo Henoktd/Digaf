@@ -1,6 +1,7 @@
 import { fetchLegalHolds } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
@@ -53,19 +54,19 @@ export default async function LegalHoldsPage() {
   ).size;
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="Legal Hold Management"
           description="Track legal holds, regulatory review freezes, and preservation controls for shareholder governance records."
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               Read-only holds
             </div>
           }
         />
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           <KpiCard
             label="Total Holds"
@@ -129,7 +130,9 @@ export default async function LegalHoldsPage() {
                     </div>
                     <div>
                       <dt className="text-slate-500">Reason</dt>
-                      <dd className="text-slate-900">{hold.reason}</dd>
+                      <dd className="break-words text-slate-900">
+                        {hold.reason}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-slate-500">Freeze</dt>
@@ -149,7 +152,7 @@ export default async function LegalHoldsPage() {
           )}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
           {legalHolds.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
@@ -201,7 +204,9 @@ export default async function LegalHoldsPage() {
                         />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        {hold.authority_reference || "Not set"}
+                        <span className="break-words">
+                          {hold.authority_reference || "Not set"}
+                        </span>
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         {hold.imposed_by}
@@ -222,7 +227,9 @@ export default async function LegalHoldsPage() {
                           />
                         </div>
                         <div className="mt-1 text-xs text-slate-500">
-                          {hold.freeze_reason || "No active freeze"}
+                          <span className="break-words">
+                            {hold.freeze_reason || "No active freeze"}
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -238,6 +245,6 @@ export default async function LegalHoldsPage() {
         </div>
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

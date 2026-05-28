@@ -1,6 +1,7 @@
 import { fetchDocuments } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
@@ -55,19 +56,19 @@ export default async function DocumentsPage() {
   ).length;
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="Document References"
           description="Review SharePoint-ready evidence references, retention categories, legal hold protection, and related governance records."
           badge={
-            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               Read-only repository
             </div>
           }
         />
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           <KpiCard
             label="Total Documents"
@@ -162,7 +163,7 @@ export default async function DocumentsPage() {
           )}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
           {documents.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
@@ -222,7 +223,7 @@ export default async function DocumentsPage() {
                           }
                         />
                         {document.authority_reference ? (
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 break-words text-xs text-slate-500">
                             {document.authority_reference}
                           </div>
                         ) : null}
@@ -253,6 +254,6 @@ export default async function DocumentsPage() {
         </div>
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

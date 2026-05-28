@@ -4,6 +4,7 @@ import {
 } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
+import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
@@ -79,7 +80,7 @@ export default async function Home() {
   ];
 
   return (
-    <main className="p-8">
+    <PageContainer>
       <div className="mx-auto max-w-7xl space-y-8">
         <PageHeader
           eyebrow="Digaf Governance Portal"
@@ -88,7 +89,7 @@ export default async function Home() {
           notice="Prototype demo environment — local RBAC and demo data are used."
           variant="dark"
           badge={
-            <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900">
+            <div className="max-w-full break-words rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 sm:px-4 sm:py-2 sm:text-sm">
               {formatNumber(summary.entity_count)} Entity
             </div>
           }
@@ -106,7 +107,7 @@ export default async function Home() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <article className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-5">
               <h2 className="text-xl font-semibold">Workflow Summary</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -144,7 +145,7 @@ export default async function Home() {
             </div>
           </article>
 
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <article className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-5">
               <h2 className="text-xl font-semibold">Top Ownership</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -152,8 +153,8 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200">
-              <table className="w-full border-collapse text-left text-sm">
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[560px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="border-b border-slate-200 px-4 py-3">
@@ -197,7 +198,7 @@ export default async function Home() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <article className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-5">
               <h2 className="text-xl font-semibold">Recent Audit Activity</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -205,8 +206,8 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200">
-              <table className="w-full border-collapse text-left text-sm">
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="border-b border-slate-200 px-4 py-3">
@@ -254,7 +255,7 @@ export default async function Home() {
             </div>
           </article>
 
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <article className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-5">
               <h2 className="text-xl font-semibold">SLA Snapshot</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -262,8 +263,8 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200">
-              <table className="w-full border-collapse text-left text-sm">
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[680px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="border-b border-slate-200 px-4 py-3">
@@ -312,7 +313,7 @@ export default async function Home() {
           </article>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-5">
             <h2 className="text-xl font-semibold">System Architecture</h2>
             <p className="mt-1 text-sm text-slate-500">
@@ -333,6 +334,6 @@ export default async function Home() {
           </div>
         </section>
       </div>
-    </main>
+    </PageContainer>
   );
 }

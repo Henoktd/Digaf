@@ -1,4 +1,5 @@
 import { verifyCertificate } from "@/src/lib/api";
+import { PageContainer } from "@/src/components/PageContainer";
 
 type QrPageProps = {
   searchParams?: Promise<{
@@ -92,23 +93,27 @@ export default async function QrVerifyPage({ searchParams }: QrPageProps) {
   const resultDescription = getResultDescription(data || undefined);
 
   return (
-    <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
+    <PageContainer>
+      <section className="mx-auto max-w-3xl rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Public Verification
           </p>
-          <h1 className="mt-2 text-3xl font-bold">Certificate QR Verification</h1>
-          <p className="mt-2 text-slate-600">
+          <h1 className="mt-2 break-words text-2xl font-bold leading-tight sm:text-3xl">
+            Certificate QR Verification
+          </h1>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
             This page verifies certificate integrity against the Digaf governance
             ledger without exposing private shareholder profile, KYC, contact,
             or approval information.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
           <p className="text-sm text-slate-500">Serial Number</p>
-          <p className="mt-1 text-xl font-semibold">{serialNumber}</p>
+          <p className="mt-1 break-all text-lg font-semibold sm:text-xl">
+            {serialNumber}
+          </p>
 
           {errorMessage ? (
             <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
@@ -118,69 +123,73 @@ export default async function QrVerifyPage({ searchParams }: QrPageProps) {
               <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
             </div>
           ) : (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="text-2xl font-bold">{resultTitle}</h2>
-              <p className="mt-2 text-slate-600">{resultDescription}</p>
+            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+              <h2 className="text-xl font-bold sm:text-2xl">{resultTitle}</h2>
+              <p className="mt-2 text-sm text-slate-600 sm:text-base">
+                {resultDescription}
+              </p>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Issuing Company</p>
-                  <p className="font-semibold">
+                  <p className="break-words font-semibold">
                     {data?.issuing_company || "Not available"}
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Share Class</p>
-                  <p className="font-semibold">
+                  <p className="break-words font-semibold">
                     {data?.share_class || "Not available"}
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Quantity</p>
-                  <p className="font-semibold">{data?.quantity || "Not set"}</p>
+                  <p className="break-words font-semibold">
+                    {data?.quantity || "Not set"}
+                  </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Issue Date</p>
-                  <p className="font-semibold">
+                  <p className="break-words font-semibold">
                     {data?.issue_date
                       ? new Date(data.issue_date).toLocaleDateString()
                       : "Not set"}
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Certificate Status</p>
-                  <p className="font-semibold capitalize">
+                  <p className="break-words font-semibold capitalize">
                     {label(data?.status)}
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Revocation Status</p>
-                  <p className="font-semibold capitalize">
+                  <p className="break-words font-semibold capitalize">
                     {label(data?.revocation_status)}
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Hash Algorithm</p>
-                  <p className="font-semibold">
+                  <p className="break-words font-semibold">
                     {data?.hash_algorithm || "Not set"}
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">Integrity Result</p>
-                  <p className="font-semibold capitalize">
+                  <p className="break-words font-semibold capitalize">
                     {label(data?.hash_verification_result)}
                   </p>
                 </div>
               </div>
 
-              <p className="mt-6 text-xs text-slate-500">
+              <p className="mt-6 break-words text-xs text-slate-500">
                 Verification timestamp:{" "}
                 {data?.verification_timestamp
                   ? new Date(data.verification_timestamp).toLocaleString()
@@ -190,6 +199,6 @@ export default async function QrVerifyPage({ searchParams }: QrPageProps) {
           )}
         </div>
       </section>
-    </main>
+    </PageContainer>
   );
 }

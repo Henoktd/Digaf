@@ -35,11 +35,13 @@ export function KpiCard({
   tone = "neutral",
 }: KpiCardProps) {
   return (
-    <article className={`rounded-xl border p-5 ${toneClasses[tone]}`}>
+    <article className={`min-w-0 rounded-xl border p-4 sm:p-5 ${toneClasses[tone]}`}>
       <p className={`text-sm font-semibold ${labelClasses[tone]}`}>{label}</p>
-      <p className="mt-3 break-words text-3xl font-bold">{value}</p>
+      <p className="mt-3 break-words text-2xl font-bold sm:text-3xl">{value}</p>
       {detail ? (
-        <p className={`mt-1 text-sm ${detailClasses[tone]}`}>{detail}</p>
+        <p className={`mt-1 break-words text-sm ${detailClasses[tone]}`}>
+          {detail}
+        </p>
       ) : null}
     </article>
   );

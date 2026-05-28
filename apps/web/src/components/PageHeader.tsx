@@ -21,12 +21,12 @@ export function PageHeader({
 
   return (
     <section
-      className={`rounded-2xl p-6 shadow-sm ${
+      className={`rounded-2xl p-4 shadow-sm sm:p-6 ${
         isDark ? "bg-slate-900 text-white" : "bg-white text-slate-900"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {eyebrow ? (
             <p
               className={`text-sm font-semibold uppercase ${
@@ -37,12 +37,16 @@ export function PageHeader({
             </p>
           ) : null}
 
-          <h1 className={`${eyebrow ? "mt-3" : ""} text-3xl font-bold`}>
+          <h1
+            className={`${
+              eyebrow ? "mt-3" : ""
+            } break-words text-2xl font-bold leading-tight sm:text-3xl`}
+          >
             {title}
           </h1>
 
           <p
-            className={`mt-2 max-w-3xl ${
+            className={`mt-2 max-w-3xl break-words text-sm sm:text-base ${
               isDark ? "text-slate-300" : "text-slate-600"
             }`}
           >
@@ -62,7 +66,9 @@ export function PageHeader({
           ) : null}
         </div>
 
-        {badge ? <div className="shrink-0">{badge}</div> : null}
+        {badge ? (
+          <div className="max-w-full shrink-0 text-sm sm:w-auto">{badge}</div>
+        ) : null}
       </div>
     </section>
   );

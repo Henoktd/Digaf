@@ -3,6 +3,9 @@ import {
   fetchCertificateRenderData,
   fetchCertificates,
 } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type Certificate = {
   certificate_id: string;
@@ -72,77 +75,83 @@ export default async function CertificatesPage() {
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Certificate Management</h1>
-            <p className="mt-2 text-slate-600">
-              Manage certificate requests, approvals, serial numbers, QR
-              verification, hashes, issuance, revocation, and reissue history.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Certificate Management"
+          description="Manage certificate requests, approvals, serial numbers, QR verification, hashes, issuance, revocation, and reissue history."
+          badge={
+            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              {certificates.length} Certificates
+            </div>
+          }
+        />
 
-          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            {certificates.length} Certificates
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-slate-200">
-          <table className="w-full border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
-              <tr>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Serial Number
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Shareholder
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Share Class
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Quantity
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Status
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Hash
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3">
-                  Revocation
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {certificates.map((certificate) => (
-                <tr key={certificate.certificate_id}>
-                  <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                    {certificate.serial_number}
-                  </td>
-                  <td className="border-b border-slate-100 px-4 py-3">
-                    {certificate.shareholder_name}
-                  </td>
-                  <td className="border-b border-slate-100 px-4 py-3">
-                    {certificate.share_class}
-                  </td>
-                  <td className="border-b border-slate-100 px-4 py-3">
-                    {certificate.quantity}
-                  </td>
-                  <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                    {certificate.status}
-                  </td>
-                  <td className="border-b border-slate-100 px-4 py-3">
-                    {certificate.hash_algorithm || "Not generated"}
-                  </td>
-                  <td className="border-b border-slate-100 px-4 py-3">
-                    {certificate.revocation_status || "None"}
-                  </td>
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          {certificates.length > 0 ? (
+            <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Serial Number
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Shareholder
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Share Class
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Quantity
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Status
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Hash
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Revocation
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {certificates.map((certificate) => (
+                  <tr key={certificate.certificate_id}>
+                    <td className="border-b border-slate-100 px-4 py-3 font-medium">
+                      {certificate.serial_number}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      {certificate.shareholder_name}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      {certificate.share_class}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      {certificate.quantity}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      <StatusBadge status={certificate.status} />
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      {certificate.hash_algorithm || "Not generated"}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      <StatusBadge
+                        status={certificate.revocation_status}
+                        label={certificate.revocation_status || "None"}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="p-4">
+              <EmptyState title="No certificates found" />
+            </div>
+          )}
         </div>
 
         {renderData ? (
@@ -207,8 +216,8 @@ export default async function CertificatesPage() {
 
               <div className="rounded-xl bg-white p-4">
                 <dt className="text-sm text-slate-500">Status</dt>
-                <dd className="mt-1 font-semibold capitalize">
-                  {renderData.status}
+                <dd className="mt-1">
+                  <StatusBadge status={renderData.status} />
                 </dd>
               </div>
 
@@ -272,12 +281,11 @@ export default async function CertificatesPage() {
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-slate-600">
-              No certificate events found.
-            </p>
+            <EmptyState title="No certificate events found" />
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

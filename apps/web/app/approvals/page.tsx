@@ -1,5 +1,9 @@
 import { fetchApprovals } from "@/src/lib/api";
 import { ApprovalActions } from "@/src/components/ApprovalActions";
+import { EmptyState } from "@/src/components/EmptyState";
+import { KpiCard } from "@/src/components/KpiCard";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type Approval = {
   id: string;
@@ -58,45 +62,31 @@ export default async function ApprovalsPage() {
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Approval Queue</h1>
-            <p className="mt-2 text-slate-600">
-              Review pending governance approvals, SLA due dates, escalation
-              status, and decision notes.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Approval Queue"
+          description="Review pending governance approvals, SLA due dates, escalation status, and decision notes."
+          badge={
+            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              {approvals.length} Approval Requests
+            </div>
+          }
+        />
 
-          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            {approvals.length} Approval Requests
-          </div>
-        </div>
-
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm text-slate-500">Total Approvals</p>
-            <p className="mt-2 text-3xl font-bold">{approvals.length}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm text-slate-500">Pending</p>
-            <p className="mt-2 text-3xl font-bold">
-              {pendingApprovals.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm text-slate-500">Overdue</p>
-            <p className="mt-2 text-3xl font-bold">
-              {overdueApprovals.length}
-            </p>
-          </div>
+          <KpiCard label="Total Approvals" value={approvals.length} />
+          <KpiCard label="Pending" value={pendingApprovals.length} tone="warning" />
+          <KpiCard
+            label="Overdue"
+            value={overdueApprovals.length}
+            tone={overdueApprovals.length > 0 ? "danger" : "neutral"}
+          />
         </div>
 
         {approvals.length === 0 ? (
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-600">
-            No approval requests found.
+          <div className="mt-6">
+            <EmptyState title="No approvals found" />
           </div>
         ) : (
           <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
@@ -154,8 +144,8 @@ export default async function ApprovalsPage() {
                     <td className="border-b border-slate-100 px-4 py-3">
                       {formatDate(approval.sla_due_date)}
                     </td>
-                    <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                      {formatLabel(approval.status)}
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      <StatusBadge status={approval.status} />
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
                       {approval.transferor_name && approval.transferee_name
@@ -187,7 +177,8 @@ export default async function ApprovalsPage() {
             </table>
           </div>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

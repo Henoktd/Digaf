@@ -2,6 +2,10 @@ import {
   DashboardSummary,
   fetchDashboardSummary,
 } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { KpiCard } from "@/src/components/KpiCard";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type DashboardSummaryResponse = {
   data: DashboardSummary;
@@ -77,43 +81,27 @@ export default async function Home() {
   return (
     <main className="p-8">
       <div className="mx-auto max-w-7xl space-y-8">
-        <section className="rounded-2xl bg-slate-900 p-8 text-white shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div>
-              <p className="text-sm font-semibold uppercase text-slate-300">
-                Digaf Governance Portal
-              </p>
-
-              <h1 className="mt-3 text-4xl font-bold">
-                Digaf Shareholder Governance Platform
-              </h1>
-
-              <p className="mt-4 max-w-3xl text-slate-300">
-                Board-ready dashboard for shareholder governance, transfer
-                controls, certificates, audit evidence, and SLA visibility.
-              </p>
-            </div>
-
+        <PageHeader
+          eyebrow="Digaf Governance Portal"
+          title="Digaf Shareholder Governance Platform"
+          description="Board-ready dashboard for shareholder governance, transfer controls, certificates, audit evidence, and SLA visibility."
+          notice="Prototype demo environment — local RBAC and demo data are used."
+          variant="dark"
+          badge={
             <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900">
               {formatNumber(summary.entity_count)} Entity
             </div>
-          </div>
-        </section>
+          }
+        />
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {kpis.map((kpi) => (
-            <article
+            <KpiCard
               key={kpi.label}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-            >
-              <p className="text-sm font-semibold text-slate-500">
-                {kpi.label}
-              </p>
-              <p className="mt-3 text-3xl font-bold text-slate-900">
-                {formatNumber(kpi.value)}
-              </p>
-              <p className="mt-2 text-sm text-slate-600">{kpi.detail}</p>
-            </article>
+              label={kpi.label}
+              value={formatNumber(kpi.value)}
+              detail={kpi.detail}
+            />
           ))}
         </section>
 
@@ -127,42 +115,32 @@ export default async function Home() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Transfers Pending</p>
-                <p className="mt-2 text-3xl font-bold">
-                  {formatNumber(summary.pending_transfer_count)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Transfers Completed</p>
-                <p className="mt-2 text-3xl font-bold">
-                  {formatNumber(summary.completed_transfer_count)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Approvals Pending</p>
-                <p className="mt-2 text-3xl font-bold">
-                  {formatNumber(summary.pending_approval_count)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Approvals Approved</p>
-                <p className="mt-2 text-3xl font-bold">
-                  {formatNumber(summary.approved_approval_count)}
-                </p>
-              </div>
+              <KpiCard
+                label="Transfers Pending"
+                value={formatNumber(summary.pending_transfer_count)}
+              />
+              <KpiCard
+                label="Transfers Completed"
+                value={formatNumber(summary.completed_transfer_count)}
+                tone="success"
+              />
+              <KpiCard
+                label="Approvals Pending"
+                value={formatNumber(summary.pending_approval_count)}
+              />
+              <KpiCard
+                label="Approvals Approved"
+                value={formatNumber(summary.approved_approval_count)}
+                tone="success"
+              />
             </div>
 
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5">
-              <p className="text-sm font-semibold text-amber-900">
-                Overdue Approvals
-              </p>
-              <p className="mt-2 text-3xl font-bold text-amber-950">
-                {formatNumber(summary.overdue_approval_count)}
-              </p>
+            <div className="mt-4">
+              <KpiCard
+                label="Overdue Approvals"
+                value={formatNumber(summary.overdue_approval_count)}
+                tone={summary.overdue_approval_count > 0 ? "warning" : "neutral"}
+              />
             </div>
           </article>
 
@@ -207,11 +185,8 @@ export default async function Home() {
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="border-b border-slate-100 px-4 py-6 text-slate-500"
-                      >
-                        No active ownership rows found.
+                      <td colSpan={3} className="p-4">
+                        <EmptyState title="No active ownership rows found" />
                       </td>
                     </tr>
                   )}
@@ -269,11 +244,8 @@ export default async function Home() {
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="border-b border-slate-100 px-4 py-6 text-slate-500"
-                      >
-                        No recent audit actions found.
+                      <td colSpan={4} className="p-4">
+                        <EmptyState title="No audit records found" />
                       </td>
                     </tr>
                   )}
@@ -322,18 +294,15 @@ export default async function Home() {
                         <td className="border-b border-slate-100 px-4 py-3">
                           {formatDate(item.sla_due_date)}
                         </td>
-                        <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                          {formatLabel(item.computed_sla_status)}
+                        <td className="border-b border-slate-100 px-4 py-3">
+                          <StatusBadge status={item.computed_sla_status} />
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="border-b border-slate-100 px-4 py-6 text-slate-500"
-                      >
-                        No SLA items found.
+                      <td colSpan={4} className="p-4">
+                        <EmptyState title="No SLA items found" />
                       </td>
                     </tr>
                   )}

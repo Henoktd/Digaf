@@ -28,6 +28,10 @@ Testing strategy, end-to-end test planning, API smoke tests, and release validat
 
 Approval rejection and transfer cancellation workflow rules are documented in [docs/workflow-rejection-cancellation-plan.md](docs/workflow-rejection-cancellation-plan.md).
 
+## UI Reviewer Experience
+
+UI polish, status badges, empty states, and reviewer-facing prototype notices are documented in [docs/ui-reviewer-experience-notes.md](docs/ui-reviewer-experience-notes.md).
+
 ## Operations and Handover
 
 Data backup/restore, environment synchronization, operations, and admin handover are documented in [docs/data-backup-restore-plan.md](docs/data-backup-restore-plan.md), [docs/environment-sync-plan.md](docs/environment-sync-plan.md), [docs/operations-runbook.md](docs/operations-runbook.md), and [docs/admin-handover-guide.md](docs/admin-handover-guide.md).

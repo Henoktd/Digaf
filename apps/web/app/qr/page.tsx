@@ -1,4 +1,7 @@
 import { verifyCertificate } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type VerificationResult = {
   serial_number: string;
@@ -48,22 +51,6 @@ function getPublicStatus(result: VerificationResult | null) {
   return "valid";
 }
 
-function getStatusStyles(status: string) {
-  if (status === "valid") {
-    return "bg-emerald-100 text-emerald-800";
-  }
-
-  if (status === "revoked") {
-    return "bg-amber-100 text-amber-800";
-  }
-
-  if (status === "tampered") {
-    return "bg-red-100 text-red-800";
-  }
-
-  return "bg-slate-200 text-slate-700";
-}
-
 function formatPublicStatus(status: string) {
   if (status === "not_found") return "Not found";
   return status.charAt(0).toUpperCase() + status.slice(1);
@@ -80,18 +67,16 @@ export default async function QrVerificationPage({
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Public QR Verification</h1>
-          <p className="mt-2 text-slate-600">
-            Verify certificate authenticity, status, serial number, share class,
-            issue date, and hash verification result without exposing personal
-            data.
-          </p>
-        </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Public QR Verification"
+          description="Verify certificate authenticity, status, serial number, share class, issue date, and hash verification result without exposing personal data."
+          notice="Privacy notice: public verification does not expose shareholder name, contact information, KYC records, beneficial ownership, actor IDs, or internal approval details."
+        />
 
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm text-slate-500">
                 Public Verification Result
@@ -104,13 +89,10 @@ export default async function QrVerificationPage({
               </p>
             </div>
 
-            <div
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${getStatusStyles(
-                publicStatus
-              )}`}
-            >
-              {result?.hash_verification_result || "not_found"}
-            </div>
+            <StatusBadge
+              status={publicStatus}
+              label={formatPublicStatus(publicStatus)}
+            />
           </div>
 
           {result ? (
@@ -166,23 +148,20 @@ export default async function QrVerificationPage({
               </div>
             </dl>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
-              <p className="font-semibold text-slate-900">
-                Certificate not found.
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                The serial number was not found in the certificate registry.
-              </p>
-            </div>
+            <EmptyState
+              title="Certificate not found"
+              description="The serial number was not found in the certificate registry."
+              className="bg-white"
+            />
           )}
 
           <div className="mt-6 rounded-xl bg-white p-4 text-sm text-slate-600">
-            Privacy notice: public verification does not expose shareholder
-            name, contact information, KYC records, beneficial ownership,
-            actor IDs, or internal approval details.
+            Public verification is intentionally limited to certificate status,
+            share class, quantity, issuance, revocation, and hash evidence.
           </div>
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

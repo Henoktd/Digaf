@@ -1,4 +1,8 @@
 import { fetchDocuments } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { KpiCard } from "@/src/components/KpiCard";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type JsonValue =
   | string
@@ -36,18 +40,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function legalHoldClass(status: string | null) {
-  if (status === "active") {
-    return "bg-rose-100 text-rose-800";
-  }
-
-  if (status === "lifted") {
-    return "bg-emerald-100 text-emerald-800";
-  }
-
-  return "bg-slate-200 text-slate-700";
-}
-
 function isSharePointReady(fileUrl: string) {
   return fileUrl.toLowerCase().startsWith("https://sharepoint.");
 }
@@ -64,51 +56,36 @@ export default async function DocumentsPage() {
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Document References</h1>
-            <p className="mt-2 text-slate-600">
-              Review SharePoint-ready evidence references, retention categories,
-              legal hold protection, and related governance records.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Document References"
+          description="Review SharePoint-ready evidence references, retention categories, legal hold protection, and related governance records."
+          badge={
+            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              Read-only repository
+            </div>
+          }
+        />
 
-          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            Read-only repository
-          </div>
-        </div>
-
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <article className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-500">
-              Total Documents
-            </p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
-              {documents.length}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">Evidence references</p>
-          </article>
-
-          <article className="rounded-xl border border-rose-200 bg-rose-50 p-5">
-            <p className="text-sm font-semibold text-rose-700">
-              Legal Hold Protected
-            </p>
-            <p className="mt-3 text-3xl font-bold text-rose-900">
-              {legalHoldProtectedCount}
-            </p>
-            <p className="mt-1 text-sm text-rose-800">Linked to hold records</p>
-          </article>
-
-          <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-            <p className="text-sm font-semibold text-emerald-700">
-              SharePoint-Ready
-            </p>
-            <p className="mt-3 text-3xl font-bold text-emerald-900">
-              {sharePointReadyCount}
-            </p>
-            <p className="mt-1 text-sm text-emerald-800">Placeholder URLs</p>
-          </article>
+          <KpiCard
+            label="Total Documents"
+            value={documents.length}
+            detail="Evidence references"
+          />
+          <KpiCard
+            label="Legal Hold Protected"
+            value={legalHoldProtectedCount}
+            detail="Linked to hold records"
+            tone={legalHoldProtectedCount > 0 ? "danger" : "neutral"}
+          />
+          <KpiCard
+            label="SharePoint-Ready"
+            value={sharePointReadyCount}
+            detail="Placeholder URLs"
+            tone="success"
+          />
         </div>
 
         <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
@@ -142,15 +119,19 @@ export default async function DocumentsPage() {
                       </h3>
                     </div>
 
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${legalHoldClass(
+                    <StatusBadge
+                      status={document.legal_hold_status}
+                      label={
                         document.legal_hold_status
-                      )}`}
-                    >
-                      {document.legal_hold_status
-                        ? formatLabel(document.legal_hold_status)
-                        : "Standard"}
-                    </span>
+                          ? formatLabel(document.legal_hold_status)
+                          : "Standard"
+                      }
+                      tone={
+                        document.legal_hold_status === "active"
+                          ? "danger"
+                          : undefined
+                      }
+                    />
                   </div>
 
                   <dl className="space-y-3 text-sm">
@@ -177,9 +158,7 @@ export default async function DocumentsPage() {
               ))}
             </div>
           ) : (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
-              No document references found.
-            </p>
+            <EmptyState title="No documents found" className="bg-white" />
           )}
         </div>
 
@@ -229,15 +208,19 @@ export default async function DocumentsPage() {
                         {formatLabel(document.related_entity)}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${legalHoldClass(
+                        <StatusBadge
+                          status={document.legal_hold_status}
+                          label={
                             document.legal_hold_status
-                          )}`}
-                        >
-                          {document.legal_hold_status
-                            ? formatLabel(document.legal_hold_status)
-                            : "Not protected"}
-                        </span>
+                              ? formatLabel(document.legal_hold_status)
+                              : "Not protected"
+                          }
+                          tone={
+                            document.legal_hold_status === "active"
+                              ? "danger"
+                              : undefined
+                          }
+                        />
                         {document.authority_reference ? (
                           <div className="mt-1 text-xs text-slate-500">
                             {document.authority_reference}
@@ -263,12 +246,13 @@ export default async function DocumentsPage() {
               </table>
             </div>
           ) : (
-            <p className="bg-slate-50 p-6 text-sm text-slate-600">
-              No document references found.
-            </p>
+            <div className="p-4">
+              <EmptyState title="No documents found" />
+            </div>
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

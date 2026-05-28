@@ -2,6 +2,8 @@ import {
   fetchIntegrationStatus,
   IntegrationStatus,
 } from "@/src/lib/api";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type IntegrationStatusResponse = {
   data: IntegrationStatus;
@@ -17,20 +19,6 @@ type StatusCardProps = {
   }[];
 };
 
-function StatusPill({ configured }: { configured: boolean }) {
-  return (
-    <span
-      className={
-        configured
-          ? "rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
-          : "rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
-      }
-    >
-      {configured ? "Configured" : "Not configured"}
-    </span>
-  );
-}
-
 function StatusCard({
   title,
   description,
@@ -45,7 +33,11 @@ function StatusCard({
           <p className="mt-2 text-sm text-slate-600">{description}</p>
         </div>
 
-        <StatusPill configured={configured} />
+        <StatusBadge
+          status={configured ? "configured" : "not_configured"}
+          label={configured ? "Configured" : "Not configured"}
+          tone={configured ? "success" : "warning"}
+        />
       </div>
 
       <div className="mt-6 space-y-3">
@@ -57,15 +49,10 @@ function StatusCard({
             <span className="text-sm font-medium text-slate-700">
               {check.label}
             </span>
-            <span
-              className={
-                check.present
-                  ? "text-sm font-semibold text-emerald-700"
-                  : "text-sm font-semibold text-slate-500"
-              }
-            >
-              {check.present ? "Present" : "Missing"}
-            </span>
+            <StatusBadge
+              status={check.present ? "present" : "missing"}
+              label={check.present ? "Present" : "Missing"}
+            />
           </div>
         ))}
       </div>
@@ -103,27 +90,16 @@ export default async function IntegrationsPage() {
   return (
     <main className="p-8">
       <div className="mx-auto max-w-7xl space-y-8">
-        <section className="rounded-2xl bg-white p-8 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div>
-              <p className="text-sm font-semibold uppercase text-slate-500">
-                Microsoft 365 Integration Preparation
-              </p>
-              <h1 className="mt-3 text-3xl font-bold">
-                Integration Readiness
-              </h1>
-              <p className="mt-3 max-w-3xl text-slate-600">
-                Environment readiness for SharePoint document references,
-                Power Automate notifications, and Power BI reporting. This page
-                checks configuration presence only.
-              </p>
-            </div>
-
+        <PageHeader
+          eyebrow="Microsoft 365 Integration Preparation"
+          title="Integration Readiness"
+          description="Environment readiness for SharePoint document references, Power Automate notifications, and Power BI reporting. This page checks configuration presence only."
+          badge={
             <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
               Prep only
             </div>
-          </div>
-        </section>
+          }
+        />
 
         <section className="grid gap-6 xl:grid-cols-3">
           <StatusCard
@@ -202,7 +178,10 @@ export default async function IntegrationsPage() {
                       {item.name}
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
-                      {item.present ? "Present" : "Missing"}
+                      <StatusBadge
+                        status={item.present ? "present" : "missing"}
+                        label={item.present ? "Present" : "Missing"}
+                      />
                     </td>
                   </tr>
                 ))}

@@ -1,4 +1,8 @@
 import { fetchSlaMonitor } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { KpiCard } from "@/src/components/KpiCard";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type SlaStatus = "completed" | "overdue" | "due_soon" | "on_track";
 
@@ -60,22 +64,6 @@ function formatDaysRemaining(value: number | null) {
   return `${value} day${Math.abs(value) === 1 ? "" : "s"}`;
 }
 
-function statusClass(status: SlaStatus) {
-  if (status === "overdue") {
-    return "bg-rose-100 text-rose-800";
-  }
-
-  if (status === "due_soon") {
-    return "bg-amber-100 text-amber-800";
-  }
-
-  if (status === "completed") {
-    return "bg-emerald-100 text-emerald-800";
-  }
-
-  return "bg-slate-200 text-slate-700";
-}
-
 export default async function SlaMonitorPage() {
   const response = await fetchSlaMonitor();
   const slaItems: SlaItem[] = response.data;
@@ -92,55 +80,42 @@ export default async function SlaMonitorPage() {
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">SLA Monitor</h1>
-            <p className="mt-2 text-slate-600">
-              Track governance SLA targets, breaches, escalation history, and
-              approval process performance.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="SLA Monitor"
+          description="Track governance SLA targets, breaches, escalation history, and approval process performance."
+          badge={
+            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              Read-only monitor
+            </div>
+          }
+        />
 
-          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            Read-only monitor
-          </div>
-        </div>
-
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-8 grid gap-4 md:grid-cols-4">
-          <article className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-500">
-              Total Tracked
-            </p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
-              {slaItems.length}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">Approval requests</p>
-          </article>
-
-          <article className="rounded-xl border border-rose-200 bg-rose-50 p-5">
-            <p className="text-sm font-semibold text-rose-700">Overdue</p>
-            <p className="mt-3 text-3xl font-bold text-rose-900">
-              {overdueCount}
-            </p>
-            <p className="mt-1 text-sm text-rose-800">Past SLA target</p>
-          </article>
-
-          <article className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-            <p className="text-sm font-semibold text-amber-700">Due Soon</p>
-            <p className="mt-3 text-3xl font-bold text-amber-900">
-              {dueSoonCount}
-            </p>
-            <p className="mt-1 text-sm text-amber-800">Within two days</p>
-          </article>
-
-          <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-            <p className="text-sm font-semibold text-emerald-700">Completed</p>
-            <p className="mt-3 text-3xl font-bold text-emerald-900">
-              {completedCount}
-            </p>
-            <p className="mt-1 text-sm text-emerald-800">Approved items</p>
-          </article>
+          <KpiCard
+            label="Total Tracked"
+            value={slaItems.length}
+            detail="Approval requests"
+          />
+          <KpiCard
+            label="Overdue"
+            value={overdueCount}
+            detail="Past SLA target"
+            tone={overdueCount > 0 ? "danger" : "neutral"}
+          />
+          <KpiCard
+            label="Due Soon"
+            value={dueSoonCount}
+            detail="Within two days"
+            tone="warning"
+          />
+          <KpiCard
+            label="Completed"
+            value={completedCount}
+            detail="Approved items"
+            tone="success"
+          />
         </div>
 
         <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -188,17 +163,11 @@ export default async function SlaMonitorPage() {
                       <td className="border-b border-slate-100 px-4 py-3 capitalize">
                         {formatLabel(item.stage)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                        {formatLabel(item.status)}
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <StatusBadge status={item.status} />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusClass(
-                            item.computed_sla_status
-                          )}`}
-                        >
-                          {formatLabel(item.computed_sla_status)}
-                        </span>
+                        <StatusBadge status={item.computed_sla_status} />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         <div className="font-semibold text-slate-900">
@@ -231,12 +200,13 @@ export default async function SlaMonitorPage() {
               </table>
             </div>
           ) : (
-            <p className="bg-slate-50 p-6 text-sm text-slate-600">
-              No SLA-tracked approval requests found.
-            </p>
+            <div className="p-4">
+              <EmptyState title="No SLA-tracked approval requests found" />
+            </div>
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

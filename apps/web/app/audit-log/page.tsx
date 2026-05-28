@@ -1,4 +1,7 @@
 import { fetchAuditLogs } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { KpiCard } from "@/src/components/KpiCard";
+import { PageHeader } from "@/src/components/PageHeader";
 
 type JsonValue =
   | string
@@ -54,49 +57,34 @@ export default async function AuditLogPage() {
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Audit Log</h1>
-            <p className="mt-2 text-slate-600">
-              Trace system activity, actors, actions, timestamps, and before
-              and after values from the governance ledger.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Audit Log"
+          description="Trace system activity, actors, actions, timestamps, and before and after values from the governance ledger."
+          badge={
+            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              Read-only evidence
+            </div>
+          }
+        />
 
-          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            Read-only evidence
-          </div>
-        </div>
-
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <article className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-500">Total Logs</p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
-              {auditLogs.length}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">Audit records</p>
-          </article>
-
-          <article className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-500">Latest Actor</p>
-            <p className="mt-3 break-all text-lg font-bold text-slate-900">
-              {latestLog?.actor_id || "No activity"}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">
-              {latestLog ? formatDate(latestLog.timestamp_utc) : "Not set"}
-            </p>
-          </article>
-
-          <article className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-500">Latest Action</p>
-            <p className="mt-3 text-lg font-bold capitalize text-slate-900">
-              {latestLog ? formatLabel(latestLog.action) : "No activity"}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">
-              {latestLog?.table_name || "Not set"}
-            </p>
-          </article>
+          <KpiCard
+            label="Total Logs"
+            value={auditLogs.length}
+            detail="Audit records"
+          />
+          <KpiCard
+            label="Latest Actor"
+            value={latestLog?.actor_id || "No activity"}
+            detail={latestLog ? formatDate(latestLog.timestamp_utc) : "Not set"}
+          />
+          <KpiCard
+            label="Latest Action"
+            value={latestLog ? formatLabel(latestLog.action) : "No activity"}
+            detail={latestLog?.table_name || "Not set"}
+          />
         </div>
 
         <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -163,12 +151,13 @@ export default async function AuditLogPage() {
               </table>
             </div>
           ) : (
-            <p className="bg-slate-50 p-6 text-sm text-slate-600">
-              No audit log records found.
-            </p>
+            <div className="p-4">
+              <EmptyState title="No audit records found" />
+            </div>
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

@@ -21,7 +21,11 @@ export function TransferActions({ transferId, status }: TransferActionsProps) {
     status === "pending_checker_1" || status === "pending_checker_2";
 
   if (!canCancel) {
-    return <span className="text-xs text-slate-500">No action available</span>;
+    return (
+      <span className="inline-flex whitespace-nowrap text-xs text-slate-500">
+        No action available
+      </span>
+    );
   }
 
   async function handleCancel() {
@@ -48,7 +52,7 @@ export function TransferActions({ transferId, status }: TransferActionsProps) {
   }
 
   return (
-    <div className="w-36 space-y-2">
+    <div className="w-full min-w-32 max-w-36 space-y-2">
       <button
         type="button"
         onClick={handleCancel}

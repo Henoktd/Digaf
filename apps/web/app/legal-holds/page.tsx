@@ -1,4 +1,8 @@
 import { fetchLegalHolds } from "@/src/lib/api";
+import { EmptyState } from "@/src/components/EmptyState";
+import { KpiCard } from "@/src/components/KpiCard";
+import { PageHeader } from "@/src/components/PageHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 
 type LegalHold = {
   id: string;
@@ -37,18 +41,6 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function statusClass(status: string | null) {
-  if (status === "active") {
-    return "bg-rose-100 text-rose-800";
-  }
-
-  if (status === "lifted") {
-    return "bg-emerald-100 text-emerald-800";
-  }
-
-  return "bg-slate-200 text-slate-700";
-}
-
 export default async function LegalHoldsPage() {
   const response = await fetchLegalHolds();
   const legalHolds: LegalHold[] = response.data;
@@ -62,47 +54,36 @@ export default async function LegalHoldsPage() {
 
   return (
     <main className="p-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Legal Hold Management</h1>
-            <p className="mt-2 text-slate-600">
-              Track legal holds, regulatory review freezes, and preservation
-              controls for shareholder governance records.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Legal Hold Management"
+          description="Track legal holds, regulatory review freezes, and preservation controls for shareholder governance records."
+          badge={
+            <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              Read-only holds
+            </div>
+          }
+        />
 
-          <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            Read-only holds
-          </div>
-        </div>
-
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <article className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-500">Total Holds</p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
-              {legalHolds.length}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">Legal hold records</p>
-          </article>
-
-          <article className="rounded-xl border border-rose-200 bg-rose-50 p-5">
-            <p className="text-sm font-semibold text-rose-700">Active Holds</p>
-            <p className="mt-3 text-3xl font-bold text-rose-900">
-              {activeHolds.length}
-            </p>
-            <p className="mt-1 text-sm text-rose-800">Preservation active</p>
-          </article>
-
-          <article className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-            <p className="text-sm font-semibold text-amber-700">
-              Active Freezes
-            </p>
-            <p className="mt-3 text-3xl font-bold text-amber-900">
-              {activeFreezeCount}
-            </p>
-            <p className="mt-1 text-sm text-amber-800">Transfer blocks</p>
-          </article>
+          <KpiCard
+            label="Total Holds"
+            value={legalHolds.length}
+            detail="Legal hold records"
+          />
+          <KpiCard
+            label="Active Holds"
+            value={activeHolds.length}
+            detail="Preservation active"
+            tone={activeHolds.length > 0 ? "danger" : "neutral"}
+          />
+          <KpiCard
+            label="Active Freezes"
+            value={activeFreezeCount}
+            detail="Transfer blocks"
+            tone={activeFreezeCount > 0 ? "warning" : "neutral"}
+          />
         </div>
 
         <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
@@ -136,9 +117,7 @@ export default async function LegalHoldsPage() {
                       </h3>
                     </div>
 
-                    <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-800">
-                      Active
-                    </span>
+                    <StatusBadge status="active" tone="danger" />
                   </div>
 
                   <dl className="space-y-3 text-sm">
@@ -163,9 +142,10 @@ export default async function LegalHoldsPage() {
               ))}
             </div>
           ) : (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
-              No active legal holds found.
-            </p>
+            <EmptyState
+              title="No active legal holds found"
+              className="bg-white"
+            />
           )}
         </div>
 
@@ -215,13 +195,10 @@ export default async function LegalHoldsPage() {
                         {hold.reason}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusClass(
-                            hold.status
-                          )}`}
-                        >
-                          {formatLabel(hold.status)}
-                        </span>
+                        <StatusBadge
+                          status={hold.status}
+                          tone={hold.status === "active" ? "danger" : undefined}
+                        />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         {hold.authority_reference || "Not set"}
@@ -234,7 +211,15 @@ export default async function LegalHoldsPage() {
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         <div className="capitalize">
-                          {formatLabel(hold.freeze_status)}
+                          <StatusBadge
+                            status={hold.freeze_status}
+                            label={formatLabel(hold.freeze_status)}
+                            tone={
+                              hold.freeze_status === "active"
+                                ? "warning"
+                                : undefined
+                            }
+                          />
                         </div>
                         <div className="mt-1 text-xs text-slate-500">
                           {hold.freeze_reason || "No active freeze"}
@@ -246,12 +231,13 @@ export default async function LegalHoldsPage() {
               </table>
             </div>
           ) : (
-            <p className="bg-slate-50 p-6 text-sm text-slate-600">
-              No legal hold records found.
-            </p>
+            <div className="p-4">
+              <EmptyState title="No legal holds found" />
+            </div>
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

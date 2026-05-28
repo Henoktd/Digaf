@@ -59,7 +59,11 @@ export function ApprovalActions({
   const config = actionType ? actionConfig[actionType] : null;
 
   if (!config) {
-    return <span className="text-xs text-slate-500">No action available</span>;
+    return (
+      <span className="inline-flex whitespace-nowrap text-xs text-slate-500">
+        No action available
+      </span>
+    );
   }
 
   const activeConfig = config;
@@ -111,7 +115,7 @@ export function ApprovalActions({
   }
 
   return (
-    <div className="w-52 space-y-2">
+    <div className="w-full min-w-44 max-w-52 space-y-2">
       <button
         type="button"
         onClick={handleApprove}

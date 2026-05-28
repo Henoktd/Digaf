@@ -93,6 +93,253 @@ function sendRoleFailure(res: any, role: unknown, message: string) {
     : sendBadRequest(res, message);
 }
 
+approvalRoutes.post("/:approvalId/reject", async (req, res) => {
+  let approvalId = "";
+  let actorId = "";
+  let decisionNotes = "";
+
+  try {
+    approvalId = requireUuid(req.params.approvalId, "approvalId");
+    actorId = normalizeActorId(req.body?.actorId);
+    decisionNotes = requireNonEmptyString(
+      req.body?.decisionNotes,
+      "decisionNotes"
+    );
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid approval rejection"
+    );
+  }
+
+  const roleResult = requireRole(req.body?.actorRole, [
+    "checker_1",
+    "checker_2",
+    "governance_admin",
+  ]);
+
+  if (!roleResult.ok) {
+    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+  }
+
+  const actorRole = roleResult.role;
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const approvalResult = await client.query(
+      `
+        SELECT
+          id,
+          entity_id,
+          request_type,
+          reference_id,
+          stage,
+          current_approver_id,
+          status,
+          maker_id,
+          checker1_id,
+          checker2_id,
+          decision_notes
+        FROM approval_request
+        WHERE id = $1
+        FOR UPDATE
+      `,
+      [approvalId]
+    );
+
+    const approval = approvalResult.rows[0];
+
+    if (!approval) {
+      await client.query("ROLLBACK");
+      return sendNotFound(res, "Approval request not found");
+    }
+
+    if (approval.request_type !== "share_transfer") {
+      await client.query("ROLLBACK");
+      return sendConflict(
+        res,
+        "Approval request is not for a share transfer"
+      );
+    }
+
+    if (approval.status !== "pending") {
+      await client.query("ROLLBACK");
+      return sendConflict(res, "Approval request is not pending");
+    }
+
+    const isChecker1Stage = approval.stage === "checker_1_review";
+    const isChecker2Stage = approval.stage === "checker_2_review";
+
+    if (!isChecker1Stage && !isChecker2Stage) {
+      await client.query("ROLLBACK");
+      return sendConflict(res, "Approval request is not at a rejectable stage");
+    }
+
+    if (
+      isChecker1Stage &&
+      actorRole !== "checker_1" &&
+      actorRole !== "governance_admin"
+    ) {
+      await client.query("ROLLBACK");
+      return sendForbidden(
+        res,
+        "Only Checker 1 or Governance Admin can reject at Checker 1 review"
+      );
+    }
+
+    if (
+      isChecker2Stage &&
+      actorRole !== "checker_2" &&
+      actorRole !== "governance_admin"
+    ) {
+      await client.query("ROLLBACK");
+      return sendForbidden(
+        res,
+        "Only Checker 2 or Governance Admin can reject at Checker 2 review"
+      );
+    }
+
+    if (actorId === approval.maker_id) {
+      await client.query("ROLLBACK");
+      return sendConflict(res, "Maker cannot reject their own request");
+    }
+
+    if (isChecker2Stage && actorId === approval.checker1_id) {
+      await client.query("ROLLBACK");
+      return sendConflict(res, "Checker 1 cannot reject as Checker 2");
+    }
+
+    const transferResult = await client.query(
+      `
+        SELECT
+          id,
+          status,
+          checker1_id,
+          checker2_id
+        FROM share_transfer
+        WHERE id = $1
+        FOR UPDATE
+      `,
+      [approval.reference_id]
+    );
+
+    const transfer = transferResult.rows[0];
+
+    if (!transfer) {
+      await client.query("ROLLBACK");
+      return sendNotFound(res, "Linked share transfer not found");
+    }
+
+    const oldValue = {
+      approval: {
+        stage: approval.stage,
+        status: approval.status,
+        current_approver_id: approval.current_approver_id,
+        checker1_id: approval.checker1_id,
+        checker2_id: approval.checker2_id,
+      },
+      transfer: {
+        status: transfer.status,
+        checker1_id: transfer.checker1_id,
+        checker2_id: transfer.checker2_id,
+      },
+    };
+
+    const newValue = {
+      approval: {
+        stage: approval.stage,
+        status: "rejected",
+        current_approver_id: null,
+        checker1_id: isChecker1Stage ? actorId : approval.checker1_id,
+        checker2_id: isChecker2Stage ? actorId : approval.checker2_id,
+        decisionNotes,
+      },
+      transfer: {
+        status: "rejected",
+        checker1_id: isChecker1Stage ? actorId : transfer.checker1_id,
+        checker2_id: isChecker2Stage ? actorId : transfer.checker2_id,
+      },
+      actorId,
+      actorRole,
+    };
+
+    await client.query(
+      `
+        UPDATE approval_request
+        SET
+          status = 'rejected',
+          current_approver_id = null,
+          decision_notes = $2,
+          checker1_id = CASE WHEN $3 THEN $4 ELSE checker1_id END,
+          checker2_id = CASE WHEN $5 THEN $4 ELSE checker2_id END
+        WHERE id = $1
+      `,
+      [approvalId, decisionNotes, isChecker1Stage, actorId, isChecker2Stage]
+    );
+
+    await client.query(
+      `
+        UPDATE share_transfer
+        SET
+          status = 'rejected',
+          checker1_id = CASE WHEN $2 THEN $3 ELSE checker1_id END,
+          checker2_id = CASE WHEN $4 THEN $3 ELSE checker2_id END
+        WHERE id = $1
+      `,
+      [approval.reference_id, isChecker1Stage, actorId, isChecker2Stage]
+    );
+
+    await client.query(
+      `
+        INSERT INTO audit_log (
+          entity_id,
+          actor_id,
+          action,
+          table_name,
+          record_id,
+          old_value_json,
+          new_value_json,
+          source_ip
+        )
+        VALUES (
+          $1,
+          $2,
+          'share_transfer_rejected',
+          'approval_request',
+          $3,
+          $4::jsonb,
+          $5::jsonb,
+          $6
+        )
+      `,
+      [
+        approval.entity_id,
+        actorId,
+        approvalId,
+        JSON.stringify(oldValue),
+        JSON.stringify(newValue),
+        req.ip ?? null,
+      ]
+    );
+
+    const summary = await getApprovalActionSummary(client, approvalId);
+
+    await client.query("COMMIT");
+
+    return res.json({
+      data: buildApprovalActionResponse(summary),
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    return sendServerError(res, "Failed to reject approval", error);
+  } finally {
+    client.release();
+  }
+});
+
 approvalRoutes.get("/", async (_req, res) => {
   try {
     const result = await pool.query(`

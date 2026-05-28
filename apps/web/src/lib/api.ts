@@ -334,6 +334,48 @@ export async function createTransfer(input: CreateTransferInput) {
   return response.json();
 }
 
+export async function cancelTransfer(
+  transferId: string,
+  actorId: string,
+  actorRole: string,
+  reason: string
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/transfers/${transferId}/cancel`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        actorId,
+        actorRole,
+        reason,
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to cancel transfer";
+
+    try {
+      const body = await response.json();
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function fetchApprovals() {
   const response = await fetch(`${API_BASE_URL}/api/approvals`, {
     cache: "no-store",
@@ -341,6 +383,48 @@ export async function fetchApprovals() {
 
   if (!response.ok) {
     throw new Error("Failed to fetch approvals");
+  }
+
+  return response.json();
+}
+
+export async function rejectApproval(
+  approvalId: string,
+  actorId: string,
+  actorRole: string,
+  decisionNotes: string
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/approvals/${approvalId}/reject`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        actorId,
+        actorRole,
+        decisionNotes,
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to reject approval";
+
+    try {
+      const body = await response.json();
+      message =
+        body?.error?.message ||
+        (typeof body?.error === "string" ? body.error : undefined) ||
+        body?.message ||
+        message;
+    } catch {
+      // Keep the generic message if the API did not return JSON.
+    }
+
+    throw new Error(message);
   }
 
   return response.json();

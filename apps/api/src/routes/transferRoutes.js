@@ -51,6 +51,55 @@ function sendRoleFailure(res, role, message) {
         ? (0, apiError_1.sendForbidden)(res, message)
         : (0, apiError_1.sendBadRequest)(res, message);
 }
+async function getTransferActionSummary(client, transferId) {
+    const summaryResult = await client.query(`
+      SELECT
+        st.id AS transfer_id,
+        st.status AS transfer_status,
+        st.maker_id,
+        st.checker1_id,
+        st.checker2_id,
+        ar.id AS approval_id,
+        ar.stage AS approval_stage,
+        ar.status AS approval_status,
+        ar.current_approver_id,
+        ar.decision_notes
+      FROM share_transfer st
+      LEFT JOIN LATERAL (
+        SELECT
+          id,
+          stage,
+          status,
+          current_approver_id,
+          decision_notes
+        FROM approval_request
+        WHERE request_type = 'share_transfer'
+          AND reference_id = st.id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) ar ON true
+      WHERE st.id = $1
+    `, [transferId]);
+    const summary = summaryResult.rows[0];
+    return {
+        transfer: {
+            id: summary.transfer_id,
+            status: summary.transfer_status,
+            maker_id: summary.maker_id,
+            checker1_id: summary.checker1_id,
+            checker2_id: summary.checker2_id,
+        },
+        approval: summary.approval_id
+            ? {
+                id: summary.approval_id,
+                stage: summary.approval_stage,
+                status: summary.approval_status,
+                current_approver_id: summary.current_approver_id,
+                decision_notes: summary.decision_notes,
+            }
+            : null,
+    };
+}
 async function buildTransferEligibility(client, input) {
     const blockingReasons = [];
     const warnings = [];
@@ -193,7 +242,9 @@ exports.transferRoutes.get("/", async (_req, res) => {
         st.created_at,
         ar.id AS approval_request_id,
         ar.stage AS approval_stage,
+        ar.status AS approval_status,
         ar.current_approver_id AS current_approver,
+        ar.decision_notes AS approval_decision_notes,
         ar.sla_due_date,
         ar.escalation_level
       FROM share_transfer st
@@ -204,7 +255,9 @@ exports.transferRoutes.get("/", async (_req, res) => {
         SELECT
           id,
           stage,
+          status,
           current_approver_id,
+          decision_notes,
           sla_due_date,
           escalation_level
         FROM approval_request
@@ -224,6 +277,159 @@ exports.transferRoutes.get("/", async (_req, res) => {
             error: "Failed to fetch transfers",
             message: error instanceof Error ? error.message : "Unknown error",
         });
+    }
+});
+exports.transferRoutes.post("/:transferId/cancel", async (req, res) => {
+    let transferId = "";
+    let actorId = "";
+    let reason = "";
+    try {
+        transferId = (0, validation_1.requireUuid)(req.params.transferId, "transferId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        reason = (0, validation_1.requireNonEmptyString)(req.body?.reason, "reason");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid transfer cancellation");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const actorRole = roleResult.role;
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const transferResult = await client.query(`
+        SELECT
+          id,
+          entity_id,
+          status,
+          maker_id,
+          checker1_id,
+          checker2_id
+        FROM share_transfer
+        WHERE id = $1
+        FOR UPDATE
+      `, [transferId]);
+        const transfer = transferResult.rows[0];
+        if (!transfer) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Share transfer not found");
+        }
+        if (!["draft", "pending_checker_1", "pending_checker_2"].includes(transfer.status)) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendConflict)(res, "Share transfer cannot be cancelled");
+        }
+        if (actorRole === "maker" && actorId !== transfer.maker_id) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendForbidden)(res, "Maker can only cancel their own transfer");
+        }
+        const approvalResult = await client.query(`
+        SELECT
+          id,
+          stage,
+          status,
+          current_approver_id,
+          decision_notes
+        FROM approval_request
+        WHERE request_type = 'share_transfer'
+          AND reference_id = $1
+        ORDER BY created_at DESC
+        LIMIT 1
+        FOR UPDATE
+      `, [transferId]);
+        const approval = approvalResult.rows[0] ?? null;
+        const oldValue = {
+            transfer: {
+                status: transfer.status,
+                checker1_id: transfer.checker1_id,
+                checker2_id: transfer.checker2_id,
+            },
+            approval: approval
+                ? {
+                    id: approval.id,
+                    stage: approval.stage,
+                    status: approval.status,
+                    current_approver_id: approval.current_approver_id,
+                }
+                : null,
+        };
+        await client.query(`
+        UPDATE share_transfer
+        SET status = 'cancelled'
+        WHERE id = $1
+      `, [transferId]);
+        if (approval) {
+            await client.query(`
+          UPDATE approval_request
+          SET
+            status = 'cancelled',
+            current_approver_id = null,
+            decision_notes = $2
+          WHERE id = $1
+        `, [approval.id, reason]);
+        }
+        const newValue = {
+            transfer: {
+                status: "cancelled",
+            },
+            approval: approval
+                ? {
+                    id: approval.id,
+                    stage: approval.stage,
+                    status: "cancelled",
+                    current_approver_id: null,
+                    decision_notes: reason,
+                }
+                : null,
+            actorId,
+            actorRole,
+            reason,
+        };
+        await client.query(`
+        INSERT INTO audit_log (
+          entity_id,
+          actor_id,
+          action,
+          table_name,
+          record_id,
+          old_value_json,
+          new_value_json,
+          source_ip
+        )
+        VALUES (
+          $1,
+          $2,
+          'share_transfer_cancelled',
+          'share_transfer',
+          $3,
+          $4::jsonb,
+          $5::jsonb,
+          $6
+        )
+      `, [
+            transfer.entity_id,
+            actorId,
+            transferId,
+            JSON.stringify(oldValue),
+            JSON.stringify(newValue),
+            req.ip ?? null,
+        ]);
+        const summary = await getTransferActionSummary(client, transferId);
+        await client.query("COMMIT");
+        return res.json({
+            data: summary,
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to cancel transfer", error);
+    }
+    finally {
+        client.release();
     }
 });
 exports.transferRoutes.post("/eligibility-check", async (req, res) => {

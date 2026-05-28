@@ -1,4 +1,5 @@
 import { CreateTransferForm } from "@/src/components/CreateTransferForm";
+import { TransferActions } from "@/src/components/TransferActions";
 import { fetchShareholders, fetchTransfers } from "@/src/lib/api";
 
 type Transfer = {
@@ -22,7 +23,9 @@ type Transfer = {
   created_at: string;
   approval_request_id: string | null;
   approval_stage: string | null;
+  approval_status: string | null;
   current_approver: string | null;
+  approval_decision_notes: string | null;
   sla_due_date: string | null;
   escalation_level: number | null;
 };
@@ -54,6 +57,24 @@ function formatShares(value: string) {
   return Number(value).toLocaleString("en-US", {
     maximumFractionDigits: 2,
   });
+}
+
+function statusBadgeClass(status: string) {
+  const base = "rounded-full px-3 py-1 text-xs font-semibold capitalize";
+
+  if (status === "completed") {
+    return `${base} bg-emerald-100 text-emerald-800`;
+  }
+
+  if (status === "rejected") {
+    return `${base} bg-rose-100 text-rose-800`;
+  }
+
+  if (status === "cancelled") {
+    return `${base} bg-slate-200 text-slate-700`;
+  }
+
+  return `${base} bg-amber-100 text-amber-800`;
 }
 
 export default async function TransfersPage() {
@@ -96,7 +117,7 @@ export default async function TransfersPage() {
                     {formatShares(transfer.shares)} shares
                   </h2>
                 </div>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold capitalize text-amber-800">
+                <span className={statusBadgeClass(transfer.status)}>
                   {formatLabel(transfer.status)}
                 </span>
               </div>
@@ -131,8 +152,8 @@ export default async function TransfersPage() {
           ))}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200">
-          <table className="w-full border-collapse text-left text-sm">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="min-w-[1280px] w-full border-collapse text-left text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
                 <th className="border-b border-slate-200 px-4 py-3">Transferor</th>
@@ -144,6 +165,7 @@ export default async function TransfersPage() {
                 <th className="border-b border-slate-200 px-4 py-3">Maker</th>
                 <th className="border-b border-slate-200 px-4 py-3">Checker 1</th>
                 <th className="border-b border-slate-200 px-4 py-3">Checker 2</th>
+                <th className="border-b border-slate-200 px-4 py-3">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -175,6 +197,12 @@ export default async function TransfersPage() {
                   </td>
                   <td className="border-b border-slate-100 px-4 py-3">
                     {transfer.checker2_id || "Pending"}
+                  </td>
+                  <td className="border-b border-slate-100 px-4 py-3">
+                    <TransferActions
+                      transferId={transfer.transfer_id}
+                      status={transfer.status}
+                    />
                   </td>
                 </tr>
               ))}

@@ -1,8 +1,42 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.certificateRoutes = void 0;
 const express_1 = require("express");
 const pool_1 = require("../db/pool");
+const QRCode = __importStar(require("qrcode"));
 const certificateCrypto_1 = require("../services/certificateCrypto");
 const apiError_1 = require("../utils/apiError");
 const validation_1 = require("../utils/validation");
@@ -28,16 +62,25 @@ function formatWrappedToken(value) {
         return "Not generated";
     return value.match(/.{1,16}/g)?.join(" ") ?? value;
 }
+function getFrontendBaseUrl() {
+    return (process.env.FRONTEND_PUBLIC_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
+}
+function buildPublicVerificationUrl(serialNumber) {
+    return `${getFrontendBaseUrl()}/qr?serialNumber=${encodeURIComponent(serialNumber)}`;
+}
 function buildPublicVerificationResponse(certificate) {
     let hashVerificationResult = "hash_missing";
     if (certificate.certificate_hash && certificate.issue_date) {
+        const issueDate = certificate.issue_date instanceof Date
+            ? certificate.issue_date.toISOString().slice(0, 10)
+            : new Date(certificate.issue_date).toISOString().slice(0, 10);
         const canonicalString = (0, certificateCrypto_1.buildCanonicalCertificateString)({
             entityId: certificate.entity_id,
             serialNumber: certificate.serial_number,
             shareholderId: certificate.shareholder_id,
             shareClassId: certificate.share_class_id,
             quantity: certificate.quantity,
-            issueDate: certificate.issue_date.toISOString().slice(0, 10),
+            issueDate,
             issuingAuthority: certificate.issuing_company,
         });
         const recomputedHash = (0, certificateCrypto_1.generateCertificateHash)(canonicalString);
@@ -127,10 +170,77 @@ exports.certificateRoutes.get("/", async (_req, res) => {
         });
     }
     catch (error) {
-        res.status(500).json({
-            error: "Failed to fetch certificates",
-            message: error instanceof Error ? error.message : "Unknown error",
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch certificates", error);
+    }
+});
+exports.certificateRoutes.get("/verify/by-token/:qrToken", async (req, res) => {
+    try {
+        const { qrToken } = req.params;
+        const certificate = await fetchPublicVerificationCertificate("(c.qr_token = $1 OR c.signature_token = $1)", qrToken);
+        if (!certificate) {
+            return (0, apiError_1.sendNotFound)(res, "Certificate not found", {
+                verificationTimestamp: new Date().toISOString(),
+            });
+        }
+        res.json({
+            data: buildPublicVerificationResponse(certificate),
         });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to verify certificate token", error);
+    }
+});
+exports.certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
+    try {
+        const { serialNumber } = req.params;
+        const certificate = await fetchPublicVerificationCertificate("c.serial_number = $1", serialNumber);
+        if (!certificate) {
+            return (0, apiError_1.sendNotFound)(res, "Certificate not found", {
+                verificationTimestamp: new Date().toISOString(),
+            });
+        }
+        res.json({
+            data: buildPublicVerificationResponse(certificate),
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to verify certificate", error);
+    }
+});
+exports.certificateRoutes.get("/:certificateId/qr.svg", async (req, res) => {
+    let certificateId = "";
+    try {
+        certificateId = (0, validation_1.requireUuid)(req.params.certificateId, "certificateId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid certificate QR request");
+    }
+    try {
+        const result = await pool_1.pool.query(`
+      SELECT
+        certificate_id,
+        serial_number
+      FROM share_certificate
+      WHERE certificate_id = $1
+      LIMIT 1
+      `, [certificateId]);
+        if (result.rowCount === 0) {
+            return (0, apiError_1.sendNotFound)(res, "Certificate not found");
+        }
+        const certificate = result.rows[0];
+        const verificationUrl = buildPublicVerificationUrl(certificate.serial_number);
+        const svg = await QRCode.toString(verificationUrl, {
+            type: "svg",
+            errorCorrectionLevel: "M",
+            margin: 2,
+            width: 240,
+        });
+        res.setHeader("Content-Type", "image/svg+xml");
+        res.setHeader("Cache-Control", "no-store");
+        return res.send(svg);
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to generate certificate QR SVG", error);
     }
 });
 exports.certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
@@ -194,7 +304,8 @@ exports.certificateRoutes.get("/:certificateId/render-data", async (req, res) =>
                 hash_algorithm: certificate.hash_algorithm,
                 hash_generated_at: certificate.hash_generated_at,
                 qr_token: certificate.qr_token,
-                public_verification_url: `/qr?serialNumber=${encodeURIComponent(certificate.serial_number)}`,
+                public_verification_url: buildPublicVerificationUrl(certificate.serial_number),
+                qr_svg_url: `/api/certificates/${certificate.certificate_id}/qr.svg`,
                 render_metadata: {
                     certificate_title: "Share Certificate",
                     template_version: "pdf-preview-v1",
@@ -240,7 +351,7 @@ exports.certificateRoutes.get("/:certificateId/print-preview", async (req, res) 
             return (0, apiError_1.sendNotFound)(res, "Certificate not found");
         }
         const certificate = result.rows[0];
-        const verificationUrl = `https://<digaf-governance-demo-url>/qr?serialNumber=${encodeURIComponent(certificate.serial_number)}`;
+        const verificationUrl = buildPublicVerificationUrl(certificate.serial_number);
         const verificationToken = certificate.qr_token || certificate.signature_token || null;
         void pool_1.pool
             .query(`
@@ -303,7 +414,6 @@ exports.certificateRoutes.get("/:certificateId/print-preview", async (req, res) 
       margin: 0;
       font-size: 26px;
       font-weight: 800;
-      letter-spacing: 0;
     }
 
     .subtitle {
@@ -330,7 +440,6 @@ exports.certificateRoutes.get("/:certificateId/print-preview", async (req, res) 
       margin: 52px 0 8px;
       text-align: center;
       font-size: 42px;
-      letter-spacing: 0;
       text-transform: uppercase;
     }
 
@@ -389,6 +498,33 @@ exports.certificateRoutes.get("/:certificateId/print-preview", async (req, res) 
       font-size: 12px;
       line-height: 1.7;
       word-break: break-word;
+    }
+
+    .qr-section {
+      margin-top: 28px;
+      padding: 18px;
+      border: 1px solid #d8e0ea;
+      border-radius: 14px;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    .qr-code {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 10px auto;
+      display: block;
+    }
+
+    .qr-label {
+      font-weight: 700;
+      margin: 6px 0;
+    }
+
+    .qr-url {
+      font-size: 11px;
+      color: #475569;
+      word-break: break-all;
     }
 
     .disclaimer {
@@ -485,10 +621,20 @@ exports.certificateRoutes.get("/:certificateId/print-preview", async (req, res) 
       <p class="value">${escapeHtml(certificate.hash_algorithm || "Not generated")}</p>
       <p class="label">Certificate hash</p>
       <p class="value">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
-      <p class="label">Public verification URL placeholder</p>
+      <p class="label">Public verification URL</p>
       <p class="value">${escapeHtml(verificationUrl)}</p>
       <p class="label">QR token / verification token</p>
       <p class="value">${escapeHtml(formatWrappedToken(verificationToken))}</p>
+    </section>
+
+    <section class="qr-section" aria-label="Certificate QR verification">
+      <img
+        src="/api/certificates/${escapeHtml(certificate.certificate_id)}/qr.svg"
+        alt="Certificate verification QR code"
+        class="qr-code"
+      />
+      <p class="qr-label">Scan to verify certificate</p>
+      <p class="qr-url">${escapeHtml(verificationUrl)}</p>
     </section>
 
     <p class="disclaimer">Demo template for MVP review. Official certificate template pending Digaf confirmation.</p>
@@ -664,13 +810,16 @@ exports.certificateRoutes.post("/:certificateId/generate-hash", async (req, res)
             await client.query("ROLLBACK");
             return (0, apiError_1.sendBadRequest)(res, "Certificate issue_date is required before hash generation");
         }
+        const issueDate = certificate.issue_date instanceof Date
+            ? certificate.issue_date.toISOString().slice(0, 10)
+            : new Date(certificate.issue_date).toISOString().slice(0, 10);
         const canonicalString = (0, certificateCrypto_1.buildCanonicalCertificateString)({
             entityId: certificate.entity_id,
             serialNumber: certificate.serial_number,
             shareholderId: certificate.shareholder_id,
             shareClassId: certificate.share_class_id,
             quantity: certificate.quantity,
-            issueDate: certificate.issue_date.toISOString().slice(0, 10),
+            issueDate,
             issuingAuthority: certificate.issuing_authority,
         });
         const certificateHash = (0, certificateCrypto_1.generateCertificateHash)(canonicalString);
@@ -712,40 +861,6 @@ exports.certificateRoutes.post("/:certificateId/generate-hash", async (req, res)
     }
     finally {
         client.release();
-    }
-});
-exports.certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
-    try {
-        const { serialNumber } = req.params;
-        const certificate = await fetchPublicVerificationCertificate("c.serial_number = $1", serialNumber);
-        if (!certificate) {
-            return (0, apiError_1.sendNotFound)(res, "Certificate not found", {
-                verificationTimestamp: new Date().toISOString(),
-            });
-        }
-        res.json({
-            data: buildPublicVerificationResponse(certificate),
-        });
-    }
-    catch (error) {
-        return (0, apiError_1.sendServerError)(res, "Failed to verify certificate", error);
-    }
-});
-exports.certificateRoutes.get("/verify/by-token/:qrToken", async (req, res) => {
-    try {
-        const { qrToken } = req.params;
-        const certificate = await fetchPublicVerificationCertificate("(c.qr_token = $1 OR c.signature_token = $1)", qrToken);
-        if (!certificate) {
-            return (0, apiError_1.sendNotFound)(res, "Certificate not found", {
-                verificationTimestamp: new Date().toISOString(),
-            });
-        }
-        res.json({
-            data: buildPublicVerificationResponse(certificate),
-        });
-    }
-    catch (error) {
-        return (0, apiError_1.sendServerError)(res, "Failed to verify certificate token", error);
     }
 });
 //# sourceMappingURL=certificateRoutes.js.map

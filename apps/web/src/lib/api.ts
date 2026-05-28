@@ -605,6 +605,12 @@ export function getCertificatePrintPreviewUrl(certificateId: string) {
   )}/print-preview`;
 }
 
+export function getCertificateQrSvgUrl(certificateId: string) {
+  return `${API_BASE_URL}/api/certificates/${encodeURIComponent(
+    certificateId
+  )}/qr.svg`;
+}
+
 export async function fetchCertificateEvents(certificateId: string) {
   const response = await fetch(
     `${API_BASE_URL}/api/certificates/${certificateId}/events`,

@@ -11,6 +11,7 @@ The current certificate module supports:
 - Certificate event history.
 - Public verification by serial number.
 - Public verification by QR token or signature token.
+- Scannable QR image generation for certificate previews.
 - PDF-ready render data retrieval for future certificate template work.
 
 The current stage does not implement real PDF generation and does not add a PDF library.
@@ -53,7 +54,8 @@ The endpoint returns certificate-safe data needed for future PDF generation:
 - Hash algorithm
 - Hash generated timestamp
 - QR token
-- Public verification URL placeholder
+- Public verification URL
+- QR SVG URL
 - Render metadata
 
 Requesting render data writes a best-effort certificate event:
@@ -63,6 +65,32 @@ render_data_accessed
 ```
 
 This event is for preview traceability and should not block the response if event insertion fails.
+
+## Scannable QR Image Endpoint
+
+Endpoint:
+
+```text
+GET /api/certificates/:certificateId/qr.svg
+```
+
+The QR endpoint validates `certificateId` as a UUID, loads only the certificate serial number, and generates an SVG QR code that points to:
+
+```text
+${FRONTEND_PUBLIC_BASE_URL}/qr?serialNumber=<serial-number>
+```
+
+The QR image does not encode shareholder name, KYC details, contact details, approval internals, certificate hash values, or private workflow data. It only opens the public verification page, which performs the existing public-safe certificate verification flow.
+
+## Certificate Print Preview QR
+
+Endpoint:
+
+```text
+GET /api/certificates/:certificateId/print-preview
+```
+
+The demo print-preview HTML includes a scannable QR code, the text `Scan to verify certificate`, and the public verification URL. The demo disclaimer remains visible because the official Digaf certificate template is still pending Digaf confirmation.
 
 ## QR Token Verification
 
@@ -157,6 +185,8 @@ Future certificate templates should define:
 - Page size and print margins.
 
 Templates should be versioned so previously issued certificate PDFs remain reproducible.
+
+The official certificate artwork, final QR placement, signature blocks, and production wording remain pending Digaf confirmation.
 
 ## Future SharePoint Storage Flow
 

@@ -11,6 +11,7 @@ Set these for the backend API in `apps/api/.env` or in the local shell.
 | `PORT` | Optional | `4000` | Local API port. The API defaults to `4000` when unset. |
 | `DATABASE_URL` | Required | `postgresql://postgres:<local-password>@localhost:5432/digaf_governance` | Local PostgreSQL connection string. Keep the real value out of Git. |
 | `CERTIFICATE_HMAC_SECRET` | Required | `<local-certificate-hmac-secret>` | Local-only HMAC secret used for certificate QR hash generation and verification. |
+| `FRONTEND_PUBLIC_BASE_URL` | Optional locally | `http://localhost:3000` | Public web base URL used by certificate QR SVG generation. The API defaults to `http://localhost:3000` when unset. |
 
 ## Backend Vercel Variables
 
@@ -20,6 +21,7 @@ Set these on the Vercel API project for the appropriate Production, Preview, or 
 | --- | --- | --- | --- |
 | `DATABASE_URL` | Required | `postgresql://<user>:<password>@<neon-host>/<database>?sslmode=require` | Neon PostgreSQL connection string. Treat as a secret. |
 | `CERTIFICATE_HMAC_SECRET` | Required | `<vercel-certificate-hmac-secret>` | Secret used by the deployed API for certificate QR hashes. Keep stable unless intentionally rotating. |
+| `FRONTEND_PUBLIC_BASE_URL` | Required | `https://<web-project>.vercel.app` | Public web base URL used by certificate QR SVG generation, for example `https://digaf-web.vercel.app`. |
 | `NODE_ENV` | Recommended | `production` | Runtime environment label for deployed API behavior and diagnostics. |
 | `ALLOWED_ORIGINS` | Required for restricted CORS | `https://<web-project>.vercel.app` | Comma-separated frontend origins allowed to call the API. |
 | `SHAREPOINT_SITE_URL` | Future optional | `https://<tenant>.sharepoint.com/sites/<site-name>` | Placeholder for future SharePoint integration. Do not include private tenant values in docs. |

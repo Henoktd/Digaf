@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db/pool";
+import * as QRCode from "qrcode";
 import {
   buildCanonicalCertificateString,
   generateCertificateHash,
@@ -44,17 +45,34 @@ function formatWrappedToken(value: string | null) {
   return value.match(/.{1,16}/g)?.join(" ") ?? value;
 }
 
+function getFrontendBaseUrl() {
+  return (
+    process.env.FRONTEND_PUBLIC_BASE_URL || "http://localhost:3000"
+  ).replace(/\/+$/, "");
+}
+
+function buildPublicVerificationUrl(serialNumber: string) {
+  return `${getFrontendBaseUrl()}/qr?serialNumber=${encodeURIComponent(
+    serialNumber
+  )}`;
+}
+
 function buildPublicVerificationResponse(certificate: any) {
   let hashVerificationResult = "hash_missing";
 
   if (certificate.certificate_hash && certificate.issue_date) {
+    const issueDate =
+      certificate.issue_date instanceof Date
+        ? certificate.issue_date.toISOString().slice(0, 10)
+        : new Date(certificate.issue_date).toISOString().slice(0, 10);
+
     const canonicalString = buildCanonicalCertificateString({
       entityId: certificate.entity_id,
       serialNumber: certificate.serial_number,
       shareholderId: certificate.shareholder_id,
       shareClassId: certificate.share_class_id,
       quantity: certificate.quantity,
-      issueDate: certificate.issue_date.toISOString().slice(0, 10),
+      issueDate,
       issuingAuthority: certificate.issuing_company,
     });
 
@@ -158,10 +176,102 @@ certificateRoutes.get("/", async (_req, res) => {
       data: result.rows,
     });
   } catch (error) {
-    res.status(500).json({
-      error: "Failed to fetch certificates",
-      message: error instanceof Error ? error.message : "Unknown error",
+    return sendServerError(res, "Failed to fetch certificates", error);
+  }
+});
+
+certificateRoutes.get("/verify/by-token/:qrToken", async (req, res) => {
+  try {
+    const { qrToken } = req.params;
+
+    const certificate = await fetchPublicVerificationCertificate(
+      "(c.qr_token = $1 OR c.signature_token = $1)",
+      qrToken
+    );
+
+    if (!certificate) {
+      return sendNotFound(res, "Certificate not found", {
+        verificationTimestamp: new Date().toISOString(),
+      });
+    }
+
+    res.json({
+      data: buildPublicVerificationResponse(certificate),
     });
+  } catch (error) {
+    return sendServerError(res, "Failed to verify certificate token", error);
+  }
+});
+
+certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
+  try {
+    const { serialNumber } = req.params;
+
+    const certificate = await fetchPublicVerificationCertificate(
+      "c.serial_number = $1",
+      serialNumber
+    );
+
+    if (!certificate) {
+      return sendNotFound(res, "Certificate not found", {
+        verificationTimestamp: new Date().toISOString(),
+      });
+    }
+
+    res.json({
+      data: buildPublicVerificationResponse(certificate),
+    });
+  } catch (error) {
+    return sendServerError(res, "Failed to verify certificate", error);
+  }
+});
+
+certificateRoutes.get("/:certificateId/qr.svg", async (req, res) => {
+  let certificateId = "";
+
+  try {
+    certificateId = requireUuid(req.params.certificateId, "certificateId");
+  } catch (error) {
+    return sendBadRequest(
+      res,
+      error instanceof Error ? error.message : "Invalid certificate QR request"
+    );
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        certificate_id,
+        serial_number
+      FROM share_certificate
+      WHERE certificate_id = $1
+      LIMIT 1
+      `,
+      [certificateId]
+    );
+
+    if (result.rowCount === 0) {
+      return sendNotFound(res, "Certificate not found");
+    }
+
+    const certificate = result.rows[0];
+    const verificationUrl = buildPublicVerificationUrl(
+      certificate.serial_number
+    );
+
+    const svg = await QRCode.toString(verificationUrl, {
+      type: "svg",
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 240,
+    });
+
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Cache-Control", "no-store");
+    return res.send(svg);
+  } catch (error) {
+    return sendServerError(res, "Failed to generate certificate QR SVG", error);
   }
 });
 
@@ -237,9 +347,10 @@ certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
         hash_algorithm: certificate.hash_algorithm,
         hash_generated_at: certificate.hash_generated_at,
         qr_token: certificate.qr_token,
-        public_verification_url: `/qr?serialNumber=${encodeURIComponent(
+        public_verification_url: buildPublicVerificationUrl(
           certificate.serial_number
-        )}`,
+        ),
+        qr_svg_url: `/api/certificates/${certificate.certificate_id}/qr.svg`,
         render_metadata: {
           certificate_title: "Share Certificate",
           template_version: "pdf-preview-v1",
@@ -293,9 +404,9 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     }
 
     const certificate = result.rows[0];
-    const verificationUrl = `https://<digaf-governance-demo-url>/qr?serialNumber=${encodeURIComponent(
+    const verificationUrl = buildPublicVerificationUrl(
       certificate.serial_number
-    )}`;
+    );
     const verificationToken =
       certificate.qr_token || certificate.signature_token || null;
 
@@ -364,7 +475,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       margin: 0;
       font-size: 26px;
       font-weight: 800;
-      letter-spacing: 0;
     }
 
     .subtitle {
@@ -391,7 +501,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       margin: 52px 0 8px;
       text-align: center;
       font-size: 42px;
-      letter-spacing: 0;
       text-transform: uppercase;
     }
 
@@ -450,6 +559,33 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       font-size: 12px;
       line-height: 1.7;
       word-break: break-word;
+    }
+
+    .qr-section {
+      margin-top: 28px;
+      padding: 18px;
+      border: 1px solid #d8e0ea;
+      border-radius: 14px;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    .qr-code {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 10px auto;
+      display: block;
+    }
+
+    .qr-label {
+      font-weight: 700;
+      margin: 6px 0;
+    }
+
+    .qr-url {
+      font-size: 11px;
+      color: #475569;
+      word-break: break-all;
     }
 
     .disclaimer {
@@ -531,7 +667,9 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       </div>
       <div class="field">
         <p class="label">Issue date</p>
-        <p class="value">${escapeHtml(formatCertificateDate(certificate.issue_date))}</p>
+        <p class="value">${escapeHtml(
+          formatCertificateDate(certificate.issue_date)
+        )}</p>
       </div>
       <div class="field">
         <p class="label">Status</p>
@@ -545,13 +683,27 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
     <section class="evidence" aria-label="Verification evidence">
       <p class="label">Hash algorithm</p>
-      <p class="value">${escapeHtml(certificate.hash_algorithm || "Not generated")}</p>
+      <p class="value">${escapeHtml(
+        certificate.hash_algorithm || "Not generated"
+      )}</p>
       <p class="label">Certificate hash</p>
-      <p class="value">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
-      <p class="label">Public verification URL placeholder</p>
+      <p class="value">${escapeHtml(
+        formatWrappedToken(certificate.certificate_hash)
+      )}</p>
+      <p class="label">Public verification URL</p>
       <p class="value">${escapeHtml(verificationUrl)}</p>
       <p class="label">QR token / verification token</p>
       <p class="value">${escapeHtml(formatWrappedToken(verificationToken))}</p>
+    </section>
+
+    <section class="qr-section" aria-label="Certificate QR verification">
+      <img
+        src="/api/certificates/${escapeHtml(certificate.certificate_id)}/qr.svg"
+        alt="Certificate verification QR code"
+        class="qr-code"
+      />
+      <p class="qr-label">Scan to verify certificate</p>
+      <p class="qr-url">${escapeHtml(verificationUrl)}</p>
     </section>
 
     <p class="disclaimer">Demo template for MVP review. Official certificate template pending Digaf confirmation.</p>
@@ -728,7 +880,6 @@ certificateRoutes.post("/:certificateId/revoke", async (req, res) => {
   }
 });
 
-
 certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
   let certificateId = "";
 
@@ -780,13 +931,18 @@ certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
       );
     }
 
+    const issueDate =
+      certificate.issue_date instanceof Date
+        ? certificate.issue_date.toISOString().slice(0, 10)
+        : new Date(certificate.issue_date).toISOString().slice(0, 10);
+
     const canonicalString = buildCanonicalCertificateString({
       entityId: certificate.entity_id,
       serialNumber: certificate.serial_number,
       shareholderId: certificate.shareholder_id,
       shareClassId: certificate.share_class_id,
       quantity: certificate.quantity,
-      issueDate: certificate.issue_date.toISOString().slice(0, 10),
+      issueDate,
       issuingAuthority: certificate.issuing_authority,
     });
 
@@ -838,52 +994,5 @@ certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
     return sendServerError(res, "Failed to generate certificate hash", error);
   } finally {
     client.release();
-  }
-});
-
-
-certificateRoutes.get("/verify/:serialNumber", async (req, res) => {
-  try {
-    const { serialNumber } = req.params;
-
-    const certificate = await fetchPublicVerificationCertificate(
-      "c.serial_number = $1",
-      serialNumber
-    );
-
-    if (!certificate) {
-      return sendNotFound(res, "Certificate not found", {
-        verificationTimestamp: new Date().toISOString(),
-      });
-    }
-
-    res.json({
-      data: buildPublicVerificationResponse(certificate),
-    });
-  } catch (error) {
-    return sendServerError(res, "Failed to verify certificate", error);
-  }
-});
-
-certificateRoutes.get("/verify/by-token/:qrToken", async (req, res) => {
-  try {
-    const { qrToken } = req.params;
-
-    const certificate = await fetchPublicVerificationCertificate(
-      "(c.qr_token = $1 OR c.signature_token = $1)",
-      qrToken
-    );
-
-    if (!certificate) {
-      return sendNotFound(res, "Certificate not found", {
-        verificationTimestamp: new Date().toISOString(),
-      });
-    }
-
-    res.json({
-      data: buildPublicVerificationResponse(certificate),
-    });
-  } catch (error) {
-    return sendServerError(res, "Failed to verify certificate token", error);
   }
 });

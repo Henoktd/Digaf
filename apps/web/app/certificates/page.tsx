@@ -3,6 +3,7 @@ import {
   fetchCertificateRenderData,
   fetchCertificates,
   getCertificatePrintPreviewUrl,
+  getCertificateQrSvgUrl,
 } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { PageHeader } from "@/src/components/PageHeader";
@@ -44,6 +45,7 @@ type CertificateRenderData = {
   hash_algorithm: string | null;
   hash_generated_at: string | null;
   qr_token: string | null;
+  qr_svg_url: string;
   public_verification_url: string;
   render_metadata: {
     certificate_title: string;
@@ -59,6 +61,10 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
   }).format(new Date(value));
+}
+
+function getPublicVerificationPageUrl(serialNumber: string) {
+  return `/qr?serialNumber=${encodeURIComponent(serialNumber)}`;
 }
 
 export default async function CertificatesPage() {
@@ -89,87 +95,116 @@ export default async function CertificatesPage() {
         />
 
         <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          {certificates.length > 0 ? (
-            <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
-                <tr>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Serial Number
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Shareholder
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Share Class
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Quantity
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Status
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Hash
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Revocation
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Demo Certificate
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {certificates.map((certificate) => (
-                  <tr key={certificate.certificate_id}>
-                    <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                      {certificate.serial_number}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {certificate.shareholder_name}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {certificate.share_class}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {certificate.quantity}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <StatusBadge status={certificate.status} />
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {certificate.hash_algorithm || "Not generated"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <StatusBadge
-                        status={certificate.revocation_status}
-                        label={certificate.revocation_status || "None"}
-                      />
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <a
-                        href={getCertificatePrintPreviewUrl(
-                          certificate.certificate_id
-                        )}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
-                      >
-                        Open Demo Certificate
-                      </a>
-                    </td>
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            {certificates.length > 0 ? (
+              <table className="w-full min-w-[1320px] border-collapse text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Serial Number
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Shareholder
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Share Class
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Quantity
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Status
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Hash
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Revocation
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      QR Verification
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      Demo Certificate
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="p-4">
-              <EmptyState title="No certificates found" />
-            </div>
-          )}
-        </div>
+                </thead>
+
+                <tbody>
+                  {certificates.map((certificate) => (
+                    <tr key={certificate.certificate_id}>
+                      <td className="border-b border-slate-100 px-4 py-3 font-medium">
+                        {certificate.serial_number}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        {certificate.shareholder_name}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        {certificate.share_class}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        {certificate.quantity}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <StatusBadge status={certificate.status} />
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        {certificate.hash_algorithm || "Not generated"}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <StatusBadge
+                          status={certificate.revocation_status}
+                          label={certificate.revocation_status || "None"}
+                        />
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <div className="flex min-w-[210px] items-center gap-3">
+                          <img
+                            src={getCertificateQrSvgUrl(
+                              certificate.certificate_id
+                            )}
+                            alt={`QR code for ${certificate.serial_number}`}
+                            className="h-20 w-20 shrink-0 rounded-lg border border-slate-200 bg-white p-1"
+                          />
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold text-slate-900">
+                              QR opens public verification page.
+                            </p>
+                            <a
+                              href={getPublicVerificationPageUrl(
+                                certificate.serial_number
+                              )}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              Open Verification Page
+                            </a>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <a
+                          href={getCertificatePrintPreviewUrl(
+                            certificate.certificate_id
+                          )}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+                        >
+                          Open Demo Certificate
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-4">
+                <EmptyState title="No certificates found" />
+              </div>
+            )}
+          </div>
 
         {renderData ? (
           <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
@@ -254,6 +289,42 @@ export default async function CertificatesPage() {
               <p className="mt-1 break-all font-mono text-sm text-slate-900">
                 {renderData.public_verification_url}
               </p>
+            </div>
+
+            <div className="mt-4 grid gap-4 rounded-xl bg-white p-4 md:grid-cols-[auto_1fr] md:items-center">
+              <img
+                src={getCertificateQrSvgUrl(renderData.certificate_id)}
+                alt={`QR code for ${renderData.serial_number}`}
+                className="h-36 w-36 rounded-xl border border-slate-200 bg-white p-2"
+              />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  QR opens public verification page.
+                </p>
+                <p className="mt-2 break-all font-mono text-sm text-slate-700">
+                  {renderData.public_verification_url}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a
+                    href={renderData.public_verification_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                  >
+                    Open Verification Page
+                  </a>
+                  <a
+                    href={getCertificatePrintPreviewUrl(
+                      renderData.certificate_id
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Open Demo Certificate
+                  </a>
+                </div>
+              </div>
             </div>
 
             <p className="mt-4 text-sm text-slate-600">

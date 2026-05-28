@@ -600,15 +600,11 @@ export async function fetchCertificateRenderData(certificateId: string) {
 }
 
 export function getCertificatePrintPreviewUrl(certificateId: string) {
-  return `${API_BASE_URL}/api/certificates/${encodeURIComponent(
-    certificateId
-  )}/print-preview`;
+  return `${API_BASE_URL}/api/certificates/${certificateId}/print-preview`;
 }
 
 export function getCertificateQrSvgUrl(certificateId: string) {
-  return `${API_BASE_URL}/api/certificates/${encodeURIComponent(
-    certificateId
-  )}/qr.svg`;
+  return `${API_BASE_URL}/api/certificates/${certificateId}/qr.svg`;
 }
 
 export async function fetchCertificateEvents(certificateId: string) {

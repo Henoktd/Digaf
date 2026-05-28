@@ -52,8 +52,24 @@ function getPublicStatus(result: VerificationResult | null) {
 }
 
 function formatPublicStatus(status: string) {
-  if (status === "not_found") return "Not found";
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  if (status === "not_found") return "not found";
+  return status;
+}
+
+function getPublicStatusDescription(status: string) {
+  if (status === "valid") {
+    return "The certificate serial number exists and its hash evidence matches.";
+  }
+
+  if (status === "revoked") {
+    return "The certificate exists, but it is marked as revoked.";
+  }
+
+  if (status === "tampered") {
+    return "The certificate exists, but hash verification detected a mismatch.";
+  }
+
+  return "The serial number was not found in the certificate registry.";
 }
 
 export default async function QrVerificationPage({
@@ -78,14 +94,17 @@ export default async function QrVerificationPage({
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">
-                Public Verification Result
+              <p className="text-sm font-semibold uppercase text-slate-500">
+                Verification status
               </p>
-              <h2 className="mt-1 text-3xl font-bold capitalize">
+              <h2 className="mt-1 text-3xl font-bold">
                 {formatPublicStatus(publicStatus)}
               </h2>
               <p className="mt-2 text-sm text-slate-600">
                 Serial checked: {serialNumber}
+              </p>
+              <p className="mt-2 max-w-2xl text-sm text-slate-700">
+                {getPublicStatusDescription(publicStatus)}
               </p>
             </div>
 
@@ -156,8 +175,10 @@ export default async function QrVerificationPage({
           )}
 
           <div className="mt-6 rounded-xl bg-white p-4 text-sm text-slate-600">
-            Public verification is intentionally limited to certificate status,
-            share class, quantity, issuance, revocation, and hash evidence.
+            Privacy notice: public verification is intentionally limited to
+            certificate status, share class, quantity, issuance, revocation, and
+            hash evidence. It does not show shareholder name, contact details,
+            KYC records, beneficial ownership, actor IDs, or approval internals.
           </div>
         </div>
         </section>

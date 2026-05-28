@@ -4,6 +4,8 @@
 
 Production deployment uses Vercel for the frontend and API, with Neon PostgreSQL for the database. See [docs/deployment-vercel.md](docs/deployment-vercel.md) for project settings, required environment variables, health checks, and troubleshooting.
 
+Security cleanup, environment variables, and pre-demo deployment synchronization are documented in [docs/security-secrets-checklist.md](docs/security-secrets-checklist.md), [docs/environment-variable-reference.md](docs/environment-variable-reference.md), and [docs/pre-demo-deployment-sync.md](docs/pre-demo-deployment-sync.md).
+
 ## Role Model
 
 The local RBAC prototype roles and permission matrix are documented in [docs/role-permission-matrix.md](docs/role-permission-matrix.md).
@@ -14,7 +16,7 @@ Microsoft Entra ID authentication planning is documented in [docs/entra-authenti
 
 ## Demo and Readiness
 
-Production readiness, demo flow, and reviewer instructions are documented in [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md), [docs/demo-script.md](docs/demo-script.md), and [docs/reviewer-guide.md](docs/reviewer-guide.md).
+Production readiness, MVP demo readiness, demo flow, and reviewer instructions are documented in [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md), [docs/mvp-demo-readiness.md](docs/mvp-demo-readiness.md), [docs/demo-script.md](docs/demo-script.md), and [docs/reviewer-guide.md](docs/reviewer-guide.md).
 
 ## Feedback and Backlog
 

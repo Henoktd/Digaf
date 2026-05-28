@@ -6,7 +6,7 @@
 
 # 
 
-# PostgreSQL is the single structured data store for the SVH Governance Platform.
+# PostgreSQL is the single structured data store for the Digaf Shareholder Governance Platform.
 
 # 
 

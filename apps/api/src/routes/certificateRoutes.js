@@ -7,6 +7,27 @@ const certificateCrypto_1 = require("../services/certificateCrypto");
 const apiError_1 = require("../utils/apiError");
 const validation_1 = require("../utils/validation");
 exports.certificateRoutes = (0, express_1.Router)();
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+function formatCertificateDate(value) {
+    if (!value)
+        return "Not set";
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 10);
+    }
+    return value;
+}
+function formatWrappedToken(value) {
+    if (!value)
+        return "Not generated";
+    return value.match(/.{1,16}/g)?.join(" ") ?? value;
+}
 function buildPublicVerificationResponse(certificate) {
     let hashVerificationResult = "hash_missing";
     if (certificate.certificate_hash && certificate.issue_date) {
@@ -188,6 +209,301 @@ exports.certificateRoutes.get("/:certificateId/render-data", async (req, res) =>
             return (0, apiError_1.sendBadRequest)(res, error.message);
         }
         return (0, apiError_1.sendServerError)(res, "Failed to fetch certificate render data", error);
+    }
+});
+exports.certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
+    try {
+        const certificateId = (0, validation_1.requireUuid)(req.params.certificateId, "certificateId");
+        const result = await pool_1.pool.query(`
+      SELECT
+        c.certificate_id,
+        c.serial_number,
+        e.legal_name AS issuing_company,
+        s.legal_name AS shareholder_name,
+        sc.class_name AS share_class,
+        c.quantity,
+        c.issue_date,
+        c.status,
+        c.revocation_status,
+        c.certificate_hash,
+        c.hash_algorithm,
+        c.qr_token,
+        c.signature_token
+      FROM share_certificate c
+      JOIN entity e ON e.entity_id = c.entity_id
+      JOIN shareholder s ON s.shareholder_id = c.shareholder_id
+      JOIN share_class sc ON sc.share_class_id = c.share_class_id
+      WHERE c.certificate_id = $1
+      LIMIT 1
+      `, [certificateId]);
+        if (result.rowCount === 0) {
+            return (0, apiError_1.sendNotFound)(res, "Certificate not found");
+        }
+        const certificate = result.rows[0];
+        const verificationUrl = `https://<digaf-governance-demo-url>/qr?serialNumber=${encodeURIComponent(certificate.serial_number)}`;
+        const verificationToken = certificate.qr_token || certificate.signature_token || null;
+        void pool_1.pool
+            .query(`
+        INSERT INTO certificate_event (
+          certificate_id,
+          event_type,
+          actor_id,
+          notes
+        )
+        VALUES (
+          $1,
+          'print_preview_accessed',
+          'system.print_preview',
+          'Certificate print preview accessed'
+        )
+        `, [certificateId])
+            .catch(() => undefined);
+        const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Share Certificate ${escapeHtml(certificate.serial_number)}</title>
+  <style>
+    :root {
+      color: #0f172a;
+      background: #e2e8f0;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      background: #e2e8f0;
+    }
+
+    .certificate {
+      max-width: 960px;
+      min-height: 680px;
+      margin: 0 auto;
+      padding: 48px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 3px solid #0f172a;
+      padding-bottom: 24px;
+    }
+
+    .issuer {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: #475569;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .serial {
+      text-align: right;
+      font-size: 13px;
+      color: #475569;
+    }
+
+    .serial strong {
+      display: block;
+      margin-top: 6px;
+      color: #0f172a;
+      font-size: 16px;
+    }
+
+    h1 {
+      margin: 52px 0 8px;
+      text-align: center;
+      font-size: 42px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .certifies {
+      max-width: 720px;
+      margin: 0 auto 40px;
+      text-align: center;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .shareholder {
+      margin: 12px 0;
+      color: #0f172a;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 32px 0;
+    }
+
+    .field {
+      border: 1px solid #e2e8f0;
+      padding: 16px;
+      min-height: 84px;
+    }
+
+    .label {
+      margin: 0 0 8px;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .value {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .evidence {
+      margin-top: 28px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      padding: 18px;
+    }
+
+    .evidence .value {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+
+    .disclaimer {
+      margin-top: 28px;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 16px;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .print-note {
+      max-width: 960px;
+      margin: 16px auto 0;
+      color: #475569;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #ffffff;
+      }
+
+      .certificate {
+        max-width: none;
+        min-height: auto;
+        border: 0;
+        box-shadow: none;
+        page-break-inside: avoid;
+      }
+
+      .print-note {
+        display: none;
+      }
+    }
+
+    @page {
+      margin: 16mm;
+      size: A4;
+    }
+  </style>
+</head>
+<body>
+  <article class="certificate" aria-label="Demo share certificate">
+    <header class="topline">
+      <div>
+        <p class="issuer">Digaf Microcredit Provider SC</p>
+        <p class="subtitle">Registered issuer: ${escapeHtml(certificate.issuing_company)}</p>
+      </div>
+      <div class="serial">
+        Certificate serial number
+        <strong>${escapeHtml(certificate.serial_number)}</strong>
+      </div>
+    </header>
+
+    <h1>Share Certificate</h1>
+
+    <section class="certifies">
+      <p>This certifies that the shareholder below is recorded in the demo shareholder register as holding the stated shares.</p>
+      <p class="shareholder">${escapeHtml(certificate.shareholder_name)}</p>
+    </section>
+
+    <section class="grid" aria-label="Certificate details">
+      <div class="field">
+        <p class="label">Shareholder name</p>
+        <p class="value">${escapeHtml(certificate.shareholder_name)}</p>
+      </div>
+      <div class="field">
+        <p class="label">Share class</p>
+        <p class="value">${escapeHtml(certificate.share_class)}</p>
+      </div>
+      <div class="field">
+        <p class="label">Quantity</p>
+        <p class="value">${escapeHtml(certificate.quantity)}</p>
+      </div>
+      <div class="field">
+        <p class="label">Issue date</p>
+        <p class="value">${escapeHtml(formatCertificateDate(certificate.issue_date))}</p>
+      </div>
+      <div class="field">
+        <p class="label">Status</p>
+        <p class="value">${escapeHtml(certificate.status)}</p>
+      </div>
+      <div class="field">
+        <p class="label">Revocation status</p>
+        <p class="value">${escapeHtml(certificate.revocation_status || "None")}</p>
+      </div>
+    </section>
+
+    <section class="evidence" aria-label="Verification evidence">
+      <p class="label">Hash algorithm</p>
+      <p class="value">${escapeHtml(certificate.hash_algorithm || "Not generated")}</p>
+      <p class="label">Certificate hash</p>
+      <p class="value">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
+      <p class="label">Public verification URL placeholder</p>
+      <p class="value">${escapeHtml(verificationUrl)}</p>
+      <p class="label">QR token / verification token</p>
+      <p class="value">${escapeHtml(formatWrappedToken(verificationToken))}</p>
+    </section>
+
+    <p class="disclaimer">Demo template for MVP review. Official certificate template pending Digaf confirmation.</p>
+  </article>
+  <p class="print-note">Use browser Print, then Save as PDF, for demo certificate output.</p>
+</body>
+</html>`;
+        res.setHeader("X-Robots-Tag", "noindex");
+        return res.type("html").send(html);
+    }
+    catch (error) {
+        if (error instanceof Error && error.message.includes("certificateId")) {
+            return (0, apiError_1.sendBadRequest)(res, error.message);
+        }
+        return (0, apiError_1.sendServerError)(res, "Failed to build certificate print preview", error);
     }
 });
 exports.certificateRoutes.get("/:certificateId/events", async (req, res) => {

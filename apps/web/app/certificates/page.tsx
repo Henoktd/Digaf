@@ -2,6 +2,7 @@ import {
   fetchCertificateEvents,
   fetchCertificateRenderData,
   fetchCertificates,
+  getCertificatePrintPreviewUrl,
 } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
 import { PageHeader } from "@/src/components/PageHeader";
@@ -79,6 +80,7 @@ export default async function CertificatesPage() {
         <PageHeader
           title="Certificate Management"
           description="Manage certificate requests, approvals, serial numbers, QR verification, hashes, issuance, revocation, and reissue history."
+          notice="Demo certificate template — official Digaf template pending."
           badge={
             <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
               {certificates.length} Certificates
@@ -89,7 +91,7 @@ export default async function CertificatesPage() {
         <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           {certificates.length > 0 ? (
-            <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
                   <th className="border-b border-slate-200 px-4 py-3">
@@ -112,6 +114,9 @@ export default async function CertificatesPage() {
                   </th>
                   <th className="border-b border-slate-200 px-4 py-3">
                     Revocation
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3">
+                    Demo Certificate
                   </th>
                 </tr>
               </thead>
@@ -143,6 +148,18 @@ export default async function CertificatesPage() {
                         label={certificate.revocation_status || "None"}
                       />
                     </td>
+                    <td className="border-b border-slate-100 px-4 py-3">
+                      <a
+                        href={getCertificatePrintPreviewUrl(
+                          certificate.certificate_id
+                        )}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+                      >
+                        Open Demo Certificate
+                      </a>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -165,8 +182,9 @@ export default async function CertificatesPage() {
                   {renderData.render_metadata.certificate_title}
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm text-slate-600">
-                  PDF-ready render data for a future certificate template. This
-                  is not a generated PDF yet.
+                  Demo certificate template — official Digaf template pending.
+                  Browser print-to-PDF is available from the certificate action
+                  in the table above.
                 </p>
               </div>
 

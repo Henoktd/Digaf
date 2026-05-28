@@ -599,6 +599,12 @@ export async function fetchCertificateRenderData(certificateId: string) {
   return response.json();
 }
 
+export function getCertificatePrintPreviewUrl(certificateId: string) {
+  return `${API_BASE_URL}/api/certificates/${encodeURIComponent(
+    certificateId
+  )}/print-preview`;
+}
+
 export async function fetchCertificateEvents(certificateId: string) {
   const response = await fetch(
     `${API_BASE_URL}/api/certificates/${certificateId}/events`,

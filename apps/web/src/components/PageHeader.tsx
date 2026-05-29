@@ -4,6 +4,7 @@ type PageHeaderProps = {
   title: string;
   description: string;
   eyebrow?: string;
+  brand?: ReactNode;
   badge?: ReactNode;
   notice?: string;
   variant?: "light" | "dark";
@@ -13,6 +14,7 @@ export function PageHeader({
   title,
   description,
   eyebrow,
+  brand,
   badge,
   notice,
   variant = "light",
@@ -27,6 +29,8 @@ export function PageHeader({
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
+          {brand ? <div className="mb-5 max-w-full">{brand}</div> : null}
+
           {eyebrow ? (
             <p
               className={`text-sm font-semibold uppercase ${

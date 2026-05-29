@@ -6,6 +6,7 @@ import {
   getCertificateQrSvgUrl,
 } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
+import { BrandLogo } from "@/src/components/BrandLogo";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
@@ -211,6 +212,11 @@ export default async function CertificatesPage() {
             <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
               <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                 <div>
+                  <BrandLogo
+                    className="mb-4 max-w-full"
+                    imageClassName="h-12 w-auto max-w-full"
+                    fallbackClassName="block max-w-full break-words text-lg font-bold leading-tight text-slate-900"
+                  />
                   <p className="text-sm font-semibold uppercase text-slate-500">
                     Certificate Render Preview
                   </p>

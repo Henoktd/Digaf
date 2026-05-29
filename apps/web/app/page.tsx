@@ -3,6 +3,7 @@ import {
   fetchDashboardSummary,
 } from "@/src/lib/api";
 import { EmptyState } from "@/src/components/EmptyState";
+import { BrandLogo } from "@/src/components/BrandLogo";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
@@ -83,6 +84,12 @@ export default async function Home() {
     <PageContainer>
       <div className="mx-auto max-w-7xl space-y-8">
         <PageHeader
+          brand={
+            <BrandLogo
+              imageClassName="h-14 w-auto max-w-full rounded-lg bg-white px-4 py-3"
+              fallbackClassName="inline-block max-w-full break-words rounded-lg bg-white px-4 py-3 text-base font-bold leading-tight text-slate-900 sm:text-lg"
+            />
+          }
           eyebrow="Digaf Governance Portal"
           title="Digaf Shareholder Governance Platform"
           description="Board-ready dashboard for shareholder governance, transfer controls, certificates, audit evidence, and SLA visibility."

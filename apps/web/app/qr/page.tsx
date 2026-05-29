@@ -1,4 +1,5 @@
 import { verifyCertificate } from "@/src/lib/api";
+import { BrandLogo } from "@/src/components/BrandLogo";
 import { PageContainer } from "@/src/components/PageContainer";
 
 type QrPageProps = {
@@ -96,6 +97,11 @@ export default async function QrVerifyPage({ searchParams }: QrPageProps) {
     <PageContainer>
       <section className="mx-auto max-w-3xl rounded-2xl bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-6">
+          <BrandLogo
+            className="mb-5 max-w-full"
+            imageClassName="h-14 w-auto max-w-full"
+            fallbackClassName="block max-w-full break-words text-xl font-bold leading-tight text-slate-900"
+          />
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Public Verification
           </p>

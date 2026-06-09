@@ -39,30 +39,175 @@ function normalizeOptionalBoolean(value, fieldName, defaultValue) {
     }
     return value;
 }
+function normalizeNullableBoolean(value, fieldName) {
+    if (value === undefined || value === null) {
+        return null;
+    }
+    if (typeof value !== "boolean") {
+        throw new Error(`${fieldName} must be a boolean`);
+    }
+    return value;
+}
+function normalizeOptionalUuid(value, fieldName) {
+    if (value === undefined || value === null || value === "") {
+        return null;
+    }
+    return (0, validation_1.requireUuid)(value, fieldName);
+}
+function normalizeOptionalNumber(value, fieldName) {
+    if (value === undefined || value === null || value === "") {
+        return null;
+    }
+    const numericValue = typeof value === "number"
+        ? value
+        : typeof value === "string"
+            ? Number(value)
+            : Number.NaN;
+    if (!Number.isFinite(numericValue)) {
+        throw new Error(`${fieldName} must be a number`);
+    }
+    return numericValue;
+}
+function normalizeOptionalTimestampString(value, fieldName) {
+    const timestampString = normalizeOptionalString(value, fieldName);
+    if (!timestampString) {
+        return null;
+    }
+    const parsedDate = new Date(timestampString);
+    if (Number.isNaN(parsedDate.getTime())) {
+        throw new Error(`${fieldName} must be a valid timestamp string`);
+    }
+    return parsedDate.toISOString();
+}
+function normalizeOptionalJsonArray(value, fieldName) {
+    if (value === undefined || value === null) {
+        return [];
+    }
+    if (!Array.isArray(value)) {
+        throw new Error(`${fieldName} must be an array`);
+    }
+    return value;
+}
+function normalizeOptionalJsonArrayOrNull(value, fieldName) {
+    if (value === undefined || value === null) {
+        return null;
+    }
+    return normalizeOptionalJsonArray(value, fieldName);
+}
+function requireObject(value, fieldName) {
+    if (value === undefined ||
+        value === null ||
+        typeof value !== "object" ||
+        Array.isArray(value)) {
+        throw new Error(`${fieldName} must be an object`);
+    }
+    return value;
+}
 function sendRoleFailure(res, role, message) {
     const normalizedRole = typeof role === "string" ? role.trim() : role;
     return (0, roles_1.isAllowedRole)(normalizedRole)
         ? (0, apiError_1.sendForbidden)(res, message)
         : (0, apiError_1.sendBadRequest)(res, message);
 }
+const shareholderCoreSelect = `
+  s.shareholder_id,
+  s.entity_id,
+  e.legal_name AS entity_name,
+  s.legal_name,
+  s.type,
+  s.status,
+  s.contact_details,
+  s.kyc_status,
+  s.kyc_expiry,
+  s.risk_classification,
+  s.proxy_eligible,
+  s.relationship_start_date,
+  s.shareholder_code,
+  s.gender,
+  s.date_of_birth,
+  s.nationality,
+  s.occupation,
+  s.tin_number,
+  s.primary_id_number,
+  s.mobile_number,
+  s.email_address,
+  s.physical_address,
+  s.source_of_funds_declaration,
+  s.created_at,
+  s.updated_at
+`;
+async function fetchShareholderContext(client, shareholderId, lockForUpdate = false) {
+    const result = await client.query(`
+    SELECT shareholder_id, entity_id, legal_name
+    FROM shareholder
+    WHERE shareholder_id = $1
+    ${lockForUpdate ? "FOR UPDATE" : ""}
+    `, [shareholderId]);
+    return result.rows[0] ?? null;
+}
+async function insertShareholderAudit(client, input) {
+    await client.query(`
+    INSERT INTO audit_log (
+      entity_id,
+      actor_id,
+      action,
+      table_name,
+      record_id,
+      old_value_json,
+      new_value_json,
+      source_ip
+    )
+    VALUES (
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6::jsonb,
+      $7::jsonb,
+      $8
+    )
+    `, [
+        input.entityId,
+        input.actorId,
+        input.action,
+        input.tableName,
+        input.recordId,
+        JSON.stringify(input.oldValue),
+        JSON.stringify(input.newValue),
+        input.sourceIp ?? null,
+    ]);
+}
 exports.shareholderRoutes.get("/", async (_req, res) => {
     try {
         const result = await pool_1.pool.query(`
       SELECT
-        shareholder_id,
-        entity_id,
-        legal_name,
-        type,
-        status,
-        contact_details,
-        kyc_status,
-        kyc_expiry,
-        risk_classification,
-        proxy_eligible,
-        relationship_start_date,
-        created_at
-      FROM shareholder
-      ORDER BY legal_name ASC
+        s.shareholder_id,
+        s.entity_id,
+        s.legal_name,
+        s.type,
+        s.status,
+        s.contact_details,
+        s.kyc_status,
+        s.kyc_expiry,
+        s.risk_classification,
+        s.proxy_eligible,
+        s.relationship_start_date,
+        s.shareholder_code,
+        s.gender,
+        s.date_of_birth,
+        s.nationality,
+        s.occupation,
+        s.tin_number,
+        s.primary_id_number,
+        s.mobile_number,
+        s.email_address,
+        s.physical_address,
+        s.source_of_funds_declaration,
+        s.created_at,
+        s.updated_at
+      FROM shareholder s
+      ORDER BY s.legal_name ASC
     `);
         res.json({
             data: result.rows,
@@ -87,6 +232,17 @@ exports.shareholderRoutes.post("/", async (req, res) => {
     let riskClassification = null;
     let proxyEligible = false;
     let relationshipStartDate = null;
+    let shareholderCode = null;
+    let gender = null;
+    let dateOfBirth = null;
+    let nationality = null;
+    let occupation = null;
+    let tinNumber = null;
+    let primaryIdNumber = null;
+    let mobileNumber = null;
+    let emailAddress = null;
+    let physicalAddress = null;
+    let sourceOfFundsDeclaration = null;
     let actorId = "";
     try {
         entityId = (0, validation_1.requireUuid)(req.body?.entityId, "entityId");
@@ -112,6 +268,19 @@ exports.shareholderRoutes.post("/", async (req, res) => {
         }
         proxyEligible = normalizeOptionalBoolean(req.body?.proxyEligible, "proxyEligible", false);
         relationshipStartDate = normalizeOptionalDateString(req.body?.relationshipStartDate, "relationshipStartDate");
+        shareholderCode = normalizeOptionalString(req.body?.shareholderCode, "shareholderCode");
+        gender = normalizeOptionalString(req.body?.gender, "gender");
+        dateOfBirth = normalizeOptionalDateString(req.body?.dateOfBirth, "dateOfBirth");
+        nationality = normalizeOptionalString(req.body?.nationality, "nationality");
+        occupation = normalizeOptionalString(req.body?.occupation, "occupation");
+        tinNumber = normalizeOptionalString(req.body?.tinNumber, "tinNumber");
+        primaryIdNumber = normalizeOptionalString(req.body?.primaryIdNumber, "primaryIdNumber");
+        mobileNumber =
+            normalizeOptionalString(req.body?.mobileNumber, "mobileNumber") ?? phone;
+        emailAddress =
+            normalizeOptionalString(req.body?.emailAddress, "emailAddress") ?? email;
+        physicalAddress = normalizeOptionalString(req.body?.physicalAddress, "physicalAddress");
+        sourceOfFundsDeclaration = normalizeOptionalString(req.body?.sourceOfFundsDeclaration, "sourceOfFundsDeclaration");
         actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
     }
     catch (error) {
@@ -138,8 +307,8 @@ exports.shareholderRoutes.post("/", async (req, res) => {
             return (0, apiError_1.sendNotFound)(res, "Entity not found");
         }
         const contactDetails = {
-            email,
-            phone,
+            email: emailAddress,
+            phone: mobileNumber,
         };
         const insertResult = await client.query(`
       INSERT INTO shareholder (
@@ -152,7 +321,18 @@ exports.shareholderRoutes.post("/", async (req, res) => {
         kyc_expiry,
         risk_classification,
         proxy_eligible,
-        relationship_start_date
+        relationship_start_date,
+        shareholder_code,
+        gender,
+        date_of_birth,
+        nationality,
+        occupation,
+        tin_number,
+        primary_id_number,
+        mobile_number,
+        email_address,
+        physical_address,
+        source_of_funds_declaration
       )
       VALUES (
         $1,
@@ -164,7 +344,18 @@ exports.shareholderRoutes.post("/", async (req, res) => {
         $7::date,
         $8,
         $9,
-        $10::date
+        $10::date,
+        $11,
+        $12,
+        $13::date,
+        $14,
+        $15,
+        $16,
+        $17,
+        $18,
+        $19,
+        $20,
+        $21
       )
       RETURNING
         shareholder_id,
@@ -178,7 +369,19 @@ exports.shareholderRoutes.post("/", async (req, res) => {
         risk_classification,
         proxy_eligible,
         relationship_start_date,
-        created_at
+        shareholder_code,
+        gender,
+        date_of_birth,
+        nationality,
+        occupation,
+        tin_number,
+        primary_id_number,
+        mobile_number,
+        email_address,
+        physical_address,
+        source_of_funds_declaration,
+        created_at,
+        updated_at
       `, [
             entityId,
             legalName,
@@ -190,6 +393,17 @@ exports.shareholderRoutes.post("/", async (req, res) => {
             riskClassification,
             proxyEligible,
             relationshipStartDate,
+            shareholderCode,
+            gender,
+            dateOfBirth,
+            nationality,
+            occupation,
+            tinNumber,
+            primaryIdNumber,
+            mobileNumber,
+            emailAddress,
+            physicalAddress,
+            sourceOfFundsDeclaration,
         ]);
         const shareholder = insertResult.rows[0];
         const shareholderSummary = {
@@ -204,6 +418,17 @@ exports.shareholderRoutes.post("/", async (req, res) => {
             risk_classification: shareholder.risk_classification,
             proxy_eligible: shareholder.proxy_eligible,
             relationship_start_date: shareholder.relationship_start_date,
+            shareholder_code: shareholder.shareholder_code,
+            gender: shareholder.gender,
+            date_of_birth: shareholder.date_of_birth,
+            nationality: shareholder.nationality,
+            occupation: shareholder.occupation,
+            tin_number: shareholder.tin_number,
+            primary_id_number: shareholder.primary_id_number,
+            mobile_number: shareholder.mobile_number,
+            email_address: shareholder.email_address,
+            physical_address: shareholder.physical_address,
+            source_of_funds_declaration: shareholder.source_of_funds_declaration,
         };
         await client.query(`
       INSERT INTO audit_log (
@@ -437,6 +662,1383 @@ exports.shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
         client.release();
     }
 });
+exports.shareholderRoutes.get("/:shareholderId/profile-details", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid shareholder request");
+    }
+    try {
+        const profileResult = await pool_1.pool.query(`
+      SELECT
+        ${shareholderCoreSelect}
+      FROM shareholder s
+      JOIN entity e ON e.entity_id = s.entity_id
+      WHERE s.shareholder_id = $1
+      LIMIT 1
+      `, [shareholderId]);
+        if (profileResult.rowCount === 0) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const [identityDocumentsResult, kycProfileResult, beneficialOwnersResult, nextOfKinResult, documentChecklistResult, paymentProfilesResult,] = await Promise.all([
+            pool_1.pool.query(`
+        SELECT *
+        FROM shareholder_identity_documents
+        WHERE shareholder_id = $1
+        ORDER BY
+          CASE WHEN document_role = 'primary' THEN 0 ELSE 1 END,
+          created_at DESC
+        `, [shareholderId]),
+            pool_1.pool.query(`
+        SELECT *
+        FROM shareholder_kyc_profiles
+        WHERE shareholder_id = $1
+        ORDER BY created_at DESC
+        LIMIT 1
+        `, [shareholderId]),
+            pool_1.pool.query(`
+        SELECT *
+        FROM shareholder_beneficial_owners
+        WHERE shareholder_id = $1
+        ORDER BY created_at DESC
+        `, [shareholderId]),
+            pool_1.pool.query(`
+        SELECT *
+        FROM shareholder_next_of_kin
+        WHERE shareholder_id = $1
+        ORDER BY is_primary DESC, created_at DESC
+        `, [shareholderId]),
+            pool_1.pool.query(`
+        SELECT *
+        FROM shareholder_document_checklist
+        WHERE shareholder_id = $1
+        ORDER BY document_type ASC, created_at DESC
+        `, [shareholderId]),
+            pool_1.pool.query(`
+        SELECT *
+        FROM shareholder_payment_profiles
+        WHERE shareholder_id = $1
+        ORDER BY created_at DESC
+        `, [shareholderId]),
+        ]);
+        return res.json({
+            data: {
+                core: profileResult.rows[0],
+                identity_documents: identityDocumentsResult.rows,
+                kyc_profile: kycProfileResult.rows[0] ?? null,
+                beneficial_owners: beneficialOwnersResult.rows,
+                next_of_kin: nextOfKinResult.rows,
+                document_checklist: documentChecklistResult.rows,
+                payment_profiles: paymentProfilesResult.rows,
+            },
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch shareholder profile details", error);
+    }
+});
+exports.shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let shareholderCode = null;
+    let gender = null;
+    let dateOfBirth = null;
+    let nationality = null;
+    let occupation = null;
+    let tinNumber = null;
+    let primaryIdNumber = null;
+    let mobileNumber = null;
+    let emailAddress = null;
+    let physicalAddress = null;
+    let sourceOfFundsDeclaration = null;
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        shareholderCode = normalizeOptionalString(req.body?.shareholderCode, "shareholderCode");
+        gender = normalizeOptionalString(req.body?.gender, "gender");
+        dateOfBirth = normalizeOptionalDateString(req.body?.dateOfBirth, "dateOfBirth");
+        nationality = normalizeOptionalString(req.body?.nationality, "nationality");
+        occupation = normalizeOptionalString(req.body?.occupation, "occupation");
+        tinNumber = normalizeOptionalString(req.body?.tinNumber, "tinNumber");
+        primaryIdNumber = normalizeOptionalString(req.body?.primaryIdNumber, "primaryIdNumber");
+        mobileNumber =
+            normalizeOptionalString(req.body?.mobileNumber, "mobileNumber") ??
+                normalizeOptionalString(req.body?.phone, "phone");
+        emailAddress =
+            normalizeOptionalString(req.body?.emailAddress, "emailAddress") ??
+                normalizeOptionalString(req.body?.email, "email");
+        physicalAddress = normalizeOptionalString(req.body?.physicalAddress, "physicalAddress");
+        sourceOfFundsDeclaration = normalizeOptionalString(req.body?.sourceOfFundsDeclaration, "sourceOfFundsDeclaration");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid shareholder core details");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId, true);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const oldResult = await client.query(`
+      SELECT *
+      FROM shareholder
+      WHERE shareholder_id = $1
+      LIMIT 1
+      `, [shareholderId]);
+        const updateResult = await client.query(`
+      UPDATE shareholder
+      SET
+        shareholder_code = COALESCE($2, shareholder_code),
+        gender = COALESCE($3, gender),
+        date_of_birth = COALESCE($4::date, date_of_birth),
+        nationality = COALESCE($5, nationality),
+        occupation = COALESCE($6, occupation),
+        tin_number = COALESCE($7, tin_number),
+        primary_id_number = COALESCE($8, primary_id_number),
+        mobile_number = COALESCE($9, mobile_number),
+        email_address = COALESCE($10, email_address),
+        physical_address = COALESCE($11, physical_address),
+        source_of_funds_declaration = COALESCE($12, source_of_funds_declaration),
+        contact_details = COALESCE(contact_details, '{}'::jsonb) || jsonb_strip_nulls(
+          jsonb_build_object(
+            'phone', COALESCE($9, mobile_number, contact_details->>'phone'),
+            'email', COALESCE($10, email_address, contact_details->>'email')
+          )
+        ),
+        updated_at = now()
+      WHERE shareholder_id = $1
+      RETURNING *
+      `, [
+            shareholderId,
+            shareholderCode,
+            gender,
+            dateOfBirth,
+            nationality,
+            occupation,
+            tinNumber,
+            primaryIdNumber,
+            mobileNumber,
+            emailAddress,
+            physicalAddress,
+            sourceOfFundsDeclaration,
+        ]);
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_core_details_updated",
+            tableName: "shareholder",
+            recordId: shareholderId,
+            oldValue: oldResult.rows[0],
+            newValue: updateResult.rows[0],
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.json({
+            data: updateResult.rows[0],
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to update shareholder core details", error);
+    }
+    finally {
+        client.release();
+    }
+});
+exports.shareholderRoutes.get("/:shareholderId/identity-documents", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid identity documents request");
+    }
+    try {
+        const shareholder = await fetchShareholderContext(pool_1.pool, shareholderId);
+        if (!shareholder) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const result = await pool_1.pool.query(`
+      SELECT *
+      FROM shareholder_identity_documents
+      WHERE shareholder_id = $1
+      ORDER BY
+        CASE WHEN document_role = 'primary' THEN 0 ELSE 1 END,
+        created_at DESC
+      `, [shareholderId]);
+        return res.json({
+            data: result.rows,
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch identity documents", error);
+    }
+});
+exports.shareholderRoutes.post("/:shareholderId/identity-documents", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let documentRole = null;
+    let idType = null;
+    let idNumber = null;
+    let issuingAuthority = null;
+    let issueDate = null;
+    let expiryDate = null;
+    let countryOfIssue = null;
+    let documentReferenceId = null;
+    let verificationStatus = "pending";
+    let verifiedBy = null;
+    let verifiedAt = null;
+    let notes = null;
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        documentRole = normalizeOptionalString(req.body?.documentRole, "documentRole");
+        idType = normalizeOptionalString(req.body?.idType, "idType");
+        idNumber = normalizeOptionalString(req.body?.idNumber, "idNumber");
+        issuingAuthority = normalizeOptionalString(req.body?.issuingAuthority, "issuingAuthority");
+        issueDate = normalizeOptionalDateString(req.body?.issueDate, "issueDate");
+        expiryDate = normalizeOptionalDateString(req.body?.expiryDate, "expiryDate");
+        countryOfIssue = normalizeOptionalString(req.body?.countryOfIssue, "countryOfIssue");
+        documentReferenceId = normalizeOptionalUuid(req.body?.documentReferenceId, "documentReferenceId");
+        verificationStatus =
+            normalizeOptionalString(req.body?.verificationStatus, "verificationStatus") ?? "pending";
+        verifiedBy = normalizeOptionalString(req.body?.verifiedBy, "verifiedBy");
+        verifiedAt = normalizeOptionalTimestampString(req.body?.verifiedAt, "verifiedAt");
+        notes = normalizeOptionalString(req.body?.notes, "notes");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid identity document request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "compliance_officer",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const insertResult = await client.query(`
+      INSERT INTO shareholder_identity_documents (
+        shareholder_id,
+        entity_id,
+        document_role,
+        id_type,
+        id_number,
+        issuing_authority,
+        issue_date,
+        expiry_date,
+        country_of_issue,
+        document_reference_id,
+        verification_status,
+        verified_by,
+        verified_at,
+        notes
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7::date,
+        $8::date,
+        $9,
+        $10,
+        $11,
+        $12,
+        $13::timestamptz,
+        $14
+      )
+      RETURNING *
+      `, [
+            shareholderId,
+            shareholder.entity_id,
+            documentRole,
+            idType,
+            idNumber,
+            issuingAuthority,
+            issueDate,
+            expiryDate,
+            countryOfIssue,
+            documentReferenceId,
+            verificationStatus,
+            verifiedBy,
+            verifiedAt,
+            notes,
+        ]);
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_identity_document_created",
+            tableName: "shareholder_identity_documents",
+            recordId: insertResult.rows[0].id,
+            oldValue: null,
+            newValue: insertResult.rows[0],
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.status(201).json({
+            data: insertResult.rows[0],
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to create identity document", error);
+    }
+    finally {
+        client.release();
+    }
+});
+exports.shareholderRoutes.get("/:shareholderId/kyc-profile", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid KYC profile request");
+    }
+    try {
+        const shareholder = await fetchShareholderContext(pool_1.pool, shareholderId);
+        if (!shareholder) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const result = await pool_1.pool.query(`
+      SELECT *
+      FROM shareholder_kyc_profiles
+      WHERE shareholder_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+      `, [shareholderId]);
+        return res.json({
+            data: result.rows[0] ?? null,
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch KYC profile", error);
+    }
+});
+exports.shareholderRoutes.put("/:shareholderId/kyc-profile", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let kycRecordId = null;
+    let cddCompleted = null;
+    let cddCompletedAt = null;
+    let cddCompletedBy = null;
+    let pepStatus = null;
+    let pepFamilyOrAssociate = null;
+    let pepPositionRole = null;
+    let pepCountryOrOrganization = null;
+    let sanctionScreeningResult = null;
+    let sanctionScreenedAt = null;
+    let sanctionScreenedBy = null;
+    let adverseMediaScreeningResult = null;
+    let adverseMediaScreenedAt = null;
+    let adverseMediaScreenedBy = null;
+    let riskRating = null;
+    let amlOfficerApprovalStatus = null;
+    let amlOfficerId = null;
+    let amlApprovalDate = null;
+    let amlApprovalNotes = null;
+    let sourceOfFundsSummary = null;
+    let sourceOfFundsCategories = null;
+    let annualIncomeRange = null;
+    let employmentStatus = null;
+    let employerBusinessName = null;
+    let employerAddress = null;
+    let businessSector = null;
+    let yearsAtCurrentJob = null;
+    let internationalSanctionsDeclared = null;
+    let financialCrimeDeclared = null;
+    let regulatoryInvestigationDeclared = null;
+    let otherFinancialInstitutionShareholding = null;
+    let conflictOfInterestDeclared = null;
+    let declarationNotes = null;
+    let reviewStatus = "draft";
+    let reviewedBy = null;
+    let reviewedAt = null;
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        kycRecordId = normalizeOptionalUuid(req.body?.kycRecordId, "kycRecordId");
+        cddCompleted = normalizeNullableBoolean(req.body?.cddCompleted, "cddCompleted");
+        cddCompletedAt = normalizeOptionalTimestampString(req.body?.cddCompletedAt, "cddCompletedAt");
+        cddCompletedBy = normalizeOptionalString(req.body?.cddCompletedBy, "cddCompletedBy");
+        pepStatus = normalizeOptionalString(req.body?.pepStatus, "pepStatus");
+        pepFamilyOrAssociate = normalizeNullableBoolean(req.body?.pepFamilyOrAssociate, "pepFamilyOrAssociate");
+        pepPositionRole = normalizeOptionalString(req.body?.pepPositionRole, "pepPositionRole");
+        pepCountryOrOrganization = normalizeOptionalString(req.body?.pepCountryOrOrganization, "pepCountryOrOrganization");
+        sanctionScreeningResult = normalizeOptionalString(req.body?.sanctionScreeningResult, "sanctionScreeningResult");
+        sanctionScreenedAt = normalizeOptionalTimestampString(req.body?.sanctionScreenedAt, "sanctionScreenedAt");
+        sanctionScreenedBy = normalizeOptionalString(req.body?.sanctionScreenedBy, "sanctionScreenedBy");
+        adverseMediaScreeningResult = normalizeOptionalString(req.body?.adverseMediaScreeningResult, "adverseMediaScreeningResult");
+        adverseMediaScreenedAt = normalizeOptionalTimestampString(req.body?.adverseMediaScreenedAt, "adverseMediaScreenedAt");
+        adverseMediaScreenedBy = normalizeOptionalString(req.body?.adverseMediaScreenedBy, "adverseMediaScreenedBy");
+        riskRating = normalizeOptionalString(req.body?.riskRating, "riskRating");
+        amlOfficerApprovalStatus = normalizeOptionalString(req.body?.amlOfficerApprovalStatus, "amlOfficerApprovalStatus");
+        amlOfficerId = normalizeOptionalString(req.body?.amlOfficerId, "amlOfficerId");
+        amlApprovalDate = normalizeOptionalDateString(req.body?.amlApprovalDate, "amlApprovalDate");
+        amlApprovalNotes = normalizeOptionalString(req.body?.amlApprovalNotes, "amlApprovalNotes");
+        sourceOfFundsSummary = normalizeOptionalString(req.body?.sourceOfFundsSummary, "sourceOfFundsSummary");
+        sourceOfFundsCategories = normalizeOptionalJsonArrayOrNull(req.body?.sourceOfFundsCategories, "sourceOfFundsCategories");
+        annualIncomeRange = normalizeOptionalString(req.body?.annualIncomeRange, "annualIncomeRange");
+        employmentStatus = normalizeOptionalString(req.body?.employmentStatus, "employmentStatus");
+        employerBusinessName = normalizeOptionalString(req.body?.employerBusinessName, "employerBusinessName");
+        employerAddress = normalizeOptionalString(req.body?.employerAddress, "employerAddress");
+        businessSector = normalizeOptionalString(req.body?.businessSector, "businessSector");
+        yearsAtCurrentJob = normalizeOptionalNumber(req.body?.yearsAtCurrentJob, "yearsAtCurrentJob");
+        internationalSanctionsDeclared = normalizeNullableBoolean(req.body?.internationalSanctionsDeclared, "internationalSanctionsDeclared");
+        financialCrimeDeclared = normalizeNullableBoolean(req.body?.financialCrimeDeclared, "financialCrimeDeclared");
+        regulatoryInvestigationDeclared = normalizeNullableBoolean(req.body?.regulatoryInvestigationDeclared, "regulatoryInvestigationDeclared");
+        otherFinancialInstitutionShareholding = normalizeNullableBoolean(req.body?.otherFinancialInstitutionShareholding, "otherFinancialInstitutionShareholding");
+        conflictOfInterestDeclared = normalizeNullableBoolean(req.body?.conflictOfInterestDeclared, "conflictOfInterestDeclared");
+        declarationNotes = normalizeOptionalString(req.body?.declarationNotes, "declarationNotes");
+        reviewStatus =
+            normalizeOptionalString(req.body?.reviewStatus, "reviewStatus") ??
+                "draft";
+        reviewedBy = normalizeOptionalString(req.body?.reviewedBy, "reviewedBy");
+        reviewedAt = normalizeOptionalTimestampString(req.body?.reviewedAt, "reviewedAt");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid KYC profile request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "compliance_officer",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId, true);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const existingResult = await client.query(`
+      SELECT *
+      FROM shareholder_kyc_profiles
+      WHERE shareholder_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+      FOR UPDATE
+      `, [shareholderId]);
+        const profileValues = [
+            kycRecordId,
+            cddCompleted,
+            cddCompletedAt,
+            cddCompletedBy,
+            pepStatus,
+            pepFamilyOrAssociate,
+            pepPositionRole,
+            pepCountryOrOrganization,
+            sanctionScreeningResult,
+            sanctionScreenedAt,
+            sanctionScreenedBy,
+            adverseMediaScreeningResult,
+            adverseMediaScreenedAt,
+            adverseMediaScreenedBy,
+            riskRating,
+            amlOfficerApprovalStatus,
+            amlOfficerId,
+            amlApprovalDate,
+            amlApprovalNotes,
+            sourceOfFundsSummary,
+            JSON.stringify(sourceOfFundsCategories ?? []),
+            annualIncomeRange,
+            employmentStatus,
+            employerBusinessName,
+            employerAddress,
+            businessSector,
+            yearsAtCurrentJob,
+            internationalSanctionsDeclared,
+            financialCrimeDeclared,
+            regulatoryInvestigationDeclared,
+            otherFinancialInstitutionShareholding,
+            conflictOfInterestDeclared,
+            declarationNotes,
+            reviewStatus,
+            reviewedBy,
+            reviewedAt,
+        ];
+        let upsertResult;
+        if (existingResult.rowCount === 0) {
+            upsertResult = await client.query(`
+        INSERT INTO shareholder_kyc_profiles (
+          shareholder_id,
+          entity_id,
+          kyc_record_id,
+          cdd_completed,
+          cdd_completed_at,
+          cdd_completed_by,
+          pep_status,
+          pep_family_or_associate,
+          pep_position_role,
+          pep_country_or_organization,
+          sanction_screening_result,
+          sanction_screened_at,
+          sanction_screened_by,
+          adverse_media_screening_result,
+          adverse_media_screened_at,
+          adverse_media_screened_by,
+          risk_rating,
+          aml_officer_approval_status,
+          aml_officer_id,
+          aml_approval_date,
+          aml_approval_notes,
+          source_of_funds_summary,
+          source_of_funds_categories,
+          annual_income_range,
+          employment_status,
+          employer_business_name,
+          employer_address,
+          business_sector,
+          years_at_current_job,
+          international_sanctions_declared,
+          financial_crime_declared,
+          regulatory_investigation_declared,
+          other_financial_institution_shareholding,
+          conflict_of_interest_declared,
+          declaration_notes,
+          review_status,
+          reviewed_by,
+          reviewed_at
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5::timestamptz,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12::timestamptz,
+          $13,
+          $14,
+          $15::timestamptz,
+          $16,
+          $17,
+          $18,
+          $19,
+          $20::date,
+          $21,
+          $22,
+          $23::jsonb,
+          $24,
+          $25,
+          $26,
+          $27,
+          $28,
+          $29,
+          $30,
+          $31,
+          $32,
+          $33,
+          $34,
+          $35,
+          $36,
+          $37,
+          $38::timestamptz
+        )
+        RETURNING *
+        `, [shareholderId, shareholder.entity_id, ...profileValues]);
+        }
+        else {
+            upsertResult = await client.query(`
+        UPDATE shareholder_kyc_profiles
+        SET
+          kyc_record_id = $2,
+          cdd_completed = $3,
+          cdd_completed_at = $4::timestamptz,
+          cdd_completed_by = $5,
+          pep_status = $6,
+          pep_family_or_associate = $7,
+          pep_position_role = $8,
+          pep_country_or_organization = $9,
+          sanction_screening_result = $10,
+          sanction_screened_at = $11::timestamptz,
+          sanction_screened_by = $12,
+          adverse_media_screening_result = $13,
+          adverse_media_screened_at = $14::timestamptz,
+          adverse_media_screened_by = $15,
+          risk_rating = $16,
+          aml_officer_approval_status = $17,
+          aml_officer_id = $18,
+          aml_approval_date = $19::date,
+          aml_approval_notes = $20,
+          source_of_funds_summary = $21,
+          source_of_funds_categories = $22::jsonb,
+          annual_income_range = $23,
+          employment_status = $24,
+          employer_business_name = $25,
+          employer_address = $26,
+          business_sector = $27,
+          years_at_current_job = $28,
+          international_sanctions_declared = $29,
+          financial_crime_declared = $30,
+          regulatory_investigation_declared = $31,
+          other_financial_institution_shareholding = $32,
+          conflict_of_interest_declared = $33,
+          declaration_notes = $34,
+          review_status = $35,
+          reviewed_by = $36,
+          reviewed_at = $37::timestamptz,
+          updated_at = now()
+        WHERE id = $1
+        RETURNING *
+        `, [existingResult.rows[0].id, ...profileValues]);
+        }
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_kyc_profile_upserted",
+            tableName: "shareholder_kyc_profiles",
+            recordId: upsertResult.rows[0].id,
+            oldValue: existingResult.rows[0] ?? null,
+            newValue: upsertResult.rows[0],
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.json({
+            data: upsertResult.rows[0],
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to update KYC profile", error);
+    }
+    finally {
+        client.release();
+    }
+});
+exports.shareholderRoutes.get("/:shareholderId/beneficial-owners", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid beneficial owners request");
+    }
+    try {
+        const shareholder = await fetchShareholderContext(pool_1.pool, shareholderId);
+        if (!shareholder) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const result = await pool_1.pool.query(`
+      SELECT *
+      FROM shareholder_beneficial_owners
+      WHERE shareholder_id = $1
+      ORDER BY created_at DESC
+      `, [shareholderId]);
+        return res.json({
+            data: result.rows,
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch beneficial owners", error);
+    }
+});
+exports.shareholderRoutes.post("/:shareholderId/beneficial-owners", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let isUltimateBeneficialOwner = null;
+    let beneficialOwnerFullName = null;
+    let relationshipToShareholder = null;
+    let beneficialOwnerIdType = null;
+    let beneficialOwnerIdNumber = null;
+    let beneficialOwnerTin = null;
+    let beneficialOwnerCountryOfResidence = null;
+    let percentageReference = null;
+    let verificationStatus = "pending";
+    let verificationMethod = null;
+    let verificationNotes = null;
+    let verifiedBy = null;
+    let verifiedAt = null;
+    let documentReferenceId = null;
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        isUltimateBeneficialOwner = normalizeNullableBoolean(req.body?.isUltimateBeneficialOwner, "isUltimateBeneficialOwner");
+        beneficialOwnerFullName = normalizeOptionalString(req.body?.beneficialOwnerFullName, "beneficialOwnerFullName");
+        relationshipToShareholder = normalizeOptionalString(req.body?.relationshipToShareholder, "relationshipToShareholder");
+        beneficialOwnerIdType = normalizeOptionalString(req.body?.beneficialOwnerIdType, "beneficialOwnerIdType");
+        beneficialOwnerIdNumber = normalizeOptionalString(req.body?.beneficialOwnerIdNumber, "beneficialOwnerIdNumber");
+        beneficialOwnerTin = normalizeOptionalString(req.body?.beneficialOwnerTin, "beneficialOwnerTin");
+        beneficialOwnerCountryOfResidence = normalizeOptionalString(req.body?.beneficialOwnerCountryOfResidence, "beneficialOwnerCountryOfResidence");
+        percentageReference = normalizeOptionalNumber(req.body?.percentageReference, "percentageReference");
+        verificationStatus =
+            normalizeOptionalString(req.body?.verificationStatus, "verificationStatus") ?? "pending";
+        verificationMethod = normalizeOptionalString(req.body?.verificationMethod, "verificationMethod");
+        verificationNotes = normalizeOptionalString(req.body?.verificationNotes, "verificationNotes");
+        verifiedBy = normalizeOptionalString(req.body?.verifiedBy, "verifiedBy");
+        verifiedAt = normalizeOptionalTimestampString(req.body?.verifiedAt, "verifiedAt");
+        documentReferenceId = normalizeOptionalUuid(req.body?.documentReferenceId, "documentReferenceId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid beneficial owner request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "compliance_officer",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const insertResult = await client.query(`
+      INSERT INTO shareholder_beneficial_owners (
+        shareholder_id,
+        entity_id,
+        is_ultimate_beneficial_owner,
+        beneficial_owner_full_name,
+        relationship_to_shareholder,
+        beneficial_owner_id_type,
+        beneficial_owner_id_number,
+        beneficial_owner_tin,
+        beneficial_owner_country_of_residence,
+        percentage_reference,
+        verification_status,
+        verification_method,
+        verification_notes,
+        verified_by,
+        verified_at,
+        document_reference_id
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        $12,
+        $13,
+        $14,
+        $15::timestamptz,
+        $16
+      )
+      RETURNING *
+      `, [
+            shareholderId,
+            shareholder.entity_id,
+            isUltimateBeneficialOwner,
+            beneficialOwnerFullName,
+            relationshipToShareholder,
+            beneficialOwnerIdType,
+            beneficialOwnerIdNumber,
+            beneficialOwnerTin,
+            beneficialOwnerCountryOfResidence,
+            percentageReference,
+            verificationStatus,
+            verificationMethod,
+            verificationNotes,
+            verifiedBy,
+            verifiedAt,
+            documentReferenceId,
+        ]);
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_beneficial_owner_created",
+            tableName: "shareholder_beneficial_owners",
+            recordId: insertResult.rows[0].id,
+            oldValue: null,
+            newValue: insertResult.rows[0],
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.status(201).json({
+            data: insertResult.rows[0],
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to create beneficial owner", error);
+    }
+    finally {
+        client.release();
+    }
+});
+exports.shareholderRoutes.get("/:shareholderId/next-of-kin", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid next of kin request");
+    }
+    try {
+        const shareholder = await fetchShareholderContext(pool_1.pool, shareholderId);
+        if (!shareholder) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const result = await pool_1.pool.query(`
+      SELECT *
+      FROM shareholder_next_of_kin
+      WHERE shareholder_id = $1
+      ORDER BY is_primary DESC, created_at DESC
+      `, [shareholderId]);
+        return res.json({
+            data: result.rows,
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch next of kin", error);
+    }
+});
+exports.shareholderRoutes.put("/:shareholderId/next-of-kin", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let contacts = [];
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        const rawContacts = req.body?.contacts;
+        let contactInputs;
+        if (rawContacts !== undefined) {
+            if (!Array.isArray(rawContacts)) {
+                throw new Error("contacts must be an array");
+            }
+            contactInputs = rawContacts.map((contact, index) => requireObject(contact, `contacts[${index}]`));
+        }
+        else {
+            const contactInput = requireObject(req.body, "nextOfKin");
+            const hasContactFields = [
+                "fullName",
+                "relationship",
+                "phoneNumber",
+                "emailAddress",
+                "residentialAddress",
+                "cityCountry",
+                "isPrimary",
+                "notes",
+            ].some((fieldName) => contactInput[fieldName] !== undefined);
+            if (!hasContactFields) {
+                throw new Error("contacts is required");
+            }
+            contactInputs = [contactInput];
+        }
+        contacts = contactInputs.map((contact, index) => ({
+            fullName: normalizeOptionalString(contact.fullName, `contacts[${index}].fullName`),
+            relationship: normalizeOptionalString(contact.relationship, `contacts[${index}].relationship`),
+            phoneNumber: normalizeOptionalString(contact.phoneNumber, `contacts[${index}].phoneNumber`),
+            emailAddress: normalizeOptionalString(contact.emailAddress, `contacts[${index}].emailAddress`),
+            residentialAddress: normalizeOptionalString(contact.residentialAddress, `contacts[${index}].residentialAddress`),
+            cityCountry: normalizeOptionalString(contact.cityCountry, `contacts[${index}].cityCountry`),
+            isPrimary: normalizeOptionalBoolean(contact.isPrimary, `contacts[${index}].isPrimary`, false),
+            notes: normalizeOptionalString(contact.notes, `contacts[${index}].notes`),
+        }));
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid next of kin request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId, true);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const oldResult = await client.query(`
+      SELECT *
+      FROM shareholder_next_of_kin
+      WHERE shareholder_id = $1
+      ORDER BY is_primary DESC, created_at DESC
+      `, [shareholderId]);
+        await client.query(`
+      DELETE FROM shareholder_next_of_kin
+      WHERE shareholder_id = $1
+      `, [shareholderId]);
+        const newRows = [];
+        for (const contact of contacts) {
+            const insertResult = await client.query(`
+        INSERT INTO shareholder_next_of_kin (
+          shareholder_id,
+          entity_id,
+          full_name,
+          relationship,
+          phone_number,
+          email_address,
+          residential_address,
+          city_country,
+          is_primary,
+          notes
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10
+        )
+        RETURNING *
+        `, [
+                shareholderId,
+                shareholder.entity_id,
+                contact.fullName,
+                contact.relationship,
+                contact.phoneNumber,
+                contact.emailAddress,
+                contact.residentialAddress,
+                contact.cityCountry,
+                contact.isPrimary,
+                contact.notes,
+            ]);
+            newRows.push(insertResult.rows[0]);
+        }
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_next_of_kin_replaced",
+            tableName: "shareholder_next_of_kin",
+            recordId: shareholderId,
+            oldValue: oldResult.rows,
+            newValue: newRows,
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.json({
+            data: newRows,
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to update next of kin", error);
+    }
+    finally {
+        client.release();
+    }
+});
+exports.shareholderRoutes.get("/:shareholderId/document-checklist", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error
+            ? error.message
+            : "Invalid document checklist request");
+    }
+    try {
+        const shareholder = await fetchShareholderContext(pool_1.pool, shareholderId);
+        if (!shareholder) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const result = await pool_1.pool.query(`
+      SELECT *
+      FROM shareholder_document_checklist
+      WHERE shareholder_id = $1
+      ORDER BY document_type ASC, created_at DESC
+      `, [shareholderId]);
+        return res.json({
+            data: result.rows,
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch document checklist", error);
+    }
+});
+exports.shareholderRoutes.put("/:shareholderId/document-checklist", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let items = [];
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        const rawItems = req.body?.items;
+        if (!Array.isArray(rawItems)) {
+            throw new Error("items must be an array");
+        }
+        items = rawItems.map((item, index) => {
+            const itemInput = requireObject(item, `items[${index}]`);
+            return {
+                documentType: (0, validation_1.requireNonEmptyString)(itemInput.documentType, `items[${index}].documentType`),
+                requirementStatus: normalizeOptionalString(itemInput.requirementStatus, `items[${index}].requirementStatus`) ?? "required",
+                checklistStatus: normalizeOptionalString(itemInput.checklistStatus, `items[${index}].checklistStatus`) ?? "pending",
+                sourceBasis: normalizeOptionalString(itemInput.sourceBasis, `items[${index}].sourceBasis`),
+                documentReferenceId: normalizeOptionalUuid(itemInput.documentReferenceId, `items[${index}].documentReferenceId`),
+                reviewedBy: normalizeOptionalString(itemInput.reviewedBy, `items[${index}].reviewedBy`),
+                reviewedAt: normalizeOptionalTimestampString(itemInput.reviewedAt, `items[${index}].reviewedAt`),
+                notes: normalizeOptionalString(itemInput.notes, `items[${index}].notes`),
+            };
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid document checklist request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "maker",
+        "compliance_officer",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId, true);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const oldResult = await client.query(`
+      SELECT *
+      FROM shareholder_document_checklist
+      WHERE shareholder_id = $1
+      ORDER BY document_type ASC, created_at DESC
+      `, [shareholderId]);
+        await client.query(`
+      DELETE FROM shareholder_document_checklist
+      WHERE shareholder_id = $1
+      `, [shareholderId]);
+        const newRows = [];
+        for (const item of items) {
+            const insertResult = await client.query(`
+        INSERT INTO shareholder_document_checklist (
+          shareholder_id,
+          entity_id,
+          document_type,
+          requirement_status,
+          checklist_status,
+          source_basis,
+          document_reference_id,
+          reviewed_by,
+          reviewed_at,
+          notes
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9::timestamptz,
+          $10
+        )
+        RETURNING *
+        `, [
+                shareholderId,
+                shareholder.entity_id,
+                item.documentType,
+                item.requirementStatus,
+                item.checklistStatus,
+                item.sourceBasis,
+                item.documentReferenceId,
+                item.reviewedBy,
+                item.reviewedAt,
+                item.notes,
+            ]);
+            newRows.push(insertResult.rows[0]);
+        }
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_document_checklist_replaced",
+            tableName: "shareholder_document_checklist",
+            recordId: shareholderId,
+            oldValue: oldResult.rows,
+            newValue: newRows,
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.json({
+            data: newRows,
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to update document checklist", error);
+    }
+    finally {
+        client.release();
+    }
+});
+exports.shareholderRoutes.get("/:shareholderId/payment-profile", async (req, res) => {
+    let shareholderId = "";
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid payment profile request");
+    }
+    try {
+        const shareholder = await fetchShareholderContext(pool_1.pool, shareholderId);
+        if (!shareholder) {
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const result = await pool_1.pool.query(`
+      SELECT *
+      FROM shareholder_payment_profiles
+      WHERE shareholder_id = $1
+      ORDER BY created_at DESC
+      `, [shareholderId]);
+        return res.json({
+            data: result.rows,
+        });
+    }
+    catch (error) {
+        return (0, apiError_1.sendServerError)(res, "Failed to fetch payment profile", error);
+    }
+});
+exports.shareholderRoutes.put("/:shareholderId/payment-profile", async (req, res) => {
+    let shareholderId = "";
+    let actorId = "";
+    let paymentProfileType = "dividend";
+    let bankName = null;
+    let branchNameCode = null;
+    let accountName = null;
+    let accountNumber = null;
+    let accountType = null;
+    let swiftBicCode = null;
+    let iban = null;
+    let mobileWalletIdentifier = null;
+    let dividendPaymentPreference = null;
+    let paymentMethod = null;
+    let totalInvestmentAmount = null;
+    let paymentVerificationStatus = "pending";
+    let paymentVerifiedBy = null;
+    let paymentVerifiedAt = null;
+    let documentReferenceId = null;
+    let notes = null;
+    try {
+        shareholderId = (0, validation_1.requireUuid)(req.params.shareholderId, "shareholderId");
+        actorId = (0, validation_1.normalizeActorId)(req.body?.actorId);
+        paymentProfileType =
+            normalizeOptionalString(req.body?.paymentProfileType, "paymentProfileType") ?? "dividend";
+        bankName = normalizeOptionalString(req.body?.bankName, "bankName");
+        branchNameCode = normalizeOptionalString(req.body?.branchNameCode, "branchNameCode");
+        accountName = normalizeOptionalString(req.body?.accountName, "accountName");
+        accountNumber = normalizeOptionalString(req.body?.accountNumber, "accountNumber");
+        accountType = normalizeOptionalString(req.body?.accountType, "accountType");
+        swiftBicCode = normalizeOptionalString(req.body?.swiftBicCode, "swiftBicCode");
+        iban = normalizeOptionalString(req.body?.iban, "iban");
+        mobileWalletIdentifier = normalizeOptionalString(req.body?.mobileWalletIdentifier, "mobileWalletIdentifier");
+        dividendPaymentPreference = normalizeOptionalString(req.body?.dividendPaymentPreference, "dividendPaymentPreference");
+        paymentMethod = normalizeOptionalString(req.body?.paymentMethod, "paymentMethod");
+        totalInvestmentAmount = normalizeOptionalNumber(req.body?.totalInvestmentAmount, "totalInvestmentAmount");
+        paymentVerificationStatus =
+            normalizeOptionalString(req.body?.paymentVerificationStatus, "paymentVerificationStatus") ?? "pending";
+        paymentVerifiedBy = normalizeOptionalString(req.body?.paymentVerifiedBy, "paymentVerifiedBy");
+        paymentVerifiedAt = normalizeOptionalTimestampString(req.body?.paymentVerifiedAt, "paymentVerifiedAt");
+        documentReferenceId = normalizeOptionalUuid(req.body?.documentReferenceId, "documentReferenceId");
+        notes = normalizeOptionalString(req.body?.notes, "notes");
+    }
+    catch (error) {
+        return (0, apiError_1.sendBadRequest)(res, error instanceof Error ? error.message : "Invalid payment profile request");
+    }
+    const roleResult = (0, roles_1.requireRole)(req.body?.actorRole, [
+        "checker_2",
+        "governance_admin",
+    ]);
+    if (!roleResult.ok) {
+        return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    }
+    const client = await pool_1.pool.connect();
+    try {
+        await client.query("BEGIN");
+        const shareholder = await fetchShareholderContext(client, shareholderId, true);
+        if (!shareholder) {
+            await client.query("ROLLBACK");
+            return (0, apiError_1.sendNotFound)(res, "Shareholder not found");
+        }
+        const existingResult = await client.query(`
+      SELECT *
+      FROM shareholder_payment_profiles
+      WHERE shareholder_id = $1
+        AND payment_profile_type = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      FOR UPDATE
+      `, [shareholderId, paymentProfileType]);
+        let upsertResult;
+        if (existingResult.rowCount === 0) {
+            upsertResult = await client.query(`
+        INSERT INTO shareholder_payment_profiles (
+          shareholder_id,
+          entity_id,
+          payment_profile_type,
+          bank_name,
+          branch_name_code,
+          account_name,
+          account_number,
+          account_type,
+          swift_bic_code,
+          iban,
+          mobile_wallet_identifier,
+          dividend_payment_preference,
+          payment_method,
+          total_investment_amount,
+          payment_verification_status,
+          payment_verified_by,
+          payment_verified_at,
+          document_reference_id,
+          notes
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12,
+          $13,
+          $14,
+          $15,
+          $16,
+          $17::timestamptz,
+          $18,
+          $19
+        )
+        RETURNING *
+        `, [
+                shareholderId,
+                shareholder.entity_id,
+                paymentProfileType,
+                bankName,
+                branchNameCode,
+                accountName,
+                accountNumber,
+                accountType,
+                swiftBicCode,
+                iban,
+                mobileWalletIdentifier,
+                dividendPaymentPreference,
+                paymentMethod,
+                totalInvestmentAmount,
+                paymentVerificationStatus,
+                paymentVerifiedBy,
+                paymentVerifiedAt,
+                documentReferenceId,
+                notes,
+            ]);
+        }
+        else {
+            upsertResult = await client.query(`
+        UPDATE shareholder_payment_profiles
+        SET
+          bank_name = $2,
+          branch_name_code = $3,
+          account_name = $4,
+          account_number = $5,
+          account_type = $6,
+          swift_bic_code = $7,
+          iban = $8,
+          mobile_wallet_identifier = $9,
+          dividend_payment_preference = $10,
+          payment_method = $11,
+          total_investment_amount = $12,
+          payment_verification_status = $13,
+          payment_verified_by = $14,
+          payment_verified_at = $15::timestamptz,
+          document_reference_id = $16,
+          notes = $17,
+          updated_at = now()
+        WHERE id = $1
+        RETURNING *
+        `, [
+                existingResult.rows[0].id,
+                bankName,
+                branchNameCode,
+                accountName,
+                accountNumber,
+                accountType,
+                swiftBicCode,
+                iban,
+                mobileWalletIdentifier,
+                dividendPaymentPreference,
+                paymentMethod,
+                totalInvestmentAmount,
+                paymentVerificationStatus,
+                paymentVerifiedBy,
+                paymentVerifiedAt,
+                documentReferenceId,
+                notes,
+            ]);
+        }
+        await insertShareholderAudit(client, {
+            entityId: shareholder.entity_id,
+            actorId,
+            action: "shareholder_payment_profile_upserted",
+            tableName: "shareholder_payment_profiles",
+            recordId: upsertResult.rows[0].id,
+            oldValue: existingResult.rows[0] ?? null,
+            newValue: upsertResult.rows[0],
+            sourceIp: req.ip,
+        });
+        await client.query("COMMIT");
+        return res.json({
+            data: upsertResult.rows[0],
+        });
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        return (0, apiError_1.sendServerError)(res, "Failed to update payment profile", error);
+    }
+    finally {
+        client.release();
+    }
+});
 exports.shareholderRoutes.get("/:shareholderId", async (req, res) => {
     let shareholderId = "";
     try {
@@ -448,19 +2050,7 @@ exports.shareholderRoutes.get("/:shareholderId", async (req, res) => {
     try {
         const profileResult = await pool_1.pool.query(`
       SELECT
-        s.shareholder_id,
-        s.entity_id,
-        e.legal_name AS entity_name,
-        s.legal_name,
-        s.type,
-        s.status,
-        s.contact_details,
-        s.kyc_status,
-        s.kyc_expiry,
-        s.risk_classification,
-        s.proxy_eligible,
-        s.relationship_start_date,
-        s.created_at
+        ${shareholderCoreSelect}
       FROM shareholder s
       JOIN entity e ON e.entity_id = s.entity_id
       WHERE s.shareholder_id = $1

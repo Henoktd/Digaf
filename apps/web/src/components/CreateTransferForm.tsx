@@ -117,7 +117,7 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
         transferorId: formState.transferorId,
         transfereeId: formState.transfereeId,
         shares,
-      }, token);
+      }, token) as { data: EligibilityResult };
 
       setEligibility(response.data);
       setMessage(

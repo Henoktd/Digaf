@@ -12,6 +12,7 @@ import { StatusBadge } from "@/src/components/StatusBadge";
 import { CertificatesTable } from "@/src/components/CertificatesTable";
 import { PaginationBar } from "@/src/components/PaginationBar";
 import { CertificatePrintButton } from "@/src/components/CertificatePrintButton";
+import { EmptyState } from "@/src/components/EmptyState";
 
 type Certificate = {
   certificate_id: string;

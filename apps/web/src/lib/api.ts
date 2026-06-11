@@ -1190,6 +1190,13 @@ export async function fetchCertificates(token?: string, page = 1, limit = 50) {
   return sendGetRequest(`${API_BASE_URL}/api/certificates?page=${page}&limit=${limit}`, token);
 }
 
+export async function createCertificate(
+  data: { shareholder_id: string; share_class_id: string; quantity: number; serial_number: string },
+  token?: string
+) {
+  return sendJsonRequest(`${API_BASE_URL}/api/certificates`, "POST", data, "Failed to create certificate", token);
+}
+
 export async function fetchCertificateRenderData(
   certificateId: string,
   token?: string

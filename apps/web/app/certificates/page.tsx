@@ -2,8 +2,11 @@ import {
   fetchCertificateEvents,
   fetchCertificateRenderData,
   fetchCertificates,
+  fetchShareholders,
+  fetchShareClasses,
   getCertificateQrSvgUrl,
 } from "@/src/lib/api";
+import { CreateCertificateForm } from "@/src/components/CreateCertificateForm";
 import { getToken } from "@/src/lib/dal";
 import { BrandLogo } from "@/src/components/BrandLogo";
 import { PageContainer } from "@/src/components/PageContainer";
@@ -80,9 +83,15 @@ export default async function CertificatesPage({
   const params = searchParams ? await searchParams : {};
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const token = await getToken();
-  const response = await fetchCertificates(token ?? undefined, page, 50);
+  const [response, shareholdersResponse, shareClassesResponse] = await Promise.all([
+    fetchCertificates(token ?? undefined, page, 50),
+    fetchShareholders(token ?? undefined),
+    fetchShareClasses(token ?? undefined),
+  ]);
   const certificates: Certificate[] = response.data;
   const total: number = response.total ?? certificates.length;
+  const shareholders = (shareholdersResponse.data ?? []) as { shareholder_id: string; legal_name: string }[];
+  const shareClasses = (shareClassesResponse.data ?? []) as { share_class_id: string; class_name: string }[];
   const firstCertificate = certificates[0];
   const [eventResponse, renderDataResponse] = firstCertificate
     ? await Promise.all([
@@ -108,6 +117,11 @@ export default async function CertificatesPage({
         />
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
+            <h2 className="mb-4 text-lg font-bold text-slate-900">Create New Certificate</h2>
+            <CreateCertificateForm shareholders={shareholders} shareClasses={shareClasses} />
+          </div>
+
           <CertificatesTable certificates={certificates} />
           <PaginationBar page={page} total={total} limit={50} baseHref="/certificates" />
 

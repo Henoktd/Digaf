@@ -194,6 +194,65 @@ certificateRoutes.get("/", async (req, res) => {
   }
 });
 
+certificateRoutes.post("/", async (req, res) => {
+  const roleResult = requireRole(req.auth?.actorRole, ["maker", "governance_admin"]);
+  if (!roleResult.ok) return sendForbidden(res, roleResult.message);
+
+  const { shareholder_id, share_class_id, quantity, serial_number } = req.body ?? {};
+
+  if (!shareholder_id || !share_class_id || !quantity || !serial_number) {
+    return sendBadRequest(res, "shareholder_id, share_class_id, quantity, and serial_number are required");
+  }
+  if (isNaN(Number(quantity)) || Number(quantity) <= 0) {
+    return sendBadRequest(res, "quantity must be a positive number");
+  }
+
+  try {
+    const dupCheck = await pool.query(
+      `SELECT certificate_id FROM share_certificate WHERE serial_number = $1`,
+      [serial_number]
+    );
+    if ((dupCheck.rowCount ?? 0) > 0) {
+      return sendConflict(res, `Serial number '${serial_number}' is already in use`);
+    }
+
+    const shareholderResult = await pool.query(
+      `SELECT shareholder_id, entity_id FROM shareholder WHERE shareholder_id = $1 LIMIT 1`,
+      [shareholder_id]
+    );
+    if (shareholderResult.rowCount === 0) {
+      return sendNotFound(res, "Shareholder not found");
+    }
+    const entity_id = shareholderResult.rows[0].entity_id;
+
+    const shareClassResult = await pool.query(
+      `SELECT share_class_id FROM share_class WHERE share_class_id = $1 LIMIT 1`,
+      [share_class_id]
+    );
+    if (shareClassResult.rowCount === 0) {
+      return sendNotFound(res, "Share class not found");
+    }
+
+    const result = await pool.query(
+      `INSERT INTO share_certificate
+        (entity_id, shareholder_id, share_class_id, quantity, serial_number, status)
+       VALUES ($1, $2, $3, $4, $5, 'draft')
+       RETURNING certificate_id, serial_number, status, created_at`,
+      [entity_id, shareholder_id, share_class_id, Number(quantity), serial_number]
+    );
+
+    await pool.query(
+      `INSERT INTO certificate_event (certificate_id, event_type, actor_id, notes)
+       VALUES ($1, 'created', $2, 'Certificate created via governance portal')`,
+      [result.rows[0].certificate_id, req.auth.actorId]
+    );
+
+    res.status(201).json({ data: result.rows[0] });
+  } catch (error) {
+    return sendServerError(res, "Failed to create certificate", error);
+  }
+});
+
 certificateRoutes.get("/verify/by-token/:qrToken", async (req, res) => {
   try {
     const { qrToken } = req.params;

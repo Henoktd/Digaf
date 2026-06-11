@@ -1,4 +1,5 @@
 import { fetchSlaMonitor } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
@@ -66,7 +67,8 @@ function formatDaysRemaining(value: number | null) {
 }
 
 export default async function SlaMonitorPage() {
-  const response = await fetchSlaMonitor();
+  const token = await getToken();
+  const response = await fetchSlaMonitor(token ?? undefined);
   const slaItems: SlaItem[] = response.data;
 
   const overdueCount = slaItems.filter(

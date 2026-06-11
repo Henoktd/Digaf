@@ -2,6 +2,7 @@ import {
   DashboardSummary,
   fetchDashboardSummary,
 } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
 import { BrandLogo } from "@/src/components/BrandLogo";
 import { KpiCard } from "@/src/components/KpiCard";
@@ -34,8 +35,37 @@ function formatDate(value: string | null) {
 }
 
 export default async function Home() {
-  const response: DashboardSummaryResponse = await fetchDashboardSummary();
-  const summary = response.data;
+  const token = await getToken();
+
+  let summary: DashboardSummary;
+  try {
+    const response: DashboardSummaryResponse = await fetchDashboardSummary(token);
+    summary = response.data;
+  } catch {
+    summary = {
+      entity_count: 0,
+      shareholder_count: 0,
+      active_shareholder_count: 0,
+      total_shares: 0,
+      certificate_count: 0,
+      issued_certificate_count: 0,
+      revoked_certificate_count: 0,
+      transfer_count: 0,
+      pending_transfer_count: 0,
+      completed_transfer_count: 0,
+      pending_approval_count: 0,
+      approved_approval_count: 0,
+      overdue_approval_count: 0,
+      active_legal_hold_count: 0,
+      active_transfer_freeze_count: 0,
+      document_reference_count: 0,
+      audit_log_count: 0,
+      communication_count: 0,
+      top_ownership_rows: [],
+      recent_audit_actions: [],
+      sla_snapshot: [],
+    };
+  }
 
   const kpis = [
     {

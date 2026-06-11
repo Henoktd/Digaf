@@ -4,8 +4,7 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createShareholder } from "@/src/lib/api";
-
-const actorId = "henok.local_dev";
+import { createClient } from "@/src/lib/supabase/client";
 
 type ShareholderType = "individual" | "institution";
 type KycStatus = "not_started" | "pending" | "verified" | "expired";
@@ -53,6 +52,13 @@ export function CreateShareholderForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function getAccessToken(): Promise<string> {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) throw new Error("Not authenticated");
+    return data.session.access_token;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -66,6 +72,7 @@ export function CreateShareholderForm({
     setError(null);
 
     try {
+      const token = await getAccessToken();
       await createShareholder({
         entityId,
         legalName: formState.legalName.trim(),
@@ -77,8 +84,7 @@ export function CreateShareholderForm({
         riskClassification: formState.riskClassification,
         proxyEligible: formState.proxyEligible,
         relationshipStartDate: formState.relationshipStartDate || undefined,
-        actorId,
-      });
+      }, token);
 
       setFormState(initialFormState);
       setMessage("Shareholder created. Registry refreshed.");
@@ -109,7 +115,7 @@ export function CreateShareholderForm({
           </p>
         </div>
         <span className="max-w-full break-all rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
-          Actor: {actorId}
+          Auth: Supabase JWT
         </span>
       </div>
 

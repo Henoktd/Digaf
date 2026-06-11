@@ -22,6 +22,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+apps/api/*.log
+apps/web/*.log
+dev-logs/
 
 # OS files
 .DS_Store

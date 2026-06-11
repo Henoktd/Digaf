@@ -6,9 +6,8 @@ import {
   sendNotFound,
   sendServerError,
 } from "../utils/apiError";
-import { isAllowedRole, requireRole } from "../utils/roles";
+import { requireRole } from "../utils/roles";
 import {
-  normalizeActorId,
   requireNonEmptyString,
   requireString,
   requireUuid,
@@ -154,14 +153,6 @@ function requireObject(value: unknown, fieldName: string) {
   return value as Record<string, unknown>;
 }
 
-function sendRoleFailure(res: any, role: unknown, message: string) {
-  const normalizedRole = typeof role === "string" ? role.trim() : role;
-
-  return isAllowedRole(normalizedRole)
-    ? sendForbidden(res, message)
-    : sendBadRequest(res, message);
-}
-
 const shareholderCoreSelect = `
   s.shareholder_id,
   s.entity_id,
@@ -257,40 +248,52 @@ async function insertShareholderAudit(
   );
 }
 
-shareholderRoutes.get("/", async (_req, res) => {
+shareholderRoutes.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        s.shareholder_id,
-        s.entity_id,
-        s.legal_name,
-        s.type,
-        s.status,
-        s.contact_details,
-        s.kyc_status,
-        s.kyc_expiry,
-        s.risk_classification,
-        s.proxy_eligible,
-        s.relationship_start_date,
-        s.shareholder_code,
-        s.gender,
-        s.date_of_birth,
-        s.nationality,
-        s.occupation,
-        s.tin_number,
-        s.primary_id_number,
-        s.mobile_number,
-        s.email_address,
-        s.physical_address,
-        s.source_of_funds_declaration,
-        s.created_at,
-        s.updated_at
-      FROM shareholder s
-      ORDER BY s.legal_name ASC
-    `);
+    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit ?? "50"), 10) || 50));
+    const offset = (page - 1) * limit;
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT
+          s.shareholder_id,
+          s.entity_id,
+          s.legal_name,
+          s.type,
+          s.status,
+          s.contact_details,
+          s.kyc_status,
+          s.kyc_expiry,
+          s.risk_classification,
+          s.proxy_eligible,
+          s.relationship_start_date,
+          s.shareholder_code,
+          s.gender,
+          s.date_of_birth,
+          s.nationality,
+          s.occupation,
+          s.tin_number,
+          s.primary_id_number,
+          s.mobile_number,
+          s.email_address,
+          s.physical_address,
+          s.source_of_funds_declaration,
+          s.created_at,
+          s.updated_at
+        FROM shareholder s
+        ORDER BY s.legal_name ASC
+        LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      ),
+      pool.query(`SELECT COUNT(*)::int AS total FROM shareholder`),
+    ]);
 
     res.json({
-      data: result.rows,
+      data: dataResult.rows,
+      total: countResult.rows[0]?.total ?? 0,
+      page,
+      limit,
     });
   } catch (error) {
     res.status(500).json({
@@ -323,7 +326,6 @@ shareholderRoutes.post("/", async (req, res) => {
   let emailAddress: string | null = null;
   let physicalAddress: string | null = null;
   let sourceOfFundsDeclaration: string | null = null;
-  let actorId = "";
 
   try {
     entityId = requireUuid(req.body?.entityId, "entityId");
@@ -400,7 +402,6 @@ shareholderRoutes.post("/", async (req, res) => {
       req.body?.sourceOfFundsDeclaration,
       "sourceOfFundsDeclaration"
     );
-    actorId = normalizeActorId(req.body?.actorId);
   } catch (error) {
     return sendBadRequest(
       res,
@@ -408,13 +409,15 @@ shareholderRoutes.post("/", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -618,7 +621,6 @@ shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
   let kycStatus = "";
   let kycExpiry: string | null = null;
   let riskClassification = "";
-  let actorId = "";
   let decisionNotes = "";
 
   try {
@@ -641,7 +643,6 @@ shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
       throw new Error("riskClassification must be one of: low, medium, high");
     }
 
-    actorId = normalizeActorId(req.body?.actorId);
     decisionNotes = requireNonEmptyString(
       req.body?.decisionNotes,
       "decisionNotes"
@@ -653,13 +654,15 @@ shareholderRoutes.patch("/:shareholderId/kyc", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "compliance_officer",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -971,7 +974,6 @@ shareholderRoutes.get("/:shareholderId/profile-details", async (req, res) => {
 
 shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let shareholderCode: string | null = null;
   let gender: string | null = null;
   let dateOfBirth: string | null = null;
@@ -986,7 +988,6 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
     shareholderCode = normalizeOptionalString(
       req.body?.shareholderCode,
       "shareholderCode"
@@ -1027,13 +1028,15 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -1165,7 +1168,6 @@ shareholderRoutes.get("/:shareholderId/identity-documents", async (req, res) => 
 
 shareholderRoutes.post("/:shareholderId/identity-documents", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let documentRole: string | null = null;
   let idType: string | null = null;
   let idNumber: string | null = null;
@@ -1181,7 +1183,6 @@ shareholderRoutes.post("/:shareholderId/identity-documents", async (req, res) =>
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
     documentRole = normalizeOptionalString(req.body?.documentRole, "documentRole");
     idType = normalizeOptionalString(req.body?.idType, "idType");
     idNumber = normalizeOptionalString(req.body?.idNumber, "idNumber");
@@ -1217,14 +1218,16 @@ shareholderRoutes.post("/:shareholderId/identity-documents", async (req, res) =>
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "compliance_officer",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -1358,7 +1361,6 @@ shareholderRoutes.get("/:shareholderId/kyc-profile", async (req, res) => {
 
 shareholderRoutes.put("/:shareholderId/kyc-profile", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let kycRecordId: string | null = null;
   let cddCompleted: boolean | null = null;
   let cddCompletedAt: string | null = null;
@@ -1398,7 +1400,6 @@ shareholderRoutes.put("/:shareholderId/kyc-profile", async (req, res) => {
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
     kycRecordId = normalizeOptionalUuid(req.body?.kycRecordId, "kycRecordId");
     cddCompleted = normalizeNullableBoolean(
       req.body?.cddCompleted,
@@ -1537,13 +1538,15 @@ shareholderRoutes.put("/:shareholderId/kyc-profile", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "compliance_officer",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -1811,7 +1814,6 @@ shareholderRoutes.get("/:shareholderId/beneficial-owners", async (req, res) => {
 
 shareholderRoutes.post("/:shareholderId/beneficial-owners", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let isUltimateBeneficialOwner: boolean | null = null;
   let beneficialOwnerFullName: string | null = null;
   let relationshipToShareholder: string | null = null;
@@ -1829,7 +1831,6 @@ shareholderRoutes.post("/:shareholderId/beneficial-owners", async (req, res) => 
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
     isUltimateBeneficialOwner = normalizeNullableBoolean(
       req.body?.isUltimateBeneficialOwner,
       "isUltimateBeneficialOwner"
@@ -1891,14 +1892,16 @@ shareholderRoutes.post("/:shareholderId/beneficial-owners", async (req, res) => 
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "compliance_officer",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -1911,6 +1914,15 @@ shareholderRoutes.post("/:shareholderId/beneficial-owners", async (req, res) => 
     if (!shareholder) {
       await client.query("ROLLBACK");
       return sendNotFound(res, "Shareholder not found");
+    }
+
+    const boCountResult = await client.query(
+      `SELECT COUNT(*)::int AS bo_count FROM shareholder_beneficial_owners WHERE shareholder_id = $1`,
+      [shareholderId]
+    );
+    if ((boCountResult.rows[0]?.bo_count ?? 0) >= 10) {
+      await client.query("ROLLBACK");
+      return sendBadRequest(res, "Maximum of 10 beneficial owners allowed per shareholder");
     }
 
     const insertResult = await client.query(
@@ -2037,7 +2049,6 @@ shareholderRoutes.get("/:shareholderId/next-of-kin", async (req, res) => {
 
 shareholderRoutes.put("/:shareholderId/next-of-kin", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let contacts: Array<{
     fullName: string | null;
     relationship: string | null;
@@ -2051,7 +2062,6 @@ shareholderRoutes.put("/:shareholderId/next-of-kin", async (req, res) => {
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
 
     const rawContacts = req.body?.contacts;
     let contactInputs: Record<string, unknown>[];
@@ -2123,13 +2133,15 @@ shareholderRoutes.put("/:shareholderId/next-of-kin", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -2276,7 +2288,6 @@ shareholderRoutes.get("/:shareholderId/document-checklist", async (req, res) => 
 
 shareholderRoutes.put("/:shareholderId/document-checklist", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let items: Array<{
     documentType: string;
     requirementStatus: string;
@@ -2290,7 +2301,6 @@ shareholderRoutes.put("/:shareholderId/document-checklist", async (req, res) => 
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
 
     const rawItems = req.body?.items;
 
@@ -2342,14 +2352,16 @@ shareholderRoutes.put("/:shareholderId/document-checklist", async (req, res) => 
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "compliance_officer",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -2494,7 +2506,6 @@ shareholderRoutes.get("/:shareholderId/payment-profile", async (req, res) => {
 
 shareholderRoutes.put("/:shareholderId/payment-profile", async (req, res) => {
   let shareholderId = "";
-  let actorId = "";
   let paymentProfileType = "dividend";
   let bankName: string | null = null;
   let branchNameCode: string | null = null;
@@ -2515,7 +2526,6 @@ shareholderRoutes.put("/:shareholderId/payment-profile", async (req, res) => {
 
   try {
     shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
-    actorId = normalizeActorId(req.body?.actorId);
     paymentProfileType =
       normalizeOptionalString(
         req.body?.paymentProfileType,
@@ -2584,13 +2594,15 @@ shareholderRoutes.put("/:shareholderId/payment-profile", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "checker_2",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();

@@ -2,14 +2,16 @@ import {
   fetchCertificateEvents,
   fetchCertificateRenderData,
   fetchCertificates,
-  getCertificatePrintPreviewUrl,
   getCertificateQrSvgUrl,
 } from "@/src/lib/api";
-import { EmptyState } from "@/src/components/EmptyState";
+import { getToken } from "@/src/lib/dal";
 import { BrandLogo } from "@/src/components/BrandLogo";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
+import { CertificatesTable } from "@/src/components/CertificatesTable";
+import { PaginationBar } from "@/src/components/PaginationBar";
+import { CertificatePrintButton } from "@/src/components/CertificatePrintButton";
 
 type Certificate = {
   certificate_id: string;
@@ -69,14 +71,22 @@ function getPublicVerificationPageUrl(serialNumber: string) {
   return `/qr?serialNumber=${encodeURIComponent(serialNumber)}`;
 }
 
-export default async function CertificatesPage() {
-  const response = await fetchCertificates();
+export default async function CertificatesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const token = await getToken();
+  const response = await fetchCertificates(token ?? undefined, page, 50);
   const certificates: Certificate[] = response.data;
+  const total: number = response.total ?? certificates.length;
   const firstCertificate = certificates[0];
   const [eventResponse, renderDataResponse] = firstCertificate
     ? await Promise.all([
-        fetchCertificateEvents(firstCertificate.certificate_id),
-        fetchCertificateRenderData(firstCertificate.certificate_id),
+        fetchCertificateEvents(firstCertificate.certificate_id, token ?? undefined),
+        fetchCertificateRenderData(firstCertificate.certificate_id, token ?? undefined),
       ])
     : [{ data: [] }, { data: null }];
   const events: CertificateEvent[] = eventResponse.data;
@@ -88,125 +98,17 @@ export default async function CertificatesPage() {
         <PageHeader
           title="Certificate Management"
           description="Manage certificate requests, approvals, serial numbers, QR verification, hashes, issuance, revocation, and reissue history."
-          notice="Demo certificate template — official Digaf template pending."
+
           badge={
             <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              {certificates.length} Certificates
+              {total} Certificates
             </div>
           }
         />
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            {certificates.length > 0 ? (
-              <table className="w-full min-w-[1320px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Serial Number
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Shareholder
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Share Class
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Quantity
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Hash
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Revocation
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      QR Verification
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Demo Certificate
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {certificates.map((certificate) => (
-                    <tr key={certificate.certificate_id}>
-                      <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                        {certificate.serial_number}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {certificate.shareholder_name}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {certificate.share_class}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {certificate.quantity}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <StatusBadge status={certificate.status} />
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {certificate.hash_algorithm || "Not generated"}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <StatusBadge
-                          status={certificate.revocation_status}
-                          label={certificate.revocation_status || "None"}
-                        />
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <div className="flex min-w-[210px] items-center gap-3">
-                          <img
-                            src={getCertificateQrSvgUrl(
-                              certificate.certificate_id
-                            )}
-                            alt={`QR code for ${certificate.serial_number}`}
-                            className="h-20 w-20 shrink-0 rounded-lg border border-slate-200 bg-white p-1"
-                          />
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold text-slate-900">
-                              QR opens public verification page.
-                            </p>
-                            <a
-                              href={getPublicVerificationPageUrl(
-                                certificate.serial_number
-                              )}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Open Verification Page
-                            </a>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <a
-                          href={getCertificatePrintPreviewUrl(
-                            certificate.certificate_id
-                          )}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
-                        >
-                          Open Demo Certificate
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="p-4">
-                <EmptyState title="No certificates found" />
-              </div>
-            )}
-          </div>
+          <CertificatesTable certificates={certificates} />
+          <PaginationBar page={page} total={total} limit={50} baseHref="/certificates" />
 
           {renderData ? (
             <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
@@ -224,9 +126,8 @@ export default async function CertificatesPage() {
                     {renderData.render_metadata.certificate_title}
                   </h2>
                   <p className="mt-2 max-w-3xl text-sm text-slate-600">
-                    Demo certificate template — official Digaf template
-                    pending. Browser print-to-PDF is available from the
-                    certificate action in the table above.
+                    Official Digaf Microcredit Provider share certificate. Use
+                    browser Print → Save as PDF to generate the final document.
                   </p>
                 </div>
 
@@ -322,16 +223,11 @@ export default async function CertificatesPage() {
                     >
                       Open Verification Page
                     </a>
-                    <a
-                      href={getCertificatePrintPreviewUrl(
-                        renderData.certificate_id
-                      )}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex w-full justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
-                    >
-                      Open Demo Certificate
-                    </a>
+                    <CertificatePrintButton
+                      certificateId={renderData.certificate_id}
+                      label="Open Certificate"
+                      className="inline-flex w-full justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto disabled:opacity-50"
+                    />
                   </div>
                 </div>
               </div>

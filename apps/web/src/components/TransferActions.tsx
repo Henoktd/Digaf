@@ -3,10 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cancelTransfer } from "@/src/lib/api";
+import { createClient } from "@/src/lib/supabase/client";
 
-const makerActorId = "henok.local_dev";
-const makerActorRole = "maker";
-const cancellationReason = "Cancelled in local prototype";
+const cancellationReason = "Cancelled by maker";
 
 type TransferActionsProps = {
   transferId: string;
@@ -28,17 +27,20 @@ export function TransferActions({ transferId, status }: TransferActionsProps) {
     );
   }
 
+  async function getAccessToken(): Promise<string> {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) throw new Error("Not authenticated");
+    return data.session.access_token;
+  }
+
   async function handleCancel() {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await cancelTransfer(
-        transferId,
-        makerActorId,
-        makerActorRole,
-        cancellationReason
-      );
+      const token = await getAccessToken();
+      await cancelTransfer(transferId, cancellationReason, token);
       router.refresh();
     } catch (cancelError) {
       setError(

@@ -1,4 +1,5 @@
 import { fetchCapTable } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
@@ -19,7 +20,8 @@ type CapTableRow = {
 };
 
 export default async function CapTablePage() {
-  const response = await fetchCapTable();
+  const token = await getToken();
+  const response = await fetchCapTable(token ?? undefined);
   const rows: CapTableRow[] = response.data;
 
   const totalShares = rows[0]?.total_entity_shares || "0";

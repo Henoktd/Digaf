@@ -1,4 +1,5 @@
 import { fetchCommunications } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
@@ -36,7 +37,8 @@ function formatDate(value: string | null) {
 }
 
 export default async function CommunicationsPage() {
-  const response = await fetchCommunications();
+  const token = await getToken();
+  const response = await fetchCommunications(token ?? undefined);
   const communications: Communication[] = response.data;
   const sentCount = communications.filter(
     (communication) => communication.delivery_status === "sent"

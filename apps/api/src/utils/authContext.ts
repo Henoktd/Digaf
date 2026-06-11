@@ -1,52 +1,35 @@
 import type { ActorRole } from "./roles";
 import { isAllowedRole } from "./roles";
 
-type AuthSource = "local_prototype" | "entra";
+export type AuthSource = "supabase" | "local_prototype";
 
 export type AuthenticatedActor = {
   actorId: string;
+  actorEmail: string;
   actorRole: ActorRole;
   authSource: AuthSource;
-  groups: string[];
 };
+
+// Supabase group name → role mapping (kept for reference and future Entra migration)
+export const supabaseGroupRoleMappings: Array<{
+  groupName: string;
+  role: ActorRole;
+}> = [
+  { groupName: "Digaf-Governance-Admins", role: "governance_admin" },
+  { groupName: "Digaf-Compliance-Officers", role: "compliance_officer" },
+  { groupName: "Digaf-Governance-Checker2", role: "checker_2" },
+  { groupName: "Digaf-Governance-Checker1", role: "checker_1" },
+  { groupName: "Digaf-Governance-Makers", role: "maker" },
+  { groupName: "Digaf-Governance-Viewers", role: "viewer" },
+];
 
 type LocalPrototypeActorInput = {
   actorId?: unknown;
   actorRole?: unknown;
 };
 
-const entraGroupRoleMappings: Array<{
-  groupName: string;
-  role: ActorRole;
-}> = [
-  {
-    groupName: "Digaf-Governance-Admins",
-    role: "governance_admin",
-  },
-  {
-    groupName: "Digaf-Compliance-Officers",
-    role: "compliance_officer",
-  },
-  {
-    groupName: "Digaf-Governance-Checker2",
-    role: "checker_2",
-  },
-  {
-    groupName: "Digaf-Governance-Checker1",
-    role: "checker_1",
-  },
-  {
-    groupName: "Digaf-Governance-Makers",
-    role: "maker",
-  },
-  {
-    groupName: "Digaf-Governance-Viewers",
-    role: "viewer",
-  },
-];
-
-// Local prototype only. Production actor context must come from trusted
-// authenticated identity claims, not from client-controlled request bodies.
+// Local prototype only — used in development when SUPABASE_URL is not set.
+// Production actor context must come from requireAuth middleware (JWT claims).
 export function getLocalPrototypeActor(
   input: LocalPrototypeActorInput
 ): AuthenticatedActor | null {
@@ -60,20 +43,8 @@ export function getLocalPrototypeActor(
 
   return {
     actorId,
+    actorEmail: `${actorRole}@local.prototype`,
     actorRole,
     authSource: "local_prototype",
-    groups: [],
   };
-}
-
-export function mapEntraGroupsToRole(groups: string[]): ActorRole {
-  const normalizedGroups = new Set(groups.map((group) => group.trim()));
-
-  for (const mapping of entraGroupRoleMappings) {
-    if (normalizedGroups.has(mapping.groupName)) {
-      return mapping.role;
-    }
-  }
-
-  return "viewer";
 }

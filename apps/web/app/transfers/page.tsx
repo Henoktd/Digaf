@@ -3,8 +3,10 @@ import { EmptyState } from "@/src/components/EmptyState";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
-import { TransferActions } from "@/src/components/TransferActions";
+import { TransfersTable } from "@/src/components/TransfersTable";
+import { PaginationBar } from "@/src/components/PaginationBar";
 import { fetchShareholders, fetchTransfers } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 
 type Transfer = {
   transfer_id: string;
@@ -42,33 +44,26 @@ type Shareholder = {
   risk_classification: string | null;
 };
 
-function formatDate(value: string | null) {
-  if (!value) {
-    return "Not set";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function formatLabel(value: string | null) {
-  return value ? value.replaceAll("_", " ") : "Not set";
-}
-
 function formatShares(value: string) {
   return Number(value).toLocaleString("en-US", {
     maximumFractionDigits: 2,
   });
 }
 
-export default async function TransfersPage() {
+export default async function TransfersPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const token = await getToken();
   const [transferResponse, shareholderResponse] = await Promise.all([
-    fetchTransfers(),
-    fetchShareholders(),
+    fetchTransfers(token ?? undefined, page, 50),
+    fetchShareholders(token ?? undefined),
   ]);
   const transfers: Transfer[] = transferResponse.data;
+  const total: number = transferResponse.total ?? transfers.length;
   const shareholders: Shareholder[] = shareholderResponse.data;
 
   return (
@@ -153,65 +148,8 @@ export default async function TransfersPage() {
           </div>
         )}
 
-        {transfers.length > 0 ? (
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-[1280px] w-full border-collapse text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
-                <tr>
-                  <th className="border-b border-slate-200 px-4 py-3">Transferor</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Transferee</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Shares</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Stage</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Current Approver</th>
-                  <th className="border-b border-slate-200 px-4 py-3">SLA Due</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Maker</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Checker 1</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Checker 2</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.map((transfer) => (
-                  <tr key={transfer.transfer_id}>
-                    <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                      {transfer.transferor_name}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {transfer.transferee_name}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {formatShares(transfer.shares)}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                      {formatLabel(transfer.approval_stage)}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {transfer.current_approver || "Not assigned"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {formatDate(transfer.sla_due_date)}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {transfer.maker_id || "Not assigned"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {transfer.checker1_id || "Pending"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {transfer.checker2_id || "Pending"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <TransferActions
-                        transferId={transfer.transfer_id}
-                        status={transfer.status}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
+        <TransfersTable transfers={transfers} />
+        <PaginationBar page={page} total={total} limit={50} baseHref="/transfers" />
         </section>
       </div>
     </PageContainer>

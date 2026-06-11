@@ -4,8 +4,7 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { checkTransferEligibility, createTransfer } from "@/src/lib/api";
-
-const actorId = "henok.local_dev";
+import { createClient } from "@/src/lib/supabase/client";
 
 type Shareholder = {
   shareholder_id: string;
@@ -91,6 +90,13 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
     Number.isFinite(shares) &&
     shares > 0;
 
+  async function getAccessToken(): Promise<string> {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) throw new Error("Not authenticated");
+    return data.session.access_token;
+  }
+
   async function handleEligibilityCheck(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setEligibility(null);
@@ -105,13 +111,13 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
     setIsChecking(true);
 
     try {
+      const token = await getAccessToken();
       const response = await checkTransferEligibility({
         entityId: transferor.entity_id,
         transferorId: formState.transferorId,
         transfereeId: formState.transfereeId,
         shares,
-        actorId,
-      });
+      }, token);
 
       setEligibility(response.data);
       setMessage(
@@ -140,13 +146,13 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
     setError(null);
 
     try {
+      const token = await getAccessToken();
       await createTransfer({
         entityId: transferor.entity_id,
         transferorId: formState.transferorId,
         transfereeId: formState.transfereeId,
         shares,
-        actorId,
-      });
+      }, token);
 
       setEligibility(null);
       setFormState((current) => ({
@@ -181,7 +187,7 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
           </p>
         </div>
         <span className="max-w-full break-all rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
-          Actor: {actorId}
+          Auth: Supabase JWT
         </span>
       </div>
 

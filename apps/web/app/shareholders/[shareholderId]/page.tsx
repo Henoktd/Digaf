@@ -1,11 +1,16 @@
 import Link from "next/link";
+import { DigafProfileSections } from "@/src/components/DigafProfileSections";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { UpdateKycForm } from "@/src/components/UpdateKycForm";
-import { fetchShareholderProfile } from "@/src/lib/api";
+import {
+  fetchShareholderProfile,
+  fetchShareholderProfileDetails,
+} from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 
 type ContactDetails = Record<string, string | number | boolean | null>;
 type KycStatus = "not_started" | "pending" | "verified" | "expired";
@@ -24,7 +29,19 @@ type ShareholderProfile = {
   risk_classification: RiskClassification | null;
   proxy_eligible: boolean;
   relationship_start_date: string | null;
+  shareholder_code: string | null;
+  gender: string | null;
+  date_of_birth: string | null;
+  nationality: string | null;
+  occupation: string | null;
+  tin_number: string | null;
+  primary_id_number: string | null;
+  mobile_number: string | null;
+  email_address: string | null;
+  physical_address: string | null;
+  source_of_funds_declaration: string | null;
   created_at: string;
+  updated_at: string | null;
 };
 
 type OwnershipRow = {
@@ -153,8 +170,14 @@ export default async function ShareholderProfilePage({
   params: Promise<{ shareholderId: string }>;
 }) {
   const { shareholderId } = await params;
-  const response: ShareholderProfileResponse =
-    await fetchShareholderProfile(shareholderId);
+  const token = await getToken();
+  const [response, digafProfileResponse]: [
+    ShareholderProfileResponse,
+    Awaited<ReturnType<typeof fetchShareholderProfileDetails>>,
+  ] = await Promise.all([
+    fetchShareholderProfile(shareholderId, token ?? undefined),
+    fetchShareholderProfileDetails(shareholderId, token ?? undefined),
+  ]);
   const {
     profile,
     ownership,
@@ -173,6 +196,7 @@ export default async function ShareholderProfilePage({
   const activeLegalHolds = legalHolds.filter(
     (legalHold) => legalHold.status === "active"
   ).length;
+  const digafDetails = digafProfileResponse.data;
 
   return (
     <PageContainer>
@@ -224,6 +248,12 @@ export default async function ShareholderProfilePage({
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Profile & KYC</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="text-sm text-slate-500">Shareholder Code</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">
+                {profile.shareholder_code || "Not set"}
+              </p>
+            </div>
             <div>
               <p className="text-sm text-slate-500">KYC Expiry</p>
               <p className="mt-1 font-semibold text-slate-900">
@@ -279,6 +309,8 @@ export default async function ShareholderProfilePage({
             )}
           </div>
         </section>
+
+        <DigafProfileSections details={digafDetails} />
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold">Ownership</h2>

@@ -3,15 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { approveChecker1, approveChecker2, rejectApproval } from "@/src/lib/api";
+import { createClient } from "@/src/lib/supabase/client";
 
-const checker1ActorId = "checker1.local_dev";
-const checker1ActorRole = "checker_1";
-const checker1DecisionNotes = "Checker 1 approved in local prototype";
-const checker2ActorId = "checker2.local_dev";
-const checker2ActorRole = "checker_2";
-const checker2DecisionNotes =
-  "Checker 2 approved and transfer completed in local prototype";
-const rejectionDecisionNotes = "Rejected in local prototype";
+const checker1DecisionNotes = "Checker 1 approved";
+const checker2DecisionNotes = "Checker 2 approved and transfer completed";
+const rejectionDecisionNotes = "Rejected";
 
 type ApprovalActionsProps = {
   approvalId: string;
@@ -21,8 +17,6 @@ type ApprovalActionsProps = {
 
 const actionConfig = {
   checker_1: {
-    actorId: checker1ActorId,
-    actorRole: checker1ActorRole,
     decisionNotes: checker1DecisionNotes,
     defaultError: "Failed to approve Checker 1",
     idleLabel: "Approve Checker 1",
@@ -30,8 +24,6 @@ const actionConfig = {
     submit: approveChecker1,
   },
   checker_2: {
-    actorId: checker2ActorId,
-    actorRole: checker2ActorRole,
     decisionNotes: checker2DecisionNotes,
     defaultError: "Failed to approve Checker 2",
     idleLabel: "Approve Checker 2",
@@ -69,16 +61,20 @@ export function ApprovalActions({
   const activeConfig = config;
   const isSubmitting = pendingAction !== null;
 
+  async function getAccessToken(): Promise<string> {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) throw new Error("Not authenticated");
+    return data.session.access_token;
+  }
+
   async function handleApprove() {
     setPendingAction("approve");
     setError(null);
 
     try {
-      await activeConfig.submit(
-        approvalId,
-        activeConfig.actorId,
-        activeConfig.decisionNotes
-      );
+      const token = await getAccessToken();
+      await activeConfig.submit(approvalId, activeConfig.decisionNotes, token);
       router.refresh();
     } catch (approvalError) {
       setError(
@@ -96,12 +92,8 @@ export function ApprovalActions({
     setError(null);
 
     try {
-      await rejectApproval(
-        approvalId,
-        activeConfig.actorId,
-        activeConfig.actorRole,
-        rejectionDecisionNotes
-      );
+      const token = await getAccessToken();
+      await rejectApproval(approvalId, rejectionDecisionNotes, token);
       router.refresh();
     } catch (rejectionError) {
       setError(

@@ -1,4 +1,5 @@
 import { fetchLegalHolds } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
@@ -43,7 +44,8 @@ function formatDate(value: string | null) {
 }
 
 export default async function LegalHoldsPage() {
-  const response = await fetchLegalHolds();
+  const token = await getToken();
+  const response = await fetchLegalHolds(token ?? undefined);
   const legalHolds: LegalHold[] = response.data;
   const activeHolds = legalHolds.filter((hold) => hold.status === "active");
   const activeFreezeCount = new Set(

@@ -7,9 +7,8 @@ import {
   sendNotFound,
   sendServerError,
 } from "../utils/apiError";
-import { isAllowedRole, requireRole } from "../utils/roles";
+import { requireRole } from "../utils/roles";
 import {
-  normalizeActorId,
   requireNonEmptyString,
   requireUuid,
 } from "../utils/validation";
@@ -65,7 +64,6 @@ function parseTransferRequestBody(body: Record<string, unknown> | undefined) {
   const transferorId = requireUuid(body?.transferorId, "transferorId");
   const transfereeId = requireUuid(body?.transfereeId, "transfereeId");
   const shares = normalizePositiveShares(body?.shares);
-  const actorId = normalizeActorId(body?.actorId);
 
   if (transferorId === transfereeId) {
     throw new Error("transferorId and transfereeId must not be the same");
@@ -76,16 +74,7 @@ function parseTransferRequestBody(body: Record<string, unknown> | undefined) {
     transferorId,
     transfereeId,
     shares,
-    actorId,
   };
-}
-
-function sendRoleFailure(res: any, role: unknown, message: string) {
-  const normalizedRole = typeof role === "string" ? role.trim() : role;
-
-  return isAllowedRole(normalizedRole)
-    ? sendForbidden(res, message)
-    : sendBadRequest(res, message);
 }
 
 async function getTransferActionSummary(client: any, transferId: string) {
@@ -310,59 +299,71 @@ async function buildTransferEligibility(
   };
 }
 
-transferRoutes.get("/", async (_req, res) => {
+transferRoutes.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        st.id AS transfer_id,
-        e.legal_name AS entity_name,
-        transferor.legal_name AS transferor_name,
-        transferee.legal_name AS transferee_name,
-        st.shares,
-        st.status,
-        st.maker_id,
-        st.checker1_id,
-        st.checker2_id,
-        st.board_approval_required,
-        st.board_approval_ref,
-        st.encumbrance_check_status,
-        st.kyc_check_status,
-        st.bo_reverification_required,
-        st.freeze_reference,
-        st.supporting_documents,
-        st.effective_date,
-        st.created_at,
-        ar.id AS approval_request_id,
-        ar.stage AS approval_stage,
-        ar.status AS approval_status,
-        ar.current_approver_id AS current_approver,
-        ar.decision_notes AS approval_decision_notes,
-        ar.sla_due_date,
-        ar.escalation_level
-      FROM share_transfer st
-      JOIN entity e ON e.entity_id = st.entity_id
-      JOIN shareholder transferor ON transferor.shareholder_id = st.transferor_id
-      JOIN shareholder transferee ON transferee.shareholder_id = st.transferee_id
-      LEFT JOIN LATERAL (
-        SELECT
-          id,
-          stage,
-          status,
-          current_approver_id,
-          decision_notes,
-          sla_due_date,
-          escalation_level
-        FROM approval_request
-        WHERE request_type = 'share_transfer'
-          AND reference_id = st.id
-        ORDER BY created_at DESC
-        LIMIT 1
-      ) ar ON true
-      ORDER BY st.created_at DESC
-    `);
+    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit ?? "50"), 10) || 50));
+    const offset = (page - 1) * limit;
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT
+          st.id AS transfer_id,
+          e.legal_name AS entity_name,
+          transferor.legal_name AS transferor_name,
+          transferee.legal_name AS transferee_name,
+          st.shares,
+          st.status,
+          st.maker_id,
+          st.checker1_id,
+          st.checker2_id,
+          st.board_approval_required,
+          st.board_approval_ref,
+          st.encumbrance_check_status,
+          st.kyc_check_status,
+          st.bo_reverification_required,
+          st.freeze_reference,
+          st.supporting_documents,
+          st.effective_date,
+          st.created_at,
+          ar.id AS approval_request_id,
+          ar.stage AS approval_stage,
+          ar.status AS approval_status,
+          ar.current_approver_id AS current_approver,
+          ar.decision_notes AS approval_decision_notes,
+          ar.sla_due_date,
+          ar.escalation_level
+        FROM share_transfer st
+        JOIN entity e ON e.entity_id = st.entity_id
+        JOIN shareholder transferor ON transferor.shareholder_id = st.transferor_id
+        JOIN shareholder transferee ON transferee.shareholder_id = st.transferee_id
+        LEFT JOIN LATERAL (
+          SELECT
+            id,
+            stage,
+            status,
+            current_approver_id,
+            decision_notes,
+            sla_due_date,
+            escalation_level
+          FROM approval_request
+          WHERE request_type = 'share_transfer'
+            AND reference_id = st.id
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) ar ON true
+        ORDER BY st.created_at DESC
+        LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      ),
+      pool.query(`SELECT COUNT(*)::int AS total FROM share_transfer`),
+    ]);
 
     res.json({
-      data: result.rows,
+      data: dataResult.rows,
+      total: countResult.rows[0]?.total ?? 0,
+      page,
+      limit,
     });
   } catch (error) {
     res.status(500).json({
@@ -374,12 +375,10 @@ transferRoutes.get("/", async (_req, res) => {
 
 transferRoutes.post("/:transferId/cancel", async (req, res) => {
   let transferId = "";
-  let actorId = "";
   let reason = "";
 
   try {
     transferId = requireUuid(req.params.transferId, "transferId");
-    actorId = normalizeActorId(req.body?.actorId);
     reason = requireNonEmptyString(req.body?.reason, "reason");
   } catch (error) {
     return sendBadRequest(
@@ -388,13 +387,15 @@ transferRoutes.post("/:transferId/cancel", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const actorRole = roleResult.role;
@@ -569,21 +570,6 @@ transferRoutes.post("/:transferId/cancel", async (req, res) => {
 transferRoutes.post("/eligibility-check", async (req, res) => {
   let input;
 
-  if (req.body?.actorRole !== undefined) {
-    const roleResult = requireRole(req.body.actorRole, [
-      "maker",
-      "checker_1",
-      "checker_2",
-      "governance_admin",
-      "compliance_officer",
-      "viewer",
-    ]);
-
-    if (!roleResult.ok) {
-      return sendRoleFailure(res, req.body.actorRole, roleResult.message);
-    }
-  }
-
   try {
     input = parseTransferRequestBody(req.body);
   } catch (error) {
@@ -622,13 +608,15 @@ transferRoutes.post("/", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "maker",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -696,7 +684,7 @@ transferRoutes.post("/", async (req, res) => {
         input.transferorId,
         input.transfereeId,
         input.shares,
-        input.actorId,
+        actorId,
         encumbranceCheckStatus,
         JSON.stringify(supportingDocuments),
       ]
@@ -738,7 +726,7 @@ transferRoutes.post("/", async (req, res) => {
         sla_due_date,
         created_at
       `,
-      [input.entityId, transfer.id, checker1ApproverId, input.actorId]
+      [input.entityId, transfer.id, checker1ApproverId, actorId]
     );
 
     const approvalRequest = approvalResult.rows[0];
@@ -768,7 +756,7 @@ transferRoutes.post("/", async (req, res) => {
       `,
       [
         input.entityId,
-        input.actorId,
+        actorId,
         transfer.id,
         JSON.stringify({
           transfer,

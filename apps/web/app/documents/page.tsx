@@ -1,9 +1,11 @@
 import { fetchDocuments } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
+import { DocumentsTable } from "@/src/components/DocumentsTable";
 
 type JsonValue =
   | string
@@ -46,7 +48,8 @@ function isSharePointReady(fileUrl: string) {
 }
 
 export default async function DocumentsPage() {
-  const response = await fetchDocuments();
+  const token = await getToken();
+  const response = await fetchDocuments(token ?? undefined);
   const documents: DocumentReference[] = response.data;
   const legalHoldProtectedCount = documents.filter(
     (document) => document.legal_hold_id !== null
@@ -163,95 +166,7 @@ export default async function DocumentsPage() {
           )}
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          {documents.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Document Type
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Library
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Retention Category
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Related Entity
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Legal Hold Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Created At
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      File URL
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {documents.map((document) => (
-                    <tr key={document.id}>
-                      <td className="border-b border-slate-100 px-4 py-3 font-medium capitalize">
-                        {formatLabel(document.document_type)}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {document.library}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                        {formatLabel(document.retention_category)}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                        {formatLabel(document.related_entity)}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <StatusBadge
-                          status={document.legal_hold_status}
-                          label={
-                            document.legal_hold_status
-                              ? formatLabel(document.legal_hold_status)
-                              : "Not protected"
-                          }
-                          tone={
-                            document.legal_hold_status === "active"
-                              ? "danger"
-                              : undefined
-                          }
-                        />
-                        {document.authority_reference ? (
-                          <div className="mt-1 break-words text-xs text-slate-500">
-                            {document.authority_reference}
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {formatDate(document.created_at)}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <a
-                          href={document.file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block max-w-sm break-words text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-600"
-                        >
-                          {document.file_url}
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-4">
-              <EmptyState title="No documents found" />
-            </div>
-          )}
-        </div>
+        <DocumentsTable documents={documents} />
         </section>
       </div>
     </PageContainer>

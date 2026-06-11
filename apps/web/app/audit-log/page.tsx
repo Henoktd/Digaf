@@ -1,8 +1,10 @@
 import { fetchAuditLogs } from "@/src/lib/api";
-import { EmptyState } from "@/src/components/EmptyState";
+import { getToken } from "@/src/lib/dal";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
+import { AuditLogTable } from "@/src/components/AuditLogTable";
+import { PaginationBar } from "@/src/components/PaginationBar";
 
 type JsonValue =
   | string
@@ -51,9 +53,17 @@ function summarizeJson(value: JsonValue | null) {
   return summary.length > 180 ? `${summary.slice(0, 177)}...` : summary;
 }
 
-export default async function AuditLogPage() {
-  const response = await fetchAuditLogs();
+export default async function AuditLogPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const token = await getToken();
+  const response = await fetchAuditLogs(token ?? undefined, page, 50);
   const auditLogs: AuditLog[] = response.data;
+  const total: number = response.total ?? auditLogs.length;
   const latestLog = auditLogs[0] ?? null;
 
   return (
@@ -73,7 +83,7 @@ export default async function AuditLogPage() {
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           <KpiCard
             label="Total Logs"
-            value={auditLogs.length}
+            value={total}
             detail="Audit records"
           />
           <KpiCard
@@ -88,75 +98,8 @@ export default async function AuditLogPage() {
           />
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          {auditLogs.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Actor
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Action
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Table
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Record ID
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Timestamp
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Old Value
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      New Value
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {auditLogs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                        {log.actor_id}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3 capitalize">
-                        {formatLabel(log.action)}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {log.table_name}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3 font-mono text-xs">
-                        {log.record_id || "Not set"}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {formatDate(log.timestamp_utc)}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <code className="block max-w-sm whitespace-pre-wrap break-words rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                          {summarizeJson(log.old_value_json)}
-                        </code>
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        <code className="block max-w-sm whitespace-pre-wrap break-words rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                          {summarizeJson(log.new_value_json)}
-                        </code>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-4">
-              <EmptyState title="No audit records found" />
-            </div>
-          )}
-        </div>
+        <AuditLogTable logs={auditLogs} />
+        <PaginationBar page={page} total={total} limit={50} baseHref="/audit-log" />
         </section>
       </div>
     </PageContainer>

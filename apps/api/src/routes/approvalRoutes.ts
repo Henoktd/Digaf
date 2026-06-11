@@ -7,9 +7,8 @@ import {
   sendNotFound,
   sendServerError,
 } from "../utils/apiError";
-import { isAllowedRole, requireRole } from "../utils/roles";
+import { requireRole } from "../utils/roles";
 import {
-  normalizeActorId,
   requireNonEmptyString,
   requireUuid,
 } from "../utils/validation";
@@ -85,22 +84,12 @@ function sendAlreadyCompletedConflict(res: any, approval: any) {
   });
 }
 
-function sendRoleFailure(res: any, role: unknown, message: string) {
-  const normalizedRole = typeof role === "string" ? role.trim() : role;
-
-  return isAllowedRole(normalizedRole)
-    ? sendForbidden(res, message)
-    : sendBadRequest(res, message);
-}
-
 approvalRoutes.post("/:approvalId/reject", async (req, res) => {
   let approvalId = "";
-  let actorId = "";
   let decisionNotes = "";
 
   try {
     approvalId = requireUuid(req.params.approvalId, "approvalId");
-    actorId = normalizeActorId(req.body?.actorId);
     decisionNotes = requireNonEmptyString(
       req.body?.decisionNotes,
       "decisionNotes"
@@ -112,14 +101,16 @@ approvalRoutes.post("/:approvalId/reject", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "checker_1",
     "checker_2",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const actorRole = roleResult.role;
@@ -398,12 +389,10 @@ approvalRoutes.get("/", async (_req, res) => {
 
 approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
   let approvalId = "";
-  let actorId = "";
   let decisionNotes = "";
 
   try {
     approvalId = requireUuid(req.params.approvalId, "approvalId");
-    actorId = normalizeActorId(req.body?.actorId);
     decisionNotes = requireNonEmptyString(
       req.body?.decisionNotes,
       "decisionNotes"
@@ -415,13 +404,15 @@ approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "checker_1",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();
@@ -584,12 +575,10 @@ approvalRoutes.post("/:approvalId/approve-checker-1", async (req, res) => {
 
 approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
   let approvalId = "";
-  let actorId = "";
   let decisionNotes = "";
 
   try {
     approvalId = requireUuid(req.params.approvalId, "approvalId");
-    actorId = normalizeActorId(req.body?.actorId);
     decisionNotes = requireNonEmptyString(
       req.body?.decisionNotes,
       "decisionNotes"
@@ -601,13 +590,15 @@ approvalRoutes.post("/:approvalId/approve-checker-2", async (req, res) => {
     );
   }
 
-  const roleResult = requireRole(req.body?.actorRole, [
+  const actorId = req.auth.actorId;
+
+  const roleResult = requireRole(req.auth.actorRole, [
     "checker_2",
     "governance_admin",
   ]);
 
   if (!roleResult.ok) {
-    return sendRoleFailure(res, req.body?.actorRole, roleResult.message);
+    return sendForbidden(res, roleResult.message);
   }
 
   const client = await pool.connect();

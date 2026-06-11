@@ -2,6 +2,7 @@ import {
   fetchIntegrationStatus,
   IntegrationStatus,
 } from "@/src/lib/api";
+import { getToken } from "@/src/lib/dal";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
@@ -62,7 +63,8 @@ function StatusCard({
 }
 
 export default async function IntegrationsPage() {
-  const response: IntegrationStatusResponse = await fetchIntegrationStatus();
+  const token = await getToken();
+  const response: IntegrationStatusResponse = await fetchIntegrationStatus(token ?? undefined);
   const status = response.data;
 
   const checklist = [

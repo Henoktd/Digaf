@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "build": "echo 'no build step'",
+    "start": "tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +21,7 @@
     "express": "^5.2.1",
     "pg": "^8.21.0",
     "qrcode": "^1.5.4",
+    "tsx": "^4.22.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -28,7 +29,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/qrcode": "^1.5.6",
-    "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
 }

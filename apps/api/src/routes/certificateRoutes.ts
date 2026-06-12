@@ -1364,8 +1364,7 @@ certificateRoutes.post("/:certificateId/issue", async (req, res) => {
            hash_algorithm = 'SHA-256',
            hash_generated_at = now(),
            signature_token = $4,
-           qr_token = $4,
-           updated_at = now()
+           qr_token = $4
        WHERE certificate_id = $1 RETURNING *`,
       [certificateId, issueDate, certificateHash, signatureToken]
     );

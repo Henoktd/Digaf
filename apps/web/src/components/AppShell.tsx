@@ -19,11 +19,13 @@ const navItems: NavItem[] = [
   { type: "section", label: "Governance" },
   { type: "link", href: "/certificates", label: "Certificates" },
   { type: "link", href: "/transfers", label: "Transfers" },
+  { type: "link", href: "/dividends", label: "Dividend Register" },
   { type: "link", href: "/approvals", label: "Approvals" },
   { type: "link", href: "/legal-holds", label: "Legal Holds" },
   { type: "link", href: "/board-resolutions", label: "Board Resolutions" },
 
   { type: "section", label: "Operations" },
+  { type: "link", href: "/reports", label: "Regulatory Reports" },
   { type: "link", href: "/communications", label: "Communications" },
   { type: "link", href: "/documents", label: "Documents" },
   { type: "link", href: "/sla-monitor", label: "SLA Monitor" },

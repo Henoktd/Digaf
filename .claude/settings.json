@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PGPASSWORD=\"Ease932!\" psql -U postgres -d svh_governance_dev -c \"SELECT entity_id, legal_name FROM entity LIMIT 5;\")",
+      "Bash(PGPASSWORD=\"Ease932!\" psql -U postgres -d svh_governance_dev -c \"SELECT column_name FROM information_schema.columns WHERE table_name='shareholder_import_batches' ORDER BY ordinal_position;\")",
+      "Bash(PGPASSWORD=\"Ease932!\" psql -U postgres -d svh_governance_dev -c \"SELECT column_name FROM information_schema.columns WHERE table_name='shareholder_import_rows' ORDER BY ordinal_position;\")",
+      "Bash(PGPASSWORD=Ease932! psql -U postgres -d svh_governance_dev -c ' *)",
+      "Bash(git -C c:/svh-governance-platform status --short)",
+      "Bash(git -C c:/svh-governance-platform log origin/main..HEAD --oneline)",
+      "Bash(git -C c:/svh-governance-platform add apps/api/src/routes/importRoutes.ts apps/api/src/utils/apiError.ts apps/web/src/lib/api.ts)",
+      "Bash(git -C c:/svh-governance-platform commit -m 'Add import batch debug logging, surface API error details in UI *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

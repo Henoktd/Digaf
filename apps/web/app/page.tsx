@@ -74,9 +74,10 @@ export default async function Home() {
       detail: `${formatNumber(summary.active_shareholder_count)} active`,
     },
     {
-      label: "Total Shares",
-      value: summary.total_shares,
-      detail: "Active ownership ledger",
+      label: "KYC Status",
+      value: summary.kyc_verified_count ?? 0,
+      detail: `${formatNumber(summary.kyc_expired_count ?? 0)} expired · ${formatNumber(summary.kyc_expiring_soon_count ?? 0)} expiring soon`,
+      alert: (summary.kyc_expired_count ?? 0) > 0 || (summary.kyc_expiring_soon_count ?? 0) > 0,
     },
     {
       label: "Certificates",
@@ -86,19 +87,20 @@ export default async function Home() {
       )} revoked`,
     },
     {
+      label: "Dividends Declared",
+      value: summary.dividend_count ?? 0,
+      detail: `ETB ${formatNumber(summary.total_dividends_declared ?? 0)} total`,
+    },
+    {
       label: "Pending Approvals",
       value: summary.pending_approval_count,
       detail: `${formatNumber(summary.overdue_approval_count)} overdue`,
+      alert: (summary.overdue_approval_count ?? 0) > 0,
     },
     {
       label: "Active Legal Holds",
       value: summary.active_legal_hold_count,
       detail: `${formatNumber(summary.active_transfer_freeze_count)} active freezes`,
-    },
-    {
-      label: "Documents",
-      value: summary.document_reference_count,
-      detail: "SharePoint-ready references",
     },
   ];
 
@@ -139,6 +141,7 @@ export default async function Home() {
               label={kpi.label}
               value={formatNumber(kpi.value)}
               detail={kpi.detail}
+              tone={(kpi as { alert?: boolean }).alert ? "warning" : undefined}
             />
           ))}
         </section>

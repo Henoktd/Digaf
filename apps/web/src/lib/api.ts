@@ -111,6 +111,11 @@ export type DashboardSummary = {
   audit_log_count: number;
   document_reference_count: number;
   communication_count: number;
+  kyc_verified_count: number;
+  kyc_expired_count: number;
+  kyc_expiring_soon_count: number;
+  dividend_count: number;
+  total_dividends_declared: number;
   top_ownership_rows: {
     shareholder_name: string;
     quantity: number;
@@ -1398,6 +1403,46 @@ export async function updateSlaConfig(
     "PUT",
     input,
     "Failed to update SLA config",
+    token
+  );
+}
+
+// Dividend Register
+export async function fetchDividends(token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/dividends`, token);
+}
+
+export async function fetchDividend(id: string, token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/dividends/${id}`, token);
+}
+
+export async function createDividend(
+  input: {
+    record_date: string;
+    payment_date?: string;
+    amount_per_share: number;
+    share_class_id?: string;
+    withholding_tax_rate?: number;
+    board_resolution_ref?: string;
+    notes?: string;
+  },
+  token: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/dividends`,
+    "POST",
+    input,
+    "Failed to create dividend declaration",
+    token
+  );
+}
+
+export async function markDividendPaid(id: string, token: string) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/dividends/${id}/mark-paid`,
+    "PATCH",
+    {},
+    "Failed to mark dividend as paid",
     token
   );
 }

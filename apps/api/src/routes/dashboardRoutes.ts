@@ -77,7 +77,28 @@ dashboardRoutes.get("/summary", async (_req, res) => {
           ) AS active_transfer_freeze_count,
           (SELECT COUNT(*)::int FROM audit_log) AS audit_log_count,
           (SELECT COUNT(*)::int FROM document_reference) AS document_reference_count,
-          (SELECT COUNT(*)::int FROM communication_log) AS communication_count
+          (SELECT COUNT(*)::int FROM communication_log) AS communication_count,
+          (
+            SELECT COUNT(*)::int FROM shareholder
+            WHERE kyc_status = 'verified'
+          ) AS kyc_verified_count,
+          (
+            SELECT COUNT(*)::int FROM shareholder
+            WHERE kyc_expiry IS NOT NULL AND kyc_expiry < CURRENT_DATE
+          ) AS kyc_expired_count,
+          (
+            SELECT COUNT(*)::int FROM shareholder
+            WHERE kyc_expiry IS NOT NULL
+              AND kyc_expiry >= CURRENT_DATE
+              AND kyc_expiry <= CURRENT_DATE + interval '30 days'
+          ) AS kyc_expiring_soon_count,
+          (
+            SELECT COUNT(*)::int FROM dividend_declaration
+          ) AS dividend_count,
+          (
+            SELECT COALESCE(SUM(total_declared_amount), 0)::float
+            FROM dividend_declaration WHERE status != 'cancelled'
+          ) AS total_dividends_declared
       `),
       pool.query(`
         WITH shareholder_ownership AS (

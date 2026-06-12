@@ -341,6 +341,8 @@ importRoutes.post("/shareholders/dry-run", async (req, res) => {
 });
 
 importRoutes.post("/shareholders/batches", async (req, res) => {
+  console.log("[BATCH] received body keys:", Object.keys(req.body ?? {}));
+  console.log("[BATCH] rows count:", Array.isArray(req.body?.rows) ? req.body.rows.length : "not array");
   let rows: Record<string, unknown>[] = [];
   let entityId: string | null = null;
   let sourceFilename: string | null = null;
@@ -379,8 +381,11 @@ importRoutes.post("/shareholders/batches", async (req, res) => {
   const client = await pool.connect();
 
   try {
+    console.log("[BATCH] fetching existing index...");
     const existingIndex = await fetchExistingImportIndex();
+    console.log("[BATCH] validating rows...");
     const result = validateShareholderImportDryRun(rows, existingIndex);
+    console.log("[BATCH] mappingVersion:", result.mappingVersion, "batchStatus will be:", deriveBatchStatus(result));
     const batchStatus = deriveBatchStatus(result);
 
     await client.query("BEGIN");

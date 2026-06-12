@@ -53,6 +53,9 @@ export function sendServerError(
   message: string,
   error?: unknown
 ) {
+  if (error !== undefined) {
+    console.error(`[SERVER_ERROR] ${message}:`, error);
+  }
   return sendApiError(
     res,
     500,

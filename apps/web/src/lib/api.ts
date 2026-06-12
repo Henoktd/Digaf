@@ -26,8 +26,14 @@ async function readApiError(response: Response, fallback: string) {
 
   try {
     const body = (await response.json()) as ApiErrorBody;
+    const errObj = typeof body?.error === "object" ? body.error : undefined;
+    const detailsMsg =
+      errObj?.details && typeof errObj.details === "object" && "message" in errObj.details
+        ? String((errObj.details as { message: unknown }).message)
+        : undefined;
     message =
-      (typeof body?.error === "object" ? body.error.message : undefined) ||
+      detailsMsg ||
+      errObj?.message ||
       (typeof body?.error === "string" ? body.error : undefined) ||
       body?.message ||
       message;

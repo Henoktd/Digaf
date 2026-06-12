@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db/pool";
 import * as QRCode from "qrcode";
-import { createHash } from "crypto";
 import {
   buildCanonicalCertificateString,
   generateCertificateHash,
@@ -1328,7 +1327,10 @@ certificateRoutes.post("/:certificateId/issue", async (req, res) => {
   try {
     await client.query("BEGIN");
     const certResult = await client.query(
-      `SELECT * FROM share_certificate WHERE certificate_id = $1 FOR UPDATE`,
+      `SELECT c.*, e.legal_name AS issuing_authority
+       FROM share_certificate c
+       JOIN entity e ON e.entity_id = c.entity_id
+       WHERE c.certificate_id = $1 FOR UPDATE`,
       [certificateId]
     );
     if (certResult.rowCount === 0) {
@@ -1340,21 +1342,36 @@ certificateRoutes.post("/:certificateId/issue", async (req, res) => {
       await client.query("ROLLBACK");
       return sendBadRequest(res, `Cannot issue a certificate with status: ${cert.status}`);
     }
-    let certHash = cert.certificate_hash;
-    if (!certHash) {
-      certHash = createHash("sha256")
-        .update(`${cert.serial_number}_${cert.shareholder_id}`)
-        .digest("hex");
-    }
+
+    const issueDate = new Date().toISOString().slice(0, 10);
+    const canonicalString = buildCanonicalCertificateString({
+      entityId: cert.entity_id,
+      serialNumber: cert.serial_number,
+      shareholderId: cert.shareholder_id,
+      shareClassId: cert.share_class_id,
+      quantity: cert.quantity,
+      issueDate,
+      issuingAuthority: cert.issuing_authority,
+    });
+    const certificateHash = generateCertificateHash(canonicalString);
+    const signatureToken = generateSignatureToken(certificateHash);
+
     const updateResult = await client.query(
       `UPDATE share_certificate
-       SET status = 'issued', issue_date = CURRENT_DATE, certificate_hash = $2, updated_at = now()
+       SET status = 'issued',
+           issue_date = $2::date,
+           certificate_hash = $3,
+           hash_algorithm = 'SHA-256',
+           hash_generated_at = now(),
+           signature_token = $4,
+           qr_token = $4,
+           updated_at = now()
        WHERE certificate_id = $1 RETURNING *`,
-      [certificateId, certHash]
+      [certificateId, issueDate, certificateHash, signatureToken]
     );
     await client.query(
       `INSERT INTO certificate_event (certificate_id, event_type, actor_id, notes)
-       VALUES ($1, 'issued', $2, 'Certificate issued')`,
+       VALUES ($1, 'issued', $2, 'Certificate issued and hash generated')`,
       [certificateId, req.auth.actorId]
     );
     await client.query("COMMIT");

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   cancelShareholderImportBatch,
+  commitShareholderImportBatch,
   rejectShareholderImportBatch,
   revalidateShareholderImportBatch,
   submitShareholderImportBatchForReview,
@@ -17,7 +18,8 @@ async function getAccessToken(): Promise<string> {
   return data.session.access_token;
 }
 
-const TERMINAL_STATUSES = ["cancelled", "rejected", "approved_for_commit"];
+const TERMINAL_STATUSES = ["cancelled", "rejected"];
+const COMMITTABLE_STATUSES = ["validated", "validated_with_warnings", "approved_for_commit", "ready_for_compliance_review"];
 const SUBMITTABLE_STATUSES = ["validated", "validated_with_warnings"];
 
 type ImportBatchActionsProps = {
@@ -36,10 +38,25 @@ export function ImportBatchActions({
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   const isTerminal = TERMINAL_STATUSES.includes(batchStatus);
+  const canCommit = COMMITTABLE_STATUSES.includes(batchStatus);
   const canSubmit = SUBMITTABLE_STATUSES.includes(batchStatus);
-  const canRevalidate = !isTerminal;
+  const canRevalidate = !isTerminal && !canCommit;
   const canCancel = !isTerminal;
   const canReject = !isTerminal;
+
+  async function handleCommit() {
+    setPending("commit");
+    setError(null);
+    try {
+      const token = await getAccessToken();
+      await commitShareholderImportBatch(batchId, token);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to commit batch");
+    } finally {
+      setPending(null);
+    }
+  }
 
   async function handleSubmitReview() {
     setPending("submit");
@@ -112,7 +129,18 @@ export function ImportBatchActions({
       <h3 className="text-sm font-semibold text-slate-700">Batch actions</h3>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {canSubmit ? (
+        {canCommit ? (
+          <button
+            type="button"
+            onClick={handleCommit}
+            disabled={pending !== null}
+            className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            {pending === "commit" ? "Committing..." : "Commit Batch → Create Shareholders"}
+          </button>
+        ) : null}
+
+        {canSubmit && !canCommit ? (
           <button
             type="button"
             onClick={handleSubmitReview}

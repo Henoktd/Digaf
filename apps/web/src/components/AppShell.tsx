@@ -14,6 +14,7 @@ const navItems: NavItem[] = [
   { type: "section", label: "Shareholders" },
   { type: "link", href: "/shareholders", label: "Registry" },
   { type: "link", href: "/imports", label: "Import Prep", indent: true },
+  { type: "link", href: "/kyc", label: "KYC Compliance", indent: true },
   { type: "link", href: "/cap-table", label: "Cap Table" },
 
   { type: "section", label: "Governance" },

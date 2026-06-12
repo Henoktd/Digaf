@@ -5,6 +5,7 @@ import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { PaginationBar } from "@/src/components/PaginationBar";
+import { ExportCsvButton } from "@/src/components/ExportCsvButton";
 import { fetchEntities, fetchShareholders } from "@/src/lib/api";
 import { getToken } from "@/src/lib/dal";
 
@@ -61,6 +62,22 @@ export default async function ShareholdersPage({
               >
                 Import Shareholders →
               </Link>
+              <ExportCsvButton
+                data={shareholders as unknown as Record<string, unknown>[]}
+                columns={[
+                  { key: "legal_name", label: "Name" },
+                  { key: "shareholder_code", label: "Code" },
+                  { key: "type", label: "Type" },
+                  { key: "status", label: "Status" },
+                  { key: "kyc_status", label: "KYC Status" },
+                  { key: "kyc_expiry", label: "KYC Expiry" },
+                  { key: "tin_number", label: "TIN" },
+                  { key: "mobile_number", label: "Mobile" },
+                  { key: "email_address", label: "Email" },
+                  { key: "risk_classification", label: "Risk" },
+                ]}
+                filename="shareholders-registry.csv"
+              />
             </div>
           }
         />

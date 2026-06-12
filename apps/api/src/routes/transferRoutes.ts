@@ -59,6 +59,8 @@ function normalizeSupportingDocuments(value: unknown) {
   return value;
 }
 
+const STAMP_DUTY_RATE = 0.005; // 0.5% — Ethiopian Stamp Duty Proclamation No. 110/1998
+
 function parseTransferRequestBody(body: Record<string, unknown> | undefined) {
   const entityId = requireUuid(body?.entityId, "entityId");
   const transferorId = requireUuid(body?.transferorId, "transferorId");
@@ -69,11 +71,25 @@ function parseTransferRequestBody(body: Record<string, unknown> | undefined) {
     throw new Error("transferorId and transfereeId must not be the same");
   }
 
+  const rawPrice = body?.pricePerShare;
+  const pricePerShare =
+    rawPrice === undefined || rawPrice === null || rawPrice === ""
+      ? null
+      : Number(rawPrice) >= 0
+        ? Number(rawPrice)
+        : null;
+
+  const transferValue = pricePerShare !== null ? shares * pricePerShare : null;
+  const stampDutyAmount = transferValue !== null ? transferValue * STAMP_DUTY_RATE : null;
+
   return {
     entityId,
     transferorId,
     transfereeId,
     shares,
+    pricePerShare,
+    transferValue,
+    stampDutyAmount,
   };
 }
 
@@ -585,7 +601,13 @@ transferRoutes.post("/eligibility-check", async (req, res) => {
     const eligibility = await buildTransferEligibility(pool, input);
 
     return res.json({
-      data: eligibility,
+      data: {
+        ...eligibility,
+        price_per_share: input.pricePerShare,
+        transfer_value: input.transferValue,
+        stamp_duty_amount: input.stampDutyAmount,
+        stamp_duty_rate: STAMP_DUTY_RATE,
+      },
     });
   } catch (error) {
     return sendServerError(res, "Failed to check transfer eligibility", error);
@@ -649,7 +671,11 @@ transferRoutes.post("/", async (req, res) => {
         encumbrance_check_status,
         kyc_check_status,
         bo_reverification_required,
-        supporting_documents
+        supporting_documents,
+        price_per_share,
+        transfer_value,
+        stamp_duty_amount,
+        stamp_duty_rate
       )
       VALUES (
         $1,
@@ -662,7 +688,11 @@ transferRoutes.post("/", async (req, res) => {
         $6,
         'passed',
         false,
-        $7::jsonb
+        $7::jsonb,
+        $8,
+        $9,
+        $10,
+        $11
       )
       RETURNING
         id,
@@ -677,6 +707,9 @@ transferRoutes.post("/", async (req, res) => {
         kyc_check_status,
         bo_reverification_required,
         supporting_documents,
+        price_per_share,
+        transfer_value,
+        stamp_duty_amount,
         created_at
       `,
       [
@@ -687,6 +720,10 @@ transferRoutes.post("/", async (req, res) => {
         actorId,
         encumbranceCheckStatus,
         JSON.stringify(supportingDocuments),
+        input.pricePerShare ?? null,
+        input.transferValue ?? null,
+        input.stampDutyAmount ?? null,
+        STAMP_DUTY_RATE,
       ]
     );
 

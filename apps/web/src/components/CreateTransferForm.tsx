@@ -25,6 +25,10 @@ type EligibilityResult = {
   transfereeFreezeActive: boolean;
   transferorLegalHoldActive: boolean;
   transfereeLegalHoldActive: boolean;
+  price_per_share: number | null;
+  transfer_value: number | null;
+  stamp_duty_amount: number | null;
+  stamp_duty_rate: number | null;
 };
 
 type CreateTransferFormProps = {
@@ -35,6 +39,7 @@ type FormState = {
   transferorId: string;
   transfereeId: string;
   shares: string;
+  pricePerShare: string;
 };
 
 const fieldClass =
@@ -63,6 +68,7 @@ function getInitialFormState(shareholders: Shareholder[]): FormState {
     transferorId,
     transfereeId,
     shares: "",
+    pricePerShare: "",
   };
 }
 
@@ -112,11 +118,13 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
 
     try {
       const token = await getAccessToken();
+      const pricePerShare = formState.pricePerShare ? Number(formState.pricePerShare) : undefined;
       const response = await checkTransferEligibility({
         entityId: transferor.entity_id,
         transferorId: formState.transferorId,
         transfereeId: formState.transfereeId,
         shares,
+        pricePerShare,
       }, token) as { data: EligibilityResult };
 
       setEligibility(response.data);
@@ -152,6 +160,7 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
         transferorId: formState.transferorId,
         transfereeId: formState.transfereeId,
         shares,
+        pricePerShare: formState.pricePerShare ? Number(formState.pricePerShare) : undefined,
       }, token);
 
       setEligibility(null);
@@ -191,7 +200,7 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
         </span>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-4">
         <label className={labelClass}>
           Transferor
           <select
@@ -258,6 +267,25 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
             placeholder="0.00"
           />
         </label>
+
+        <label className={labelClass}>
+          Price per Share (ETB)
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={formState.pricePerShare}
+            onChange={(event) => {
+              setEligibility(null);
+              setFormState((current) => ({
+                ...current,
+                pricePerShare: event.target.value,
+              }));
+            }}
+            className={fieldClass}
+            placeholder="Optional — for stamp duty"
+          />
+        </label>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -318,6 +346,27 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
               </p>
             </div>
           </div>
+
+          {eligibility.transfer_value !== null && eligibility.transfer_value !== undefined && (
+            <div className="mt-4 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Stamp Duty Summary (ETB)</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                <div>
+                  <p className="text-xs text-amber-600">Transfer Value</p>
+                  <p className="font-semibold text-amber-900">{formatShares(String(eligibility.transfer_value))}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-amber-600">Stamp Duty ({((eligibility.stamp_duty_rate ?? 0.005) * 100).toFixed(1)}%)</p>
+                  <p className="font-semibold text-amber-900">{formatShares(String(eligibility.stamp_duty_amount))}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-amber-600">Net to Transferee</p>
+                  <p className="font-semibold text-amber-900">{formatShares(String((eligibility.transfer_value ?? 0) - (eligibility.stamp_duty_amount ?? 0)))}</p>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-amber-600">Per Ethiopian Stamp Duty Proclamation No. 110/1998</p>
+            </div>
+          )}
 
           {eligibility.blockingReasons.length > 0 ? (
             <div className="mt-4">

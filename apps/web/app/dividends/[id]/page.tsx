@@ -5,6 +5,7 @@ import { getToken } from "@/src/lib/dal";
 import { PageContainer } from "@/src/components/PageContainer";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { MarkDividendPaidButton } from "@/src/components/MarkDividendPaidButton";
+import { ExportCsvButton } from "@/src/components/ExportCsvButton";
 
 type Entitlement = {
   id: string;
@@ -82,11 +83,23 @@ export default async function DividendDetailPage({ params }: PageProps) {
               WHT {(Number(declaration.withholding_tax_rate) * 100).toFixed(0)}%
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <StatusBadge status={declaration.status} />
             {declaration.status === "declared" && (
               <MarkDividendPaidButton dividendId={declaration.id} />
             )}
+            <ExportCsvButton
+              data={entitlements as unknown as Record<string, unknown>[]}
+              columns={[
+                { key: "shareholder_name", label: "Shareholder" },
+                { key: "shares_at_record_date", label: "Shares" },
+                { key: "gross_amount", label: "Gross (ETB)" },
+                { key: "withholding_tax_amount", label: "WHT (ETB)" },
+                { key: "net_amount", label: "Net (ETB)" },
+                { key: "payment_status", label: "Payment Status" },
+              ]}
+              filename={`dividend-entitlements-${id}.csv`}
+            />
           </div>
         </div>
 

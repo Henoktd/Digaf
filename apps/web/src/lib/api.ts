@@ -1066,6 +1066,7 @@ export type TransferEligibilityInput = {
   transferorId: string;
   transfereeId: string;
   shares: number;
+  pricePerShare?: number;
 };
 
 export type CreateTransferInput = TransferEligibilityInput & {

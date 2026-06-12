@@ -150,7 +150,7 @@ export default async function ShareholdersPage({
                         <StatusBadge status={shareholder.kyc_status} />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        {shareholder.kyc_expiry || "Not set"}
+                        {shareholder.kyc_expiry ? shareholder.kyc_expiry.slice(0, 10) : "Not set"}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 capitalize">
                         {shareholder.risk_classification || "Not set"}

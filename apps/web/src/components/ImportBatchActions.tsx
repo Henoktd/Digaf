@@ -20,7 +20,8 @@ async function getAccessToken(): Promise<string> {
 }
 
 const TERMINAL_STATUSES = ["cancelled", "rejected"];
-const COMMITTABLE_STATUSES = ["validated", "validated_with_warnings", "approved_for_commit", "ready_for_compliance_review"];
+const ALREADY_COMMITTED_STATUSES = ["approved_for_commit"];
+const COMMITTABLE_STATUSES = ["validated", "validated_with_warnings", "ready_for_compliance_review"];
 const SUBMITTABLE_STATUSES = ["validated", "validated_with_warnings"];
 
 type ImportBatchActionsProps = {
@@ -40,11 +41,12 @@ export function ImportBatchActions({
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   const isTerminal = TERMINAL_STATUSES.includes(batchStatus);
+  const isAlreadyCommitted = ALREADY_COMMITTED_STATUSES.includes(batchStatus);
   const canCommit = COMMITTABLE_STATUSES.includes(batchStatus);
   const canSubmit = SUBMITTABLE_STATUSES.includes(batchStatus);
-  const canRevalidate = !isTerminal && !canCommit;
-  const canCancel = !isTerminal;
-  const canReject = !isTerminal;
+  const canRevalidate = !isTerminal && !canCommit && !isAlreadyCommitted;
+  const canCancel = !isTerminal && !isAlreadyCommitted;
+  const canReject = !isTerminal && !isAlreadyCommitted;
 
   async function handleCommit() {
     setPending("commit");
@@ -127,11 +129,11 @@ export function ImportBatchActions({
     return null;
   }
 
-  if (committed) {
+  if (committed || isAlreadyCommitted) {
     return (
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
         <p className="text-sm font-semibold text-emerald-800">
-          Batch committed — shareholders created successfully.
+          Batch committed — shareholders have been created in the registry.
         </p>
         <Link
           href="/shareholders"

@@ -944,6 +944,18 @@ importRoutes.post("/shareholders/batches/:batchId/commit", async (req, res) => {
       [batchId]
     );
 
+    let resolvedEntityId: string = batch.entity_id;
+    if (!resolvedEntityId) {
+      const entityResult = await client.query(
+        `SELECT entity_id FROM entity LIMIT 1`
+      );
+      if (entityResult.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return sendBadRequest(res, "No entity found in the system. Please set up your company entity first.");
+      }
+      resolvedEntityId = entityResult.rows[0].entity_id;
+    }
+
     const rows = rowsResult.rows;
     const createdIds: string[] = [];
 
@@ -959,7 +971,7 @@ importRoutes.post("/shareholders/batches/:batchId/commit", async (req, res) => {
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,CURRENT_DATE
         ) RETURNING shareholder_id`,
         [
-          batch.entity_id ?? null,
+          resolvedEntityId,
           n.legalName || "Unknown",
           n.type || "individual",
           n.status || "pending",

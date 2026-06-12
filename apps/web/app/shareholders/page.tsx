@@ -51,8 +51,16 @@ export default async function ShareholdersPage({
           title="Shareholder Registry"
           description="Manage shareholder master records, KYC status, beneficial ownership references, and profile history."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              {total} Shareholders
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+                {total} Shareholders
+              </div>
+              <Link
+                href="/imports"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:px-4 sm:py-2 sm:text-sm"
+              >
+                Import Shareholders →
+              </Link>
             </div>
           }
         />

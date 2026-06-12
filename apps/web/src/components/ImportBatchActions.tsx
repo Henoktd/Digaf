@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -34,6 +35,7 @@ export function ImportBatchActions({
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [committed, setCommitted] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
@@ -50,6 +52,7 @@ export function ImportBatchActions({
     try {
       const token = await getAccessToken();
       await commitShareholderImportBatch(batchId, token);
+      setCommitted(true);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to commit batch");
@@ -122,6 +125,22 @@ export function ImportBatchActions({
 
   if (isTerminal) {
     return null;
+  }
+
+  if (committed) {
+    return (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <p className="text-sm font-semibold text-emerald-800">
+          Batch committed — shareholders created successfully.
+        </p>
+        <Link
+          href="/shareholders"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600"
+        >
+          View Shareholders →
+        </Link>
+      </div>
+    );
   }
 
   return (

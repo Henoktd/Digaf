@@ -4,24 +4,36 @@ import { SessionWatcher } from "@/src/components/SessionWatcher";
 import { getSession } from "@/src/lib/dal";
 import { logout } from "@/app/auth/actions";
 
-const navItems = [
-  { href: "/", label: "Dashboard" },
-  { href: "/shareholders", label: "Shareholders" },
-  { href: "/imports", label: "Import Prep" },
-  { href: "/cap-table", label: "Cap Table" },
-  { href: "/certificates", label: "Certificates" },
-  { href: "/transfers", label: "Transfers" },
-  { href: "/approvals", label: "Approvals" },
-  { href: "/legal-holds", label: "Legal Holds" },
-  { href: "/communications", label: "Communications" },
-  { href: "/documents", label: "Documents" },
-  { href: "/sla-monitor", label: "SLA Monitor" },
-  { href: "/audit-log", label: "Audit Log" },
-  { href: "/share-classes", label: "Share Classes" },
-  { href: "/board-resolutions", label: "Board Resolutions" },
-  { href: "/sla-config", label: "SLA Config" },
-  { href: "/qr", label: "QR Verify" },
-  { href: "/integrations", label: "Integrations" },
+type NavItem =
+  | { type: "link"; href: string; label: string; indent?: boolean }
+  | { type: "section"; label: string };
+
+const navItems: NavItem[] = [
+  { type: "link", href: "/", label: "Dashboard" },
+
+  { type: "section", label: "Shareholders" },
+  { type: "link", href: "/shareholders", label: "Registry" },
+  { type: "link", href: "/imports", label: "Import Prep", indent: true },
+  { type: "link", href: "/cap-table", label: "Cap Table" },
+
+  { type: "section", label: "Governance" },
+  { type: "link", href: "/certificates", label: "Certificates" },
+  { type: "link", href: "/transfers", label: "Transfers" },
+  { type: "link", href: "/approvals", label: "Approvals" },
+  { type: "link", href: "/legal-holds", label: "Legal Holds" },
+  { type: "link", href: "/board-resolutions", label: "Board Resolutions" },
+
+  { type: "section", label: "Operations" },
+  { type: "link", href: "/communications", label: "Communications" },
+  { type: "link", href: "/documents", label: "Documents" },
+  { type: "link", href: "/sla-monitor", label: "SLA Monitor" },
+
+  { type: "section", label: "System" },
+  { type: "link", href: "/audit-log", label: "Audit Log" },
+  { type: "link", href: "/share-classes", label: "Share Classes" },
+  { type: "link", href: "/sla-config", label: "SLA Config" },
+  { type: "link", href: "/qr", label: "QR Verify" },
+  { type: "link", href: "/integrations", label: "Integrations" },
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
@@ -53,16 +65,25 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </p>
         </div>
 
-        <nav className="mt-8 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="mt-8 space-y-0.5">
+          {navItems.map((item, i) =>
+            item.type === "section" ? (
+              <p
+                key={i}
+                className="px-4 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 first:pt-0"
+              >
+                {item.label}
+              </p>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`block rounded-xl py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 ${item.indent ? "pl-8 pr-4" : "px-4"}`}
+              >
+                {item.indent ? `↳ ${item.label}` : item.label}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="mt-8 border-t border-slate-100 pt-6">
@@ -122,13 +143,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <nav className="-mx-4 mt-3 flex max-w-[100vw] gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
-            {navItems.map((item) => (
+            {navItems.filter((item) => item.type === "link").map((item) => (
               <Link
-                key={item.href}
-                href={item.href}
+                key={(item as { href: string }).href}
+                href={(item as { href: string }).href}
                 className="shrink-0 whitespace-nowrap rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
               >
-                {item.label}
+                {(item as { label: string }).label}
               </Link>
             ))}
           </nav>

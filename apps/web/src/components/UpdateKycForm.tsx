@@ -100,9 +100,6 @@ export function UpdateKycForm({
             Record reviewed KYC status, expiry, and risk classification.
           </p>
         </div>
-        <span className="max-w-full break-all rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
-          Auth: Supabase JWT
-        </span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

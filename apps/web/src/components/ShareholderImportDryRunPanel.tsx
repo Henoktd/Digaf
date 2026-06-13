@@ -291,9 +291,6 @@ export function ShareholderImportDryRunPanel() {
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
             No database commit
           </span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-            Auth: Supabase JWT
-          </span>
         </div>
 
         {error ? (

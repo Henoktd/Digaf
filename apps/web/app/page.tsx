@@ -109,14 +109,6 @@ export default async function Home() {
     },
   ];
 
-  const architecture = [
-    ["Frontend", "Next.js"],
-    ["Backend", "Express API"],
-    ["Database", "PostgreSQL"],
-    ["Documents", "SharePoint-ready references"],
-    ["Identity", "local RBAC prototype, Entra planned"],
-  ];
-
   return (
     <PageContainer>
       <div className="mx-auto max-w-7xl space-y-8">
@@ -130,7 +122,6 @@ export default async function Home() {
           eyebrow="Digaf Governance Portal"
           title="Digaf Shareholder Governance Platform"
           description="Board-ready dashboard for shareholder governance, transfer controls, certificates, audit evidence, and SLA visibility."
-          notice="Prototype demo environment — local RBAC and demo data are used."
           variant="dark"
           badge={
             <div className="max-w-full break-words rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 sm:px-4 sm:py-2 sm:text-sm">
@@ -358,26 +349,6 @@ export default async function Home() {
           </article>
         </section>
 
-        <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-          <div className="mb-5">
-            <h2 className="text-xl font-semibold">System Architecture</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Current MVP architecture and integration posture.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-5">
-            {architecture.map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <p className="text-sm font-semibold text-slate-500">{label}</p>
-                <p className="mt-2 text-sm text-slate-900">{value}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </PageContainer>
   );

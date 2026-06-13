@@ -95,7 +95,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
     try {
       const token = await getToken();
       if (!token) return;
-      await approveChecker1(approvalId, "", token);
+      await approveChecker1(approvalId, "Approved by Checker 1", token);
       toast("Approved (Checker 1)", "success");
       router.refresh();
     } catch (err) {
@@ -110,7 +110,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
     try {
       const token = await getToken();
       if (!token) return;
-      await approveChecker2(approvalId, "", token);
+      await approveChecker2(approvalId, "Approved by Checker 2", token);
       toast("Approved (Checker 2)", "success");
       router.refresh();
     } catch (err) {
@@ -143,7 +143,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
       const token = await getToken();
       if (!token) return;
       for (const id of Array.from(selected)) {
-        await approveChecker1(id, reason ?? "", token);
+        await approveChecker1(id, reason || "Approved by Checker 1", token);
       }
       setSelected(new Set());
       toast(`${selected.size} items approved`, "success");

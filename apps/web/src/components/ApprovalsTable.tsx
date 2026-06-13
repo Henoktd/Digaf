@@ -33,6 +33,13 @@ function formatLabel(value: string | null) {
   return value.replaceAll("_", " ");
 }
 
+function formatActor(id: string | null): string {
+  if (!id) return "—";
+  // UUID pattern: 8-4-4-4-12 hex chars
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id)) return `${id.slice(0, 8)}…`;
+  return id;
+}
+
 function formatDate(value: string | null) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
@@ -254,8 +261,8 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
                   <td className="px-4 py-3">
                     <StatusBadge status={approval.status} />
                   </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {approval.maker_id ?? "—"}
+                  <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                    {formatActor(approval.maker_id)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">

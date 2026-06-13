@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandLogo } from "@/src/components/BrandLogo";
 import { SessionWatcher } from "@/src/components/SessionWatcher";
+import { SideNavLinks, MobileNavLinks } from "@/src/components/NavLinks";
 import { getSession } from "@/src/lib/dal";
 import { logout } from "@/app/auth/actions";
 
@@ -69,24 +70,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="mt-8 space-y-0.5">
-          {navItems.map((item, i) =>
-            item.type === "section" ? (
-              <p
-                key={i}
-                className="px-4 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 first:pt-0"
-              >
-                {item.label}
-              </p>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`block rounded-xl py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 ${item.indent ? "pl-8 pr-4" : "px-4"}`}
-              >
-                {item.indent ? `↳ ${item.label}` : item.label}
-              </Link>
-            )
-          )}
+          <SideNavLinks items={navItems} />
         </nav>
 
         <div className="mt-8 border-t border-slate-100 pt-6">
@@ -146,15 +130,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <nav className="-mx-4 mt-3 flex max-w-[100vw] gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
-            {navItems.filter((item) => item.type === "link").map((item) => (
-              <Link
-                key={(item as { href: string }).href}
-                href={(item as { href: string }).href}
-                className="shrink-0 whitespace-nowrap rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
-              >
-                {(item as { label: string }).label}
-              </Link>
-            ))}
+            <MobileNavLinks items={navItems} />
           </nav>
         </header>
 

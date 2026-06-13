@@ -21,6 +21,11 @@ function formatNumber(value: number) {
   }).format(Number(value || 0));
 }
 
+function pct(value: number, total: number) {
+  if (!total) return 0;
+  return Math.max(0, Math.min(100, Math.round((value / total) * 100)));
+}
+
 function formatLabel(value: string | null) {
   return value ? value.replaceAll("_", " ") : "Not set";
 }
@@ -115,16 +120,15 @@ export default async function Home() {
         <PageHeader
           brand={
             <BrandLogo
-              imageClassName="h-14 w-auto max-w-full rounded-lg bg-white px-4 py-3"
-              fallbackClassName="inline-block max-w-full break-words rounded-lg bg-white px-4 py-3 text-base font-bold leading-tight text-slate-900 sm:text-lg"
+              imageClassName="h-14 w-auto max-w-full"
+              fallbackClassName="inline-block max-w-full break-words text-base font-bold leading-tight text-slate-900 sm:text-lg"
             />
           }
           eyebrow="Digaf Governance Portal"
           title="Digaf Shareholder Governance Platform"
           description="Board-ready dashboard for shareholder governance, transfer controls, certificates, audit evidence, and SLA visibility."
-          variant="dark"
           badge={
-            <div className="max-w-full break-words rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 sm:px-4 sm:py-2 sm:text-sm">
+            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               {formatNumber(summary.entity_count)} Entity
             </div>
           }
@@ -140,6 +144,119 @@ export default async function Home() {
               tone={(kpi as { alert?: boolean }).alert ? "warning" : undefined}
             />
           ))}
+        </section>
+
+        {/* Registry Health Charts */}
+        <section>
+          <h2 className="mb-4 text-base font-bold uppercase tracking-wide text-slate-400">
+            Registry Health
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* KYC Compliance chart */}
+            {(() => {
+              const total = summary.shareholder_count;
+              const verified = summary.kyc_verified_count ?? 0;
+              const expiring = summary.kyc_expiring_soon_count ?? 0;
+              const expired = summary.kyc_expired_count ?? 0;
+              const other = Math.max(0, total - verified - expiring - expired);
+              return (
+                <article className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-700">KYC Compliance</p>
+                  <p className="mt-0.5 text-xs text-slate-400">
+                    {verified} verified of {total} shareholders
+                  </p>
+                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 flex gap-px">
+                    <div className="h-full bg-emerald-500" style={{ width: `${pct(verified, total)}%` }} />
+                    <div className="h-full bg-amber-400" style={{ width: `${pct(expiring, total)}%` }} />
+                    <div className="h-full bg-rose-500" style={{ width: `${pct(expired, total)}%` }} />
+                    <div className="h-full bg-slate-200" style={{ width: `${pct(other, total)}%` }} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {[
+                      { label: "Verified", value: verified, color: "bg-emerald-500" },
+                      { label: "Expiring", value: expiring, color: "bg-amber-400" },
+                      { label: "Expired", value: expired, color: "bg-rose-500" },
+                      { label: "No KYC", value: other, color: "bg-slate-200" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center gap-1.5">
+                        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
+                        <span className="text-xs text-slate-500">{label}</span>
+                        <span className="ml-auto text-xs font-semibold text-slate-700">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })()}
+
+            {/* Certificate Status chart */}
+            {(() => {
+              const total = summary.certificate_count;
+              const issued = summary.issued_certificate_count;
+              const revoked = summary.revoked_certificate_count;
+              const draft = Math.max(0, total - issued - revoked);
+              return (
+                <article className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-700">Certificate Pipeline</p>
+                  <p className="mt-0.5 text-xs text-slate-400">
+                    {issued} issued of {total} total
+                  </p>
+                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 flex gap-px">
+                    <div className="h-full bg-emerald-500" style={{ width: `${pct(issued, total)}%` }} />
+                    <div className="h-full bg-sky-400" style={{ width: `${pct(draft, total)}%` }} />
+                    <div className="h-full bg-rose-500" style={{ width: `${pct(revoked, total)}%` }} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {[
+                      { label: "Issued", value: issued, color: "bg-emerald-500" },
+                      { label: "Draft", value: draft, color: "bg-sky-400" },
+                      { label: "Revoked", value: revoked, color: "bg-rose-500" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center gap-1.5">
+                        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
+                        <span className="text-xs text-slate-500">{label}</span>
+                        <span className="ml-auto text-xs font-semibold text-slate-700">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })()}
+
+            {/* Approval Pipeline chart */}
+            {(() => {
+              const approved = summary.approved_approval_count;
+              const pending = summary.pending_approval_count;
+              const overdue = summary.overdue_approval_count;
+              const total = approved + pending + overdue;
+              return (
+                <article className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-700">Approval Pipeline</p>
+                  <p className="mt-0.5 text-xs text-slate-400">
+                    {pending} pending · {overdue} overdue
+                  </p>
+                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 flex gap-px">
+                    <div className="h-full bg-emerald-500" style={{ width: `${pct(approved, total)}%` }} />
+                    <div className="h-full bg-amber-400" style={{ width: `${pct(pending, total)}%` }} />
+                    <div className="h-full bg-rose-500" style={{ width: `${pct(overdue, total)}%` }} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {[
+                      { label: "Approved", value: approved, color: "bg-emerald-500" },
+                      { label: "Pending", value: pending, color: "bg-amber-400" },
+                      { label: "Overdue", value: overdue, color: "bg-rose-500" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center gap-1.5">
+                        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
+                        <span className="text-xs text-slate-500">{label}</span>
+                        <span className="ml-auto text-xs font-semibold text-slate-700">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })()}
+          </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">

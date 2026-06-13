@@ -287,7 +287,7 @@ export function ShareholderImportPanel() {
               type="button"
               onClick={runValidation}
               disabled={isRunning}
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {isRunning ? "Validating..." : "Run validation"}
             </button>
@@ -296,7 +296,7 @@ export function ShareholderImportPanel() {
                 type="button"
                 onClick={persistBatch}
                 disabled={isPersisting}
-                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                className="rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 {isPersisting ? "Saving..." : hasBlockers ? "Persist batch (blocked rows)" : "Persist batch"}
               </button>
@@ -341,7 +341,7 @@ export function ShareholderImportPanel() {
           <div className="mt-4 flex flex-wrap gap-3">
             <a
               href={`/imports/batches/${persistedBatch.batch.id}`}
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
             >
               Open batch
             </a>
@@ -383,14 +383,14 @@ export function ShareholderImportPanel() {
 
             <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
               <table className="w-full min-w-[860px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">Row</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Shareholder</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Status</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Errors</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Warnings</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Messages</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Row</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholder</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Errors</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Warnings</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Messages</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -467,14 +467,14 @@ export function ShareholderImportPanel() {
         {batches.length > 0 ? (
           <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full min-w-[820px] border-collapse text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="border-b border-slate-200 px-4 py-3">File</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Status</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Rows</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Errors</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Warnings</th>
-                  <th className="border-b border-slate-200 px-4 py-3">Created</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">File</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Rows</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Errors</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Warnings</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Created</th>
                 </tr>
               </thead>
               <tbody>

@@ -31,12 +31,12 @@ async function BoardResolutionsContent() {
           <table className="w-full text-sm">
             <thead className="border-b border-slate-100 bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Resolution No.</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Date</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Description</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Approved Action</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">SharePoint</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Created</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Resolution No.</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Description</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Approved Action</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Document</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -78,6 +78,7 @@ export default function BoardResolutionsPage() {
     <PageContainer>
       <div className="mx-auto max-w-7xl space-y-6">
         <PageHeader
+          variant="page"
           eyebrow="Governance"
           title="Board Resolutions"
           description="Record and track board resolutions that authorise governance actions."

@@ -177,7 +177,7 @@ export function UpdateKycForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {isSubmitting ? "Updating..." : "Update KYC"}
         </button>

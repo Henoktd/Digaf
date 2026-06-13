@@ -55,10 +55,11 @@ export default async function DocumentsPage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Document References"
           description="Governance evidence references with retention categories, legal hold protection, and related entity links."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
               Evidence repository
             </div>
           }

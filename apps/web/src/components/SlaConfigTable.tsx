@@ -157,7 +157,7 @@ function EditRow({
               type="button"
               onClick={handleSave}
               disabled={isSubmitting}
-              className="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {isSubmitting ? "Saving…" : "Save"}
             </button>

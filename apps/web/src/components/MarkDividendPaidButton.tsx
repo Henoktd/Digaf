@@ -34,7 +34,7 @@ export function MarkDividendPaidButton({ dividendId }: { dividendId: string }) {
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+        className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
       >
         {loading ? "Processing…" : "Mark All Paid"}
       </button>

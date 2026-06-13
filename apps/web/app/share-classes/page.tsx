@@ -32,14 +32,14 @@ async function ShareClassesContent() {
           <table className="w-full text-sm">
             <thead className="border-b border-slate-100 bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Class Name</th>
-                <th className="px-4 py-3 text-right font-semibold text-slate-600">Par Value</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Voting</th>
-                <th className="px-4 py-3 text-right font-semibold text-slate-600">Votes/Share</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Tier</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Notes</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Created</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Class Name</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Par Value</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Voting</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Votes/Share</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tier</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Notes</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -68,6 +68,7 @@ export default function ShareClassesPage() {
     <PageContainer>
       <div className="mx-auto max-w-7xl space-y-6">
         <PageHeader
+          variant="page"
           eyebrow="Share Classes"
           title="Share Class Management"
           description="Define and manage share classes for the entity."

@@ -53,16 +53,17 @@ export default async function KycCompliancePage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="KYC Compliance Monitor"
           description="Track KYC verification status, expiry alerts, and renewal requirements across all shareholders."
           badge={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
                 {all.length} Shareholders
               </div>
               {expired.length > 0 && (
-                <div className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-                  {expired.length} Expired — Action Required
+                <div className="rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white">
+                  {expired.length} Expired
                 </div>
               )}
             </div>
@@ -176,15 +177,15 @@ function KycSection({
       <p className="mt-1 text-sm text-slate-600">{description}</p>
       <div className="mt-4 overflow-x-auto rounded-xl border border-white bg-white">
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="border-b border-slate-200 px-4 py-3">Shareholder</th>
-              <th className="border-b border-slate-200 px-4 py-3">Type</th>
-              <th className="border-b border-slate-200 px-4 py-3">KYC Status</th>
-              <th className="border-b border-slate-200 px-4 py-3">Expiry Date</th>
-              {showDays && <th className="border-b border-slate-200 px-4 py-3">Days</th>}
-              <th className="border-b border-slate-200 px-4 py-3">Contact</th>
-              <th className="border-b border-slate-200 px-4 py-3">Action</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholder</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">KYC Status</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Expiry Date</th>
+              {showDays && <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Days</th>}
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -215,7 +216,7 @@ function KycSection({
                   <td className="border-b border-slate-100 px-4 py-3">
                     <Link
                       href={`/shareholders/${s.shareholder_id}`}
-                      className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
                     >
                       Update KYC →
                     </Link>

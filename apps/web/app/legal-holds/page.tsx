@@ -59,11 +59,12 @@ export default async function LegalHoldsPage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Legal Hold Management"
           description="Track legal holds, regulatory review freezes, and preservation controls for shareholder governance records."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              Read-only holds
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
+              Read-only
             </div>
           }
         />
@@ -158,32 +159,16 @@ export default async function LegalHoldsPage() {
           {legalHolds.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Hold Type
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Related Shareholder
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Reason
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Authority Ref
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Imposed By
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Imposed At
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Freeze Status
-                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Hold Type</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholder</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Reason</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Authority Ref</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Imposed By</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Imposed At</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Freeze</th>
                   </tr>
                 </thead>
 

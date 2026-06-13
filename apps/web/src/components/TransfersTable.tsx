@@ -89,18 +89,18 @@ export function TransfersTable({ transfers }: { transfers: Transfer[] }) {
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         {filtered.length > 0 ? (
           <table className="min-w-[1280px] w-full border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="border-b border-slate-200 px-4 py-3">Transferor</th>
-                <th className="border-b border-slate-200 px-4 py-3">Transferee</th>
-                <th className="border-b border-slate-200 px-4 py-3">Shares</th>
-                <th className="border-b border-slate-200 px-4 py-3">Status</th>
-                <th className="border-b border-slate-200 px-4 py-3">Stage</th>
-                <th className="border-b border-slate-200 px-4 py-3">SLA Due</th>
-                <th className="border-b border-slate-200 px-4 py-3">Maker</th>
-                <th className="border-b border-slate-200 px-4 py-3">Checker 1</th>
-                <th className="border-b border-slate-200 px-4 py-3">Checker 2</th>
-                <th className="border-b border-slate-200 px-4 py-3">Action</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Transferor</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Transferee</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shares</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Stage</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">SLA Due</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Maker</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Checker 1</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Checker 2</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
               </tr>
             </thead>
             <tbody>

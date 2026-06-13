@@ -25,6 +25,7 @@ export default function SlaConfigPage() {
     <PageContainer>
       <div className="mx-auto max-w-7xl space-y-6">
         <PageHeader
+          variant="page"
           eyebrow="Configuration"
           title="SLA Configuration"
           description="Set target days and escalation rules for each governance process type."

@@ -60,15 +60,15 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         {filtered.length > 0 ? (
           <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="border-b border-slate-200 px-4 py-3">Actor</th>
-                <th className="border-b border-slate-200 px-4 py-3">Action</th>
-                <th className="border-b border-slate-200 px-4 py-3">Table</th>
-                <th className="border-b border-slate-200 px-4 py-3">Record ID</th>
-                <th className="border-b border-slate-200 px-4 py-3">Timestamp</th>
-                <th className="border-b border-slate-200 px-4 py-3">Old Value</th>
-                <th className="border-b border-slate-200 px-4 py-3">New Value</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Actor</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Table</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Record ID</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Timestamp</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Old Value</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">New Value</th>
               </tr>
             </thead>
             <tbody>

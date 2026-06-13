@@ -30,11 +30,12 @@ export default async function CapTablePage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Cap Table"
           description="View ownership, share classes, concentration, pledged shares, encumbered shares, and historical snapshots."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              Total Shares: {totalShares}
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
+              {totalShares} Total Shares
             </div>
           }
         />
@@ -54,30 +55,16 @@ export default async function CapTablePage() {
         <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
           {rows.length > 0 ? (
             <table className="w-full min-w-[960px] border-collapse text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Shareholder
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">Type</th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Share Class
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Quantity
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Ownership %
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Pledged
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Encumbered
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3">
-                    Status
-                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholder</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Share Class</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Quantity</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Ownership %</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Pledged</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Encumbered</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                 </tr>
               </thead>
 

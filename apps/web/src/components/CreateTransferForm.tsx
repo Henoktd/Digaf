@@ -289,7 +289,7 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
         <button
           type="submit"
           disabled={isChecking || isCreating || !canSubmit}
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {isChecking ? "Checking..." : "Check Eligibility"}
         </button>
@@ -299,7 +299,7 @@ export function CreateTransferForm({ shareholders }: CreateTransferFormProps) {
             type="button"
             onClick={handleCreateTransfer}
             disabled={isCreating}
-            className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-lg bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {isCreating ? "Creating..." : "Create Transfer"}
           </button>

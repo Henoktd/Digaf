@@ -63,6 +63,7 @@ export default async function ReportsPage() {
     <PageContainer>
       <div className="mx-auto max-w-5xl space-y-6 print:max-w-none">
         <PageHeader
+          variant="page"
           title="Regulatory Summary Report"
           description={`Generated ${today()} — for internal governance and regulatory filing reference.`}
           badge={<PrintButton />}

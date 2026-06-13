@@ -49,18 +49,19 @@ export default async function ShareholdersPage({
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Shareholder Registry"
           description="Manage shareholder master records, KYC status, beneficial ownership references, and profile history."
           badge={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
                 {total} Shareholders
               </div>
               <Link
                 href="/imports"
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:px-4 sm:py-2 sm:text-sm"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
               >
-                Import Shareholders →
+                Import →
               </Link>
               <ExportCsvButton
                 data={shareholders as unknown as Record<string, unknown>[]}
@@ -88,28 +89,18 @@ export default async function ShareholdersPage({
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             {shareholders.length > 0 ? (
               <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">Name</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Code</th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Contact
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">TIN</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Type</th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      KYC Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      KYC Expiry
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">Risk</th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Proxy Eligible
-                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Name</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Code</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">TIN</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">KYC</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">KYC Expiry</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Risk</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Proxy</th>
                   </tr>
                 </thead>
 

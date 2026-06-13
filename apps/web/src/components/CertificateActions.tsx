@@ -87,7 +87,7 @@ export function CertificateActions({ certificateId, serialNumber, status }: Prop
             type="button"
             onClick={handleIssue}
             disabled={isLoading}
-            className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             Issue
           </button>
@@ -128,7 +128,7 @@ export function CertificateActions({ certificateId, serialNumber, status }: Prop
           <button
             type="submit"
             disabled={isLoading}
-            className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {isLoading ? "…" : "Submit"}
           </button>

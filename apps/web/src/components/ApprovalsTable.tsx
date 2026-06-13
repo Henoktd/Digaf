@@ -189,7 +189,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
             type="button"
             onClick={() => setBulkModal(true)}
             disabled={bulkLoading}
-            className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             {bulkLoading ? "Approving…" : `Approve selected (${selected.size}) — C1`}
           </button>
@@ -199,9 +199,9 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
       {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         <table className="min-w-[1100px] w-full border-collapse text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="border-b border-slate-200 px-3 py-3">
+              <th className="border-b border-slate-200 px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {pendingFiltered.length > 0 && (
                   <input
                     type="checkbox"
@@ -211,14 +211,14 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
                   />
                 )}
               </th>
-              <th className="border-b border-slate-200 px-4 py-3">Type</th>
-              <th className="border-b border-slate-200 px-4 py-3">Stage</th>
-              <th className="border-b border-slate-200 px-4 py-3">Transfer</th>
-              <th className="border-b border-slate-200 px-4 py-3">Shares</th>
-              <th className="border-b border-slate-200 px-4 py-3">SLA Due</th>
-              <th className="border-b border-slate-200 px-4 py-3">Status</th>
-              <th className="border-b border-slate-200 px-4 py-3">Maker</th>
-              <th className="border-b border-slate-200 px-4 py-3">Actions</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Stage</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Transfer</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shares</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">SLA Due</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Maker</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -273,7 +273,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
                             type="button"
                             onClick={() => handleApproveC1(approval.id)}
                             disabled={loadingId === approval.id}
-                            className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                           >
                             Approve C1
                           </button>
@@ -285,7 +285,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
                             type="button"
                             onClick={() => handleApproveC2(approval.id)}
                             disabled={loadingId === approval.id}
-                            className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                           >
                             Approve C2
                           </button>
@@ -297,7 +297,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
                             setRejectModal({ open: true, approvalId: approval.id })
                           }
                           disabled={loadingId === approval.id}
-                          className="rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                         >
                           Reject
                         </button>

@@ -85,11 +85,12 @@ export default async function SlaMonitorPage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="SLA Monitor"
           description="Track governance SLA targets, breaches, escalation history, and approval process performance."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              Read-only monitor
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
+              Read-only
             </div>
           }
         />
@@ -125,35 +126,17 @@ export default async function SlaMonitorPage() {
           {slaItems.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Request Type
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Stage
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      SLA Status
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Days Remaining
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Current Approver
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Transfer
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Shares
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
-                      Escalation
-                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Request Type</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Stage</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">SLA</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Days</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Approver</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Transfer</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shares</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Escalation</th>
                   </tr>
                 </thead>
 

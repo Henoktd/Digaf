@@ -106,11 +106,11 @@ export default async function CertificatesPage({
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Certificate Management"
           description="Manage certificate requests, approvals, serial numbers, QR verification, hashes, issuance, revocation, and reissue history."
-
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
               {total} Certificates
             </div>
           }
@@ -146,7 +146,7 @@ export default async function CertificatesPage({
                   </p>
                 </div>
 
-                <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+                <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
                   {renderData.render_metadata.template_version}
                 </div>
               </div>
@@ -234,7 +234,7 @@ export default async function CertificatesPage({
                       href={renderData.public_verification_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex w-full justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 sm:w-auto"
+                      className="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 sm:w-auto"
                     >
                       Open Verification Page
                     </a>
@@ -267,7 +267,7 @@ export default async function CertificatesPage({
               <ol className="space-y-4">
                 {events.map((event) => (
                   <li key={event.id} className="flex gap-3">
-                    <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-slate-900" />
+                    <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-indigo-500" />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <p className="font-semibold capitalize text-slate-900">

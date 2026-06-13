@@ -194,27 +194,27 @@ function IdentityDocumentsSection({
       {documents.length > 0 ? (
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="border-b border-slate-200 px-4 py-3">Role</th>
-                <th className="border-b border-slate-200 px-4 py-3">Type</th>
-                <th className="border-b border-slate-200 px-4 py-3">Number</th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Role</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Number</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Issuer
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Country
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Issue Date
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Expiry
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Verification
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Document Ref
                 </th>
               </tr>
@@ -498,24 +498,24 @@ function DocumentChecklistSection({
       {items.length > 0 ? (
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full min-w-[900px] border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Document
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Requirement
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Status
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Source
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Reviewed
                 </th>
-                <th className="border-b border-slate-200 px-4 py-3">
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Document Ref
                 </th>
               </tr>

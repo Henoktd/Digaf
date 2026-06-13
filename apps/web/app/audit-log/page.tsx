@@ -70,11 +70,12 @@ export default async function AuditLogPage({
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Audit Log"
           description="Trace system activity, actors, actions, timestamps, and before and after values from the governance ledger."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              Read-only evidence
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
+              Read-only
             </div>
           }
         />

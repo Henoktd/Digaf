@@ -73,7 +73,7 @@ const labelClass = "space-y-2 text-sm font-semibold text-slate-700";
 const helpTextClass = "text-xs font-medium text-slate-500";
 
 const submitClass =
-  "rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300";
+  "rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300";
 
 function toInputValue(value: string | number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);

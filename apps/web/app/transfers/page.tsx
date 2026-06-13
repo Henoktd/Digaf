@@ -70,11 +70,12 @@ export default async function TransfersPage({
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Share Transfers"
           description="Manage transfer requests, maker-checker-checker approvals, KYC checks, freeze checks, and encumbrance checks."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              {transfers.length} Transfer Requests
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
+              {total} Transfers
             </div>
           }
         />

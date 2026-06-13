@@ -137,7 +137,7 @@ export function ImportBatchActions({
         </p>
         <Link
           href="/shareholders"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600"
         >
           View Shareholders →
         </Link>
@@ -155,7 +155,7 @@ export function ImportBatchActions({
             type="button"
             onClick={handleCommit}
             disabled={pending !== null}
-            className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {pending === "commit" ? "Committing..." : "Commit Batch → Create Shareholders"}
           </button>
@@ -166,7 +166,7 @@ export function ImportBatchActions({
             type="button"
             onClick={handleSubmitReview}
             disabled={pending !== null}
-            className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {pending === "submit" ? "Submitting..." : "Submit for review"}
           </button>
@@ -199,7 +199,7 @@ export function ImportBatchActions({
             type="button"
             onClick={handleCancel}
             disabled={pending !== null}
-            className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             {pending === "cancel" ? "Cancelling..." : "Cancel batch"}
           </button>
@@ -233,7 +233,7 @@ export function ImportBatchActions({
                 setShowRejectForm(false);
                 setRejectNotes("");
               }}
-              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
             >
               Cancel
             </button>

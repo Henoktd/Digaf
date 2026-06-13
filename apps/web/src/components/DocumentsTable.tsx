@@ -49,16 +49,16 @@ export function DocumentsTable({ documents }: { documents: DocumentReference[] }
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         {filtered.length > 0 ? (
           <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="border-b border-slate-200 px-4 py-3">Document Type</th>
-                <th className="border-b border-slate-200 px-4 py-3">Library</th>
-                <th className="border-b border-slate-200 px-4 py-3">Entity</th>
-                <th className="border-b border-slate-200 px-4 py-3">Retention</th>
-                <th className="border-b border-slate-200 px-4 py-3">Legal Hold</th>
-                <th className="border-b border-slate-200 px-4 py-3">Authority Ref.</th>
-                <th className="border-b border-slate-200 px-4 py-3">File URL</th>
-                <th className="border-b border-slate-200 px-4 py-3">Created</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Document Type</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Library</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Entity</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Retention</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Legal Hold</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Authority Ref.</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">File URL</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Created</th>
               </tr>
             </thead>
             <tbody>

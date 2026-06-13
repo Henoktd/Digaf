@@ -72,7 +72,7 @@ export function CreateShareClassForm() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
         >
           + Create Share Class
         </button>
@@ -192,7 +192,7 @@ export function CreateShareClassForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
         >
           {isSubmitting ? "Saving…" : "Create"}
         </button>

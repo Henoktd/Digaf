@@ -53,11 +53,12 @@ export default async function ApprovalsPage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Approval Queue"
           description="Review pending governance approvals, SLA due dates, escalation status, and decision notes."
           badge={
-            <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              {approvals.length} Approval Requests
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
+              {approvals.length} Requests
             </div>
           }
         />

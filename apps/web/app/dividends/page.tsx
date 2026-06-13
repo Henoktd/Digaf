@@ -48,15 +48,16 @@ export default async function DividendsPage() {
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
+          variant="page"
           title="Dividend Register"
           description="Declare dividends, auto-compute per-shareholder entitlements from issued certificates, and track payment status."
           badge={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
                 {declarations.length} Declarations
               </div>
-              <div className="max-w-full break-words rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 sm:px-4 sm:py-2 sm:text-sm">
-                ETB {fmt(totalDeclared)} Total Declared
+              <div className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-600">
+                ETB {fmt(totalDeclared)} Total
               </div>
             </div>
           }
@@ -74,17 +75,17 @@ export default async function DividendsPage() {
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             {declarations.length > 0 ? (
               <table className="w-full min-w-[900px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="border-b border-slate-200 px-4 py-3">Record Date</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Share Class</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Per Share (ETB)</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Total Declared (ETB)</th>
-                    <th className="border-b border-slate-200 px-4 py-3">WHT Rate</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Shareholders</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Payment Date</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Status</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Detail</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Record Date</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Share Class</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Per Share (ETB)</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Total (ETB)</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">WHT</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholders</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Payment Date</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Detail</th>
                   </tr>
                 </thead>
                 <tbody>

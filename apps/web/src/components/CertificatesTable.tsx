@@ -61,18 +61,18 @@ export function CertificatesTable({
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         {filtered.length > 0 ? (
           <table className="w-full min-w-[1400px] border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="border-b border-slate-200 px-4 py-3">Serial Number</th>
-                <th className="border-b border-slate-200 px-4 py-3">Shareholder</th>
-                <th className="border-b border-slate-200 px-4 py-3">Share Class</th>
-                <th className="border-b border-slate-200 px-4 py-3">Quantity</th>
-                <th className="border-b border-slate-200 px-4 py-3">Status</th>
-                <th className="border-b border-slate-200 px-4 py-3">Hash</th>
-                <th className="border-b border-slate-200 px-4 py-3">Revocation</th>
-                <th className="border-b border-slate-200 px-4 py-3">QR Verification</th>
-                <th className="border-b border-slate-200 px-4 py-3">Certificate</th>
-                <th className="border-b border-slate-200 px-4 py-3">Actions</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Serial Number</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholder</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Share Class</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Quantity</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Hash</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Revocation</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">QR Verification</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Certificate</th>
+                <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
               </tr>
             </thead>
             <tbody>

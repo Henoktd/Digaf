@@ -43,10 +43,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function isSharePointReady(fileUrl: string) {
-  return fileUrl.toLowerCase().startsWith("https://sharepoint.");
-}
-
 export default async function DocumentsPage() {
   const token = await getToken();
   const response = await fetchDocuments(token ?? undefined);
@@ -54,25 +50,22 @@ export default async function DocumentsPage() {
   const legalHoldProtectedCount = documents.filter(
     (document) => document.legal_hold_id !== null
   ).length;
-  const sharePointReadyCount = documents.filter((document) =>
-    isSharePointReady(document.file_url)
-  ).length;
 
   return (
     <PageContainer>
       <div className="space-y-6">
         <PageHeader
           title="Document References"
-          description="Review SharePoint-ready evidence references, retention categories, legal hold protection, and related governance records."
+          description="Governance evidence references with retention categories, legal hold protection, and related entity links."
           badge={
             <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
-              Read-only repository
+              Evidence repository
             </div>
           }
         />
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
+        <div className="mb-8 grid gap-4 md:grid-cols-2">
           <KpiCard
             label="Total Documents"
             value={documents.length}
@@ -81,23 +74,17 @@ export default async function DocumentsPage() {
           <KpiCard
             label="Legal Hold Protected"
             value={legalHoldProtectedCount}
-            detail="Linked to hold records"
+            detail="Linked to active hold records"
             tone={legalHoldProtectedCount > 0 ? "danger" : "neutral"}
-          />
-          <KpiCard
-            label="SharePoint-Ready"
-            value={sharePointReadyCount}
-            detail="Placeholder URLs"
-            tone="success"
           />
         </div>
 
         <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">Evidence Summary</h2>
+              <h2 className="text-xl font-bold">Recent Evidence</h2>
               <p className="mt-1 text-sm text-slate-600">
-                Recent document references mapped to governance records.
+                Latest document references mapped to governance records.
               </p>
             </div>
 

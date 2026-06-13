@@ -37,7 +37,6 @@ const navItems: NavItem[] = [
   { type: "link", href: "/share-classes", label: "Share Classes" },
   { type: "link", href: "/sla-config", label: "SLA Config" },
   { type: "link", href: "/qr", label: "QR Verify" },
-  { type: "link", href: "/integrations", label: "Integrations" },
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {

@@ -75,7 +75,7 @@ export function ShareClassesTable({ shareClasses }: { shareClasses: ShareClass[]
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
-        throw new Error(body?.error || "Failed to update share class");
+        throw new Error(body?.error?.message || "Failed to update share class");
       }
       toast("Share class updated", "success");
       setEditingId(null);

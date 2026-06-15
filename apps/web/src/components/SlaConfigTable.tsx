@@ -66,7 +66,7 @@ function EditRow({
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
-        throw new Error(body?.error || "Failed to update SLA config");
+        throw new Error(body?.error?.message || "Failed to update SLA config");
       }
       onDone();
       toast("SLA config updated", "success");

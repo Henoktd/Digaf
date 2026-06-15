@@ -44,7 +44,7 @@ export function CreateBoardResolutionForm() {
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
-        throw new Error(body?.error || "Failed to create board resolution");
+        throw new Error(body?.error?.message || "Failed to create board resolution");
       }
       setOpen(false);
       setResolutionNumber("");

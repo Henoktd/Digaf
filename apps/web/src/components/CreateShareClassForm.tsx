@@ -48,7 +48,7 @@ export function CreateShareClassForm() {
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
-        throw new Error(body?.error || "Failed to create share class");
+        throw new Error(body?.error?.message || "Failed to create share class");
       }
       setOpen(false);
       setClassName("");

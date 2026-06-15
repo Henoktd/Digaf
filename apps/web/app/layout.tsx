@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   title: "Digaf Shareholder Governance Platform",
   description:
     "Shareholder governance and engagement portal for Digaf Microcredit Provider SC",
+  icons: {
+    icon: "/logos/digaf-logo.svg",
+    shortcut: "/logos/digaf-logo.svg",
+  },
 };
 
 export default function RootLayout({

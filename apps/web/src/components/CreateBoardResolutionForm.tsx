@@ -14,7 +14,6 @@ export function CreateBoardResolutionForm() {
   const [resolutionDate, setResolutionDate] = useState("");
   const [description, setDescription] = useState("");
   const [approvedAction, setApprovedAction] = useState("");
-  const [sharepointDocumentUrl, setSharepointDocumentUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -39,7 +38,6 @@ export function CreateBoardResolutionForm() {
           resolutionDate,
           description,
           approvedAction: approvedAction.trim() || undefined,
-          sharepointDocumentUrl: sharepointDocumentUrl.trim() || undefined,
         }),
       });
       if (!resp.ok) {
@@ -51,7 +49,6 @@ export function CreateBoardResolutionForm() {
       setResolutionDate("");
       setDescription("");
       setApprovedAction("");
-      setSharepointDocumentUrl("");
       toast("Board resolution recorded", "success");
       router.refresh();
     } catch (err) {
@@ -125,30 +122,16 @@ export function CreateBoardResolutionForm() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            Approved Action
-          </label>
-          <input
-            value={approvedAction}
-            onChange={(e) => setApprovedAction(e.target.value)}
-            placeholder="e.g. Share transfer approved"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            SharePoint Document URL
-          </label>
-          <input
-            type="url"
-            value={sharepointDocumentUrl}
-            onChange={(e) => setSharepointDocumentUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-          />
-        </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 mb-1">
+          Approved Action
+        </label>
+        <input
+          value={approvedAction}
+          onChange={(e) => setApprovedAction(e.target.value)}
+          placeholder="e.g. Share transfer approved"
+          className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+        />
       </div>
 
       <div className="flex justify-end gap-3">

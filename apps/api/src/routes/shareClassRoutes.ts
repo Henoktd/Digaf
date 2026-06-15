@@ -55,6 +55,18 @@ shareClassRoutes.post("/", async (req, res) => {
     return sendBadRequest(res, "parValue must be a positive number");
   }
 
+  // Resolve entity: use provided entityId or fall back to the single tenant entity
+  let resolvedEntityId = entityId;
+  if (!resolvedEntityId) {
+    try {
+      const entityRow = await pool.query(`SELECT entity_id FROM entity LIMIT 1`);
+      if (!entityRow.rowCount) return sendBadRequest(res, "No entity found in the system");
+      resolvedEntityId = entityRow.rows[0].entity_id;
+    } catch (error) {
+      return sendServerError(res, "Failed to resolve entity", error);
+    }
+  }
+
   try {
     const result = await pool.query(
       `INSERT INTO share_class
@@ -62,7 +74,7 @@ shareClassRoutes.post("/", async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
-        entityId,
+        resolvedEntityId,
         className,
         votingRights === true || votingRights === "true",
         votesPerShare != null ? parseInt(String(votesPerShare), 10) : 1,

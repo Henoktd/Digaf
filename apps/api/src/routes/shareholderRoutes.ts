@@ -440,6 +440,16 @@ shareholderRoutes.post("/", async (req, res) => {
       return sendNotFound(res, "Entity not found");
     }
 
+    // Auto-generate a sequential shareholder code if not provided
+    if (!shareholderCode) {
+      const countResult = await client.query(
+        `SELECT COUNT(*) AS cnt FROM shareholder WHERE entity_id = $1`,
+        [entityId]
+      );
+      const nextNum = parseInt(countResult.rows[0].cnt, 10) + 1;
+      shareholderCode = `DIGAF-${String(nextNum).padStart(3, "0")}`;
+    }
+
     const contactDetails = {
       email: emailAddress,
       phone: mobileNumber,

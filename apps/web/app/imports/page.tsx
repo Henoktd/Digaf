@@ -11,7 +11,6 @@ export default function ImportsPage() {
           eyebrow="Import Batch"
           title="Shareholder Import"
           description="Upload an Excel or CSV file to validate and persist shareholder import batches. Persisting a batch does not create shareholder records — it stages the rows for compliance review."
-          notice="Use test data only — do not upload production shareholder records."
         />
 
         <ShareholderImportPanel />

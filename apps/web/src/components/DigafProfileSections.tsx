@@ -141,7 +141,7 @@ function DetailGrid({ items }: { items: DetailItem[] }) {
 
 function EmptyProfileSection({
   title,
-  description = "Pending Digaf validation. To be completed during pilot onboarding.",
+  description = "No data has been captured for this section yet.",
 }: {
   title: string;
   description?: string;
@@ -265,7 +265,7 @@ function KycProfileSection({ profile }: { profile: ShareholderKycProfile | null 
   return (
     <SectionShell
       title="KYC / AML / CFT Profile"
-      description="Expanded due diligence and screening fields for the production-ready pilot."
+      description="Expanded due diligence and screening fields for KYC/AML/CFT compliance."
       draft
     >
       {profile ? (
@@ -363,7 +363,7 @@ function KycProfileSection({ profile }: { profile: ShareholderKycProfile | null 
       ) : (
         <EmptyProfileSection
           title="No KYC profile has been captured yet."
-          description="Pending Digaf validation. To be completed during pilot onboarding."
+          description="No KYC profile data has been captured for this shareholder yet."
         />
       )}
     </SectionShell>
@@ -378,7 +378,7 @@ function BeneficialOwnershipSection({
   return (
     <SectionShell
       title="Beneficial Ownership"
-      description="Pilot beneficial ownership capture and verification summary."
+      description="Beneficial ownership records and verification summary."
       draft
     >
       {owners.length > 0 ? (
@@ -440,7 +440,7 @@ function NextOfKinSection({ contacts }: { contacts: ShareholderNextOfKin[] }) {
   return (
     <SectionShell
       title="Next of Kin / Emergency Contact"
-      description="Draft contact structure for pilot onboarding."
+      description="Emergency contact and next-of-kin details."
       draft
     >
       {contacts.length > 0 ? (
@@ -492,7 +492,7 @@ function DocumentChecklistSection({
   return (
     <SectionShell
       title="Document Checklist"
-      description="Required and conditional evidence tracking for pilot onboarding."
+      description="Required and conditional document evidence tracking."
       draft
     >
       {items.length > 0 ? (

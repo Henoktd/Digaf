@@ -35,8 +35,8 @@ const pilotRoles: {
 }[] = [
   {
     value: "governance_admin",
-    label: "Pilot admin",
-    description: "Local pilot role with access to every Stage 66F workflow.",
+    label: "Governance Admin",
+    description: "Governance Administrator with access to all profile edit workflows.",
   },
   {
     value: "maker",
@@ -243,7 +243,7 @@ function SectionForm({
           children
         ) : (
           <p className="rounded-xl bg-white px-4 py-3 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
-            The selected pilot role cannot edit this section. Allowed roles:
+            The selected role cannot edit this section. Allowed roles:
             {" "}
             <span className="font-semibold text-slate-900">
               {allowedRoles
@@ -266,7 +266,7 @@ function FormFooter({
   isSubmitting,
   message,
   error,
-  submitLabel = "Save pilot update",
+  submitLabel = "Save changes",
 }: {
   isSubmitting: boolean;
   message: string | null;
@@ -302,10 +302,8 @@ function ActorNotice({ actorRole }: { actorRole: PilotRole }) {
 
   return (
     <p className="mb-4 max-w-full break-words rounded-xl bg-white px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
-      Auth: <span className="font-semibold text-slate-900">Supabase JWT</span>.
-      {" "}Selected pilot role:{" "}
-      <span className="font-semibold text-slate-900">{roleLabel}</span>. Draft
-      fields remain pending Digaf validation.
+      Acting as:{" "}
+      <span className="font-semibold text-slate-900">{roleLabel}</span>. Only fields permitted for this role are editable.
     </p>
   );
 }
@@ -1087,7 +1085,7 @@ function NextOfKinForm({
 
     const validationError =
       !confirmReplacement
-        ? "Confirm that this pilot update will replace the current next-of-kin list."
+        ? "Please confirm that this action will replace the current next-of-kin list."
         : validateRequired(formState.fullName, "Full name") ??
           validateRequired(formState.relationship, "Relationship") ??
           (!formState.phoneNumber.trim() && !formState.emailAddress.trim()
@@ -1141,9 +1139,7 @@ function NextOfKinForm({
     <form onSubmit={handleSubmit}>
       <ActorNotice actorRole={actorRole} />
       <p className={`${helpTextClass} mb-4`}>
-        Pilot note: this route replaces the current next-of-kin list with the
-        contact below. Use only for pilot/demo records until final Digaf rules
-        are confirmed.
+        Note: this action replaces the current next-of-kin list with the contact entered below.
       </p>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1208,8 +1204,7 @@ function NextOfKinForm({
           className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
         />
         <span>
-          I understand this pilot action replaces the current next-of-kin list
-          for this shareholder.
+          I understand this action will replace the current next-of-kin list for this shareholder.
         </span>
       </label>
 
@@ -1243,7 +1238,7 @@ function DocumentChecklistForm({
     event.preventDefault();
 
     const validationError = !confirmReplacement
-      ? "Confirm that this pilot update will replace the current document checklist."
+      ? "Please confirm that this action will replace the current document checklist."
       : validateRequired(formState.documentType, "Document type");
 
     if (validationError) {
@@ -1291,9 +1286,7 @@ function DocumentChecklistForm({
     <form onSubmit={handleSubmit}>
       <ActorNotice actorRole={actorRole} />
       <p className={`${helpTextClass} mb-4`}>
-        Pilot note: this route replaces the current checklist with the item
-        below. Use this as a safe single-item pilot workflow until final
-        checklist editing is designed.
+        Note: this action replaces the current document checklist with the item entered below.
       </p>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1415,7 +1408,7 @@ function DocumentChecklistForm({
           className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
         />
         <span>
-          I understand this pilot action replaces the current document checklist
+          I understand this action will replace the current document checklist
           for this shareholder.
         </span>
       </label>
@@ -1527,8 +1520,7 @@ function PaymentProfileForm({
     <form onSubmit={handleSubmit}>
       <ActorNotice actorRole={actorRole} />
       <p className={`${helpTextClass} mb-4`}>
-        Payment and bank fields are sensitive pilot fields. Use demo or approved
-        pilot records only until Digaf confirms final finance controls.
+        Payment and bank fields are sensitive. Ensure all information is verified before saving.
       </p>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[
@@ -1619,8 +1611,8 @@ export function DigafProfileEditWorkflows({
     pilotRoles.find((pilotRole) => pilotRole.value === actorRole) ??
     ({
       value: "governance_admin",
-      label: "Pilot admin",
-      description: "Local pilot role with access to every Stage 66F workflow.",
+      label: "Governance Admin",
+      description: "Governance Administrator with access to all profile edit workflows.",
     } satisfies (typeof pilotRoles)[number]);
 
   return (
@@ -1628,22 +1620,17 @@ export function DigafProfileEditWorkflows({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="break-words text-xl font-bold text-slate-900">
-            Pilot Edit Workflows
+            Profile Edit Workflows
           </h2>
           <p className="mt-1 max-w-3xl break-words text-sm text-slate-600">
-            Controlled Stage 66F forms for pilot preparation. Select a pilot
-            role to preview the assumed edit boundaries pending Digaf
-            validation.
+            Controlled forms for updating shareholder master-data fields. Select an acting role to view the edit boundaries for that role.
           </p>
         </div>
-        <span className="inline-flex max-w-full items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">
-          Pending Digaf validation
-        </span>
       </div>
 
       <div className="mt-5 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
         <label className={labelClass}>
-          Pilot role
+          Acting role
           <select
             value={actorRole}
             onChange={(event) => setActorRole(event.target.value as PilotRole)}
@@ -1657,15 +1644,14 @@ export function DigafProfileEditWorkflows({
           </select>
         </label>
         <p className="mt-2 max-w-3xl break-words text-xs font-medium text-slate-600">
-          {selectedRole.description} This is a frontend pilot control only;
-          final authorization remains pending Digaf validation.
+          {selectedRole.description}
         </p>
       </div>
 
       <div className="mt-5 space-y-3">
         <SectionForm
           title="Edit Core Shareholder Details"
-          description="Update nullable Digaf master-data fields without changing existing MVP identifiers."
+          description="Update core shareholder master-data fields."
           actorRole={actorRole}
           allowedRoles={workflowRoles.core}
         >
@@ -1692,7 +1678,7 @@ export function DigafProfileEditWorkflows({
 
         <SectionForm
           title="Capture Beneficial Owner"
-          description="Append a pilot beneficial-owner record for compliance review."
+          description="Append a beneficial ownership record for compliance review."
           actorRole={actorRole}
           allowedRoles={workflowRoles.beneficialOwner}
         >
@@ -1701,7 +1687,7 @@ export function DigafProfileEditWorkflows({
 
         <SectionForm
           title="Replace Next of Kin"
-          description="Pilot single-contact replacement workflow for next-of-kin details."
+          description="Update next-of-kin contact details for this shareholder."
           actorRole={actorRole}
           allowedRoles={workflowRoles.nextOfKin}
         >
@@ -1710,7 +1696,7 @@ export function DigafProfileEditWorkflows({
 
         <SectionForm
           title="Replace Document Checklist Item"
-          description="Pilot single-item checklist workflow until final checklist UX is confirmed."
+          description="Add or update document checklist items for compliance tracking."
           actorRole={actorRole}
           allowedRoles={workflowRoles.checklist}
         >

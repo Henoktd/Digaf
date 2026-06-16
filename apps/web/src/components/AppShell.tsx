@@ -47,8 +47,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const userEmail = session.user.email ?? "Unknown";
-  const userRole =
-    (session.user.app_metadata?.role as string | undefined) ?? "viewer";
+  const assignedRole = session.user.app_metadata?.role as string | undefined;
+  const userRole = assignedRole ?? "No role assigned";
+  const hasRole = Boolean(assignedRole);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
@@ -81,7 +82,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-slate-700">{userEmail}</p>
-              <p className="text-[11px] capitalize text-slate-400">{userRole.replace(/_/g, " ")}</p>
+              <p className={`text-[11px] capitalize ${hasRole ? "text-slate-400" : "font-semibold text-red-500"}`}>
+                {userRole.replace(/_/g, " ")}
+              </p>
             </div>
           </div>
           <form action={logout} className="mt-3">
@@ -120,7 +123,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="max-w-[14rem] truncate text-xs font-medium text-slate-700">
                   {userEmail}
                 </p>
-                <p className="text-[11px] capitalize text-slate-400">
+                <p className={`text-[11px] capitalize ${hasRole ? "text-slate-400" : "font-semibold text-red-500"}`}>
                   {userRole.replace(/_/g, " ")}
                 </p>
               </div>

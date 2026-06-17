@@ -9,34 +9,40 @@ type NavItem =
   | { type: "link"; href: string; label: string; indent?: boolean }
   | { type: "section"; label: string };
 
-const navItems: NavItem[] = [
-  { type: "link", href: "/", label: "Dashboard" },
+function buildNavItems(role: string | undefined): NavItem[] {
+  const isAdmin = role === "governance_admin";
+  return [
+    { type: "link", href: "/", label: "Dashboard" },
 
-  { type: "section", label: "Shareholders" },
-  { type: "link", href: "/shareholders", label: "Registry" },
-  { type: "link", href: "/imports", label: "Import Prep", indent: true },
-  { type: "link", href: "/kyc", label: "KYC Compliance", indent: true },
-  { type: "link", href: "/cap-table", label: "Cap Table" },
+    { type: "section", label: "Shareholders" },
+    { type: "link", href: "/shareholders", label: "Registry" },
+    { type: "link", href: "/imports", label: "Import Prep", indent: true },
+    { type: "link", href: "/kyc", label: "KYC Compliance", indent: true },
+    { type: "link", href: "/cap-table", label: "Cap Table" },
 
-  { type: "section", label: "Governance" },
-  { type: "link", href: "/certificates", label: "Certificates" },
-  { type: "link", href: "/transfers", label: "Transfers" },
-  { type: "link", href: "/dividends", label: "Dividend Register" },
-  { type: "link", href: "/approvals", label: "Approvals" },
-  { type: "link", href: "/legal-holds", label: "Legal Holds" },
-  { type: "link", href: "/board-resolutions", label: "Board Resolutions" },
+    { type: "section", label: "Governance" },
+    { type: "link", href: "/certificates", label: "Certificates" },
+    { type: "link", href: "/transfers", label: "Transfers" },
+    { type: "link", href: "/dividends", label: "Dividend Register" },
+    { type: "link", href: "/approvals", label: "Approvals" },
+    { type: "link", href: "/legal-holds", label: "Legal Holds" },
+    { type: "link", href: "/board-resolutions", label: "Board Resolutions" },
 
-  { type: "section", label: "Operations" },
-  { type: "link", href: "/reports", label: "Regulatory Reports" },
-  { type: "link", href: "/communications", label: "Communications" },
-  { type: "link", href: "/documents", label: "Documents" },
-  { type: "link", href: "/sla-monitor", label: "SLA Monitor" },
+    { type: "section", label: "Operations" },
+    { type: "link", href: "/reports", label: "Regulatory Reports" },
+    { type: "link", href: "/communications", label: "Communications" },
+    { type: "link", href: "/documents", label: "Documents" },
+    { type: "link", href: "/sla-monitor", label: "SLA Monitor" },
 
-  { type: "section", label: "System" },
-  { type: "link", href: "/audit-log", label: "Audit Log" },
-  { type: "link", href: "/sla-config", label: "SLA Config" },
-  { type: "link", href: "/qr", label: "QR Verify" },
-];
+    { type: "section", label: "System" },
+    { type: "link", href: "/audit-log", label: "Audit Log" },
+    { type: "link", href: "/sla-config", label: "SLA Config" },
+    { type: "link", href: "/qr", label: "QR Verify" },
+    ...(isAdmin
+      ? [{ type: "link" as const, href: "/users", label: "User Management" }]
+      : []),
+  ];
+}
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -49,6 +55,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const assignedRole = session.user.app_metadata?.role as string | undefined;
   const userRole = assignedRole ?? "No role assigned";
   const hasRole = Boolean(assignedRole);
+  const navItems = buildNavItems(assignedRole);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">

@@ -21,6 +21,7 @@ import { importRoutes } from "./routes/importRoutes";
 import { boardResolutionRoutes } from "./routes/boardResolutionRoutes";
 import { slaConfigRoutes } from "./routes/slaConfigRoutes";
 import { dividendRoutes } from "./routes/dividendRoutes";
+import { userRoutes } from "./routes/userRoutes";
 
 dotenv.config();
 
@@ -160,6 +161,7 @@ app.use("/api/imports", importRoutes);
 app.use("/api/board-resolutions", boardResolutionRoutes);
 app.use("/api/sla-config", slaConfigRoutes);
 app.use("/api/dividends", dividendRoutes);
+app.use("/api/users", userRoutes);
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {

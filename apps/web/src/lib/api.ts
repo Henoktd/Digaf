@@ -1458,3 +1458,21 @@ export async function testPowerAutomateWebhook(token: string) {
     token
   ) as Promise<{ success: boolean; statusCode?: number; error?: string }>;
 }
+
+export async function fetchUsers(token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/users`, token);
+}
+
+export async function updateUserRole(
+  userId: string,
+  role: string,
+  token?: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/users/${userId}/role`,
+    "PATCH",
+    { role },
+    "Failed to update user role",
+    token
+  );
+}

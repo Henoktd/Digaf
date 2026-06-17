@@ -8,5 +8,5 @@
 
 ALTER TABLE share_certificate ALTER COLUMN share_class_id DROP NOT NULL;
 
--- shareholder_ownership is created in migration 002
-ALTER TABLE shareholder_ownership ALTER COLUMN share_class_id DROP NOT NULL;
+-- share_ownership is created in migration 002
+ALTER TABLE share_ownership ALTER COLUMN share_class_id DROP NOT NULL;

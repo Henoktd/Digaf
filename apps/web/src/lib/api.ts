@@ -1476,3 +1476,17 @@ export async function updateUserRole(
     token
   );
 }
+
+export async function sendUserPasswordReset(
+  userId: string,
+  email: string,
+  token?: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/users/${userId}/send-reset`,
+    "POST",
+    { email },
+    "Failed to send password reset",
+    token
+  );
+}

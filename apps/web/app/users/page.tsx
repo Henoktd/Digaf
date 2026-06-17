@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/src/lib/supabase/client";
-import { fetchUsers, updateUserRole } from "@/src/lib/api";
+import { fetchUsers, updateUserRole, sendUserPasswordReset } from "@/src/lib/api";
 import { useRole } from "@/src/lib/useRole";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
@@ -69,12 +69,17 @@ function RoleBadge({ role }: { role: string | null }) {
 function UserRow({
   user,
   saving,
+  resetting,
   onRoleChange,
+  onResetPassword,
 }: {
   user: User;
   saving: boolean;
+  resetting: string | null;
   onRoleChange: (userId: string, role: string) => void;
+  onResetPassword: (userId: string, email: string) => void;
 }) {
+  const isSendingReset = resetting === user.id;
   return (
     <tr className="border-b border-slate-100 hover:bg-slate-50">
       <td className="px-4 py-3 font-medium text-slate-900">
@@ -106,6 +111,15 @@ function UserRow({
       <td className="px-4 py-3 text-sm text-slate-400">
         {formatDate(user.created_at)}
       </td>
+      <td className="px-4 py-3">
+        <button
+          disabled={isSendingReset || !user.email}
+          onClick={() => user.email && onResetPassword(user.id, user.email)}
+          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {isSendingReset ? "Sending…" : "Reset Password"}
+        </button>
+      </td>
     </tr>
   );
 }
@@ -115,6 +129,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
@@ -145,6 +160,25 @@ export default function UsersPage() {
       setLoading(false);
     }
   }, [role, roleLoading, loadUsers]);
+
+  async function handleResetPassword(userId: string, email: string) {
+    setResetting(userId);
+    setToast(null);
+    try {
+      const supabase = createClient();
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      await sendUserPasswordReset(userId, email, token);
+      setToast({ msg: `Password reset email sent to ${email}.`, ok: true });
+    } catch (err) {
+      setToast({
+        msg: err instanceof Error ? err.message : "Failed to send reset email",
+        ok: false,
+      });
+    } finally {
+      setResetting(null);
+    }
+  }
 
   async function handleRoleChange(userId: string, newRole: string) {
     setSaving(true);
@@ -251,6 +285,9 @@ export default function UsersPage() {
                     <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Created
                     </th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,7 +296,9 @@ export default function UsersPage() {
                       key={user.id}
                       user={user}
                       saving={saving}
+                      resetting={resetting}
                       onRoleChange={handleRoleChange}
+                      onResetPassword={handleResetPassword}
                     />
                   ))}
                 </tbody>

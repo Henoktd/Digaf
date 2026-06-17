@@ -92,3 +92,26 @@ userRoutes.patch("/:id/role", async (req, res) => {
     return sendServerError(res, "Failed to update user role", error);
   }
 });
+
+// POST /api/users/:id/send-reset — send a password reset email to a user
+userRoutes.post("/:id/send-reset", async (req, res) => {
+  const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
+  if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
+
+  if (!supabaseAdmin) return notConfigured(res);
+
+  const { email } = req.body ?? {};
+  if (!email || typeof email !== "string") {
+    return sendBadRequest(res, "email is required");
+  }
+
+  try {
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email);
+    if (error) {
+      return sendServerError(res, "Failed to send password reset email", error);
+    }
+    res.json({ data: { sent: true } });
+  } catch (error) {
+    return sendServerError(res, "Failed to send password reset email", error);
+  }
+});

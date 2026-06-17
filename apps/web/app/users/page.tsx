@@ -113,7 +113,7 @@ function InviteModal({
       const supabase = createClient();
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
-      const res = await inviteUser(email.trim(), role, token);
+      const res = await inviteUser(email.trim(), role, token) as { data: { id: string; email: string | null; role: string } };
       onSuccess({ ...res.data, last_sign_in_at: null, created_at: new Date().toISOString() });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to invite user");

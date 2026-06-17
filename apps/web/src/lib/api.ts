@@ -46,7 +46,7 @@ async function readApiError(response: Response, fallback: string) {
 
 async function sendJsonRequest<TResponse>(
   url: string,
-  method: "POST" | "PUT" | "PATCH",
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
   body: unknown,
   fallbackMessage: string,
   token?: string

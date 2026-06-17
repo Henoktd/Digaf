@@ -4,7 +4,6 @@ import { requireRole, type ActorRole } from "../utils/roles";
 import {
   sendBadRequest,
   sendForbidden,
-  sendNotFound,
   sendServerError,
 } from "../utils/apiError";
 
@@ -38,7 +37,7 @@ function notConfigured(res: Parameters<typeof sendServerError>[0]) {
   );
 }
 
-// GET /api/users — list all auth users with their assigned role
+// GET /api/users — list all auth users via RPC (avoids Admin API bug)
 userRoutes.get("/", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
   if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
@@ -46,29 +45,19 @@ userRoutes.get("/", async (req, res) => {
   if (!supabaseAdmin) return notConfigured(res);
 
   try {
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({
-      perPage: 1000,
-    });
+    const { data, error } = await supabaseAdmin.rpc("list_auth_users");
 
     if (error) {
-      return sendServerError(res, "Failed to list users from auth provider", error);
+      return sendServerError(res, "Failed to list users", error);
     }
 
-    const users = data.users.map((u) => ({
-      id: u.id,
-      email: u.email ?? null,
-      role: (u.app_metadata?.role as string | undefined) ?? null,
-      created_at: u.created_at,
-      last_sign_in_at: u.last_sign_in_at ?? null,
-    }));
-
-    res.json({ data: users });
+    res.json({ data: data ?? [] });
   } catch (error) {
     return sendServerError(res, "Failed to fetch users", error);
   }
 });
 
-// PATCH /api/users/:id/role — assign a governance role to a user
+// PATCH /api/users/:id/role — assign a governance role to a user via RPC
 userRoutes.patch("/:id/role", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
   if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
@@ -89,24 +78,16 @@ userRoutes.patch("/:id/role", async (req, res) => {
   }
 
   try {
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(id, {
-      app_metadata: { role },
+    const { error } = await supabaseAdmin.rpc("set_user_role", {
+      target_user_id: id,
+      new_role: role,
     });
 
     if (error) {
-      if (error.message?.toLowerCase().includes("not found")) {
-        return sendNotFound(res, "User not found");
-      }
       return sendServerError(res, "Failed to update user role", error);
     }
 
-    res.json({
-      data: {
-        id: data.user.id,
-        email: data.user.email ?? null,
-        role: (data.user.app_metadata?.role as string | undefined) ?? null,
-      },
-    });
+    res.json({ data: { id, role } });
   } catch (error) {
     return sendServerError(res, "Failed to update user role", error);
   }

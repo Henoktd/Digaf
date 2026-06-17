@@ -229,9 +229,9 @@ export default function UsersPage() {
             <div className="py-12 text-center text-sm text-slate-400">
               Loading users…
             </div>
-          ) : users.length === 0 ? (
+          ) : users.length === 0 && !error ? (
             <EmptyState title="No users found" />
-          ) : (
+          ) : !error ? (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
               <table className="w-full min-w-[700px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50">

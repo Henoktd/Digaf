@@ -11,7 +11,6 @@ type QrPageProps = {
 type VerificationData = {
   serial_number?: string;
   issuing_company?: string;
-  share_class?: string;
   quantity?: string;
   issue_date?: string | null;
   status?: string | null;
@@ -140,13 +139,6 @@ export default async function QrVerifyPage({ searchParams }: QrPageProps) {
                   <p className="text-sm text-slate-500">Issuing Company</p>
                   <p className="break-words font-semibold">
                     {data?.issuing_company || "Not available"}
-                  </p>
-                </div>
-
-                <div className="min-w-0">
-                  <p className="text-sm text-slate-500">Share Class</p>
-                  <p className="break-words font-semibold">
-                    {data?.share_class || "Not available"}
                   </p>
                 </div>
 

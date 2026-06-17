@@ -34,7 +34,6 @@ const navItems: NavItem[] = [
 
   { type: "section", label: "System" },
   { type: "link", href: "/audit-log", label: "Audit Log" },
-  { type: "link", href: "/share-classes", label: "Share Classes" },
   { type: "link", href: "/sla-config", label: "SLA Config" },
   { type: "link", href: "/qr", label: "QR Verify" },
 ];

@@ -4,7 +4,7 @@ type CertificateCanonicalData = {
   entityId: string;
   serialNumber: string;
   shareholderId: string;
-  shareClassId: string;
+  shareClassId?: string | null;
   quantity: string;
   issueDate: string;
   issuingAuthority: string;
@@ -15,7 +15,7 @@ export function buildCanonicalCertificateString(data: CertificateCanonicalData) 
     `entity_id=${data.entityId}`,
     `certificate_serial_number=${data.serialNumber}`,
     `shareholder_id=${data.shareholderId}`,
-    `share_class_id=${data.shareClassId}`,
+    `share_class_id=${data.shareClassId ?? ""}`,
     `quantity=${data.quantity}`,
     `issue_date=${data.issueDate}`,
     `issuing_authority=${data.issuingAuthority}`,

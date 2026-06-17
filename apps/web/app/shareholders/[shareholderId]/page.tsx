@@ -45,7 +45,6 @@ type ShareholderProfile = {
 };
 
 type OwnershipRow = {
-  share_class: string;
   quantity: string;
   pledged_quantity: string;
   encumbered_quantity: string;
@@ -56,7 +55,6 @@ type OwnershipRow = {
 type CertificateRow = {
   certificate_id: string;
   serial_number: string;
-  share_class: string;
   quantity: string;
   issue_date: string | null;
   status: string;
@@ -320,9 +318,6 @@ export default async function ShareholderProfilePage({
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="border-b border-slate-200 px-4 py-3">
-                      Share Class
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
                       Quantity
                     </th>
                     <th className="border-b border-slate-200 px-4 py-3">
@@ -342,11 +337,8 @@ export default async function ShareholderProfilePage({
                 <tbody>
                   {ownership.map((row) => (
                     <tr
-                      key={`${row.share_class}-${row.effective_date}-${row.status}`}
+                      key={`${row.effective_date}-${row.status}`}
                     >
-                      <td className="border-b border-slate-100 px-4 py-3 font-medium">
-                        {row.share_class}
-                      </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         {formatShares(row.quantity)}
                       </td>
@@ -385,9 +377,6 @@ export default async function ShareholderProfilePage({
                       Serial Number
                     </th>
                     <th className="border-b border-slate-200 px-4 py-3">
-                      Share Class
-                    </th>
-                    <th className="border-b border-slate-200 px-4 py-3">
                       Quantity
                     </th>
                     <th className="border-b border-slate-200 px-4 py-3">
@@ -409,9 +398,6 @@ export default async function ShareholderProfilePage({
                     <tr key={certificate.certificate_id}>
                       <td className="border-b border-slate-100 px-4 py-3 font-medium">
                         {certificate.serial_number}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3">
-                        {certificate.share_class}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         {formatShares(certificate.quantity)}

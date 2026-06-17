@@ -71,7 +71,6 @@ function buildPublicVerificationResponse(certificate: any) {
       entityId: certificate.entity_id,
       serialNumber: certificate.serial_number,
       shareholderId: certificate.shareholder_id,
-      shareClassId: certificate.share_class_id,
       quantity: certificate.quantity,
       issueDate,
       issuingAuthority: certificate.issuing_company,
@@ -94,7 +93,6 @@ function buildPublicVerificationResponse(certificate: any) {
   return {
     serial_number: certificate.serial_number,
     issuing_company: certificate.issuing_company,
-    share_class: certificate.share_class,
     quantity: certificate.quantity,
     issue_date: certificate.issue_date,
     status:
@@ -120,7 +118,6 @@ async function fetchPublicVerificationCertificate(
       c.entity_id,
       c.serial_number,
       c.shareholder_id,
-      c.share_class_id,
       c.quantity,
       c.issue_date,
       c.status,
@@ -130,11 +127,9 @@ async function fetchPublicVerificationCertificate(
       c.hash_generated_at,
       c.signature_token,
       e.legal_name AS issuing_company,
-      sc.class_name AS share_class,
       now() AS verification_timestamp
     FROM share_certificate c
     JOIN entity e ON e.entity_id = c.entity_id
-    JOIN share_class sc ON sc.share_class_id = c.share_class_id
     WHERE ${whereClause}
     LIMIT 1
     `,
@@ -159,8 +154,6 @@ certificateRoutes.get("/", async (req, res) => {
           c.serial_number,
           c.shareholder_id,
           s.legal_name AS shareholder_name,
-          c.share_class_id,
-          sc.class_name AS share_class,
           c.quantity,
           c.issue_date,
           c.status,
@@ -174,7 +167,6 @@ certificateRoutes.get("/", async (req, res) => {
         FROM share_certificate c
         JOIN entity e ON e.entity_id = c.entity_id
         JOIN shareholder s ON s.shareholder_id = c.shareholder_id
-        JOIN share_class sc ON sc.share_class_id = c.share_class_id
         ORDER BY c.created_at DESC
         LIMIT $1 OFFSET $2`,
         [limit, offset]
@@ -197,10 +189,10 @@ certificateRoutes.post("/", async (req, res) => {
   const roleResult = requireRole(req.auth?.actorRole, ["maker", "governance_admin"]);
   if (!roleResult.ok) return sendForbidden(res, roleResult.message);
 
-  const { shareholder_id, share_class_id, quantity, serial_number } = req.body ?? {};
+  const { shareholder_id, quantity, serial_number } = req.body ?? {};
 
-  if (!shareholder_id || !share_class_id || !quantity || !serial_number) {
-    return sendBadRequest(res, "shareholder_id, share_class_id, quantity, and serial_number are required");
+  if (!shareholder_id || !quantity || !serial_number) {
+    return sendBadRequest(res, "shareholder_id, quantity, and serial_number are required");
   }
   if (isNaN(Number(quantity)) || Number(quantity) <= 0) {
     return sendBadRequest(res, "quantity must be a positive number");
@@ -224,20 +216,12 @@ certificateRoutes.post("/", async (req, res) => {
     }
     const entity_id = shareholderResult.rows[0].entity_id;
 
-    const shareClassResult = await pool.query(
-      `SELECT share_class_id FROM share_class WHERE share_class_id = $1 LIMIT 1`,
-      [share_class_id]
-    );
-    if (shareClassResult.rowCount === 0) {
-      return sendNotFound(res, "Share class not found");
-    }
-
     const result = await pool.query(
       `INSERT INTO share_certificate
-        (entity_id, shareholder_id, share_class_id, quantity, serial_number, status)
-       VALUES ($1, $2, $3, $4, $5, 'draft')
+        (entity_id, shareholder_id, quantity, serial_number, status)
+       VALUES ($1, $2, $3, $4, 'draft')
        RETURNING certificate_id, serial_number, status, created_at`,
-      [entity_id, shareholder_id, share_class_id, Number(quantity), serial_number]
+      [entity_id, shareholder_id, Number(quantity), serial_number]
     );
 
     await pool.query(
@@ -358,7 +342,6 @@ certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
         c.serial_number,
         e.legal_name AS issuing_company,
         s.legal_name AS shareholder_name,
-        sc.class_name AS share_class,
         c.quantity,
         c.issue_date,
         c.status,
@@ -370,7 +353,6 @@ certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
       FROM share_certificate c
       JOIN entity e ON e.entity_id = c.entity_id
       JOIN shareholder s ON s.shareholder_id = c.shareholder_id
-      JOIN share_class sc ON sc.share_class_id = c.share_class_id
       WHERE c.certificate_id = $1
       LIMIT 1
       `,
@@ -410,7 +392,6 @@ certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
         serial_number: certificate.serial_number,
         issuing_company: certificate.issuing_company,
         shareholder_name: certificate.shareholder_name,
-        share_class: certificate.share_class,
         quantity: certificate.quantity,
         issue_date: certificate.issue_date,
         status: certificate.status,
@@ -452,7 +433,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         c.serial_number,
         e.legal_name AS issuing_company,
         s.legal_name AS shareholder_name,
-        sc.class_name AS share_class,
         c.quantity,
         c.issue_date,
         c.status,
@@ -464,7 +444,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       FROM share_certificate c
       JOIN entity e ON e.entity_id = c.entity_id
       JOIN shareholder s ON s.shareholder_id = c.shareholder_id
-      JOIN share_class sc ON sc.share_class_id = c.share_class_id
       WHERE c.certificate_id = $1
       LIMIT 1
       `,
@@ -525,370 +504,206 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
 
-    *{ box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #d1cfc8;
+      background: #c8c5bd;
       font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-      padding: 32px 24px 48px;
+      padding: 20px 16px 32px;
       color: #1a1a2e;
     }
 
-    /* ── Outer envelope ── */
     .page {
-      max-width: 820px;
+      width: 190mm;
       margin: 0 auto;
       background: #fffef9;
-      box-shadow: 0 32px 96px rgba(0,0,0,0.28);
+      box-shadow: 0 24px 72px rgba(0,0,0,0.26);
       position: relative;
       overflow: hidden;
     }
 
-    /* Decorative corner ornaments via pseudo-element border trick */
     .border-outer {
-      margin: 18px;
-      border: 2.5px solid #b8973a;
-      padding: 14px;
-    }
-
-    .border-inner {
-      border: 1px solid #b8973a;
-      padding: 36px 40px 32px;
+      margin: 10px;
+      border: 2px solid #b8973a;
+      padding: 8px;
       position: relative;
     }
+    .border-outer::before { content: '◆'; position: absolute; top: -6px; left: -6px; color: #b8973a; font-size: 9px; line-height: 1; }
+    .border-outer::after  { content: '◆'; position: absolute; bottom: -6px; right: -6px; color: #b8973a; font-size: 9px; line-height: 1; }
 
-    /* Corner diamonds */
-    .border-outer::before,
-    .border-outer::after,
-    .border-inner::before,
-    .border-inner::after {
-      content: '◆';
-      position: absolute;
-      color: #b8973a;
-      font-size: 10px;
-      line-height: 1;
+    .border-inner {
+      border: 0.75px solid #b8973a;
+      padding: 18px 24px 16px;
+      position: relative;
     }
-    .border-outer::before { top: -7px; left: -7px; }
-    .border-outer::after  { bottom: -7px; right: -7px; }
-    .border-inner::before { top: -7px; left: -7px; }
-    .border-inner::after  { bottom: -7px; right: -7px; }
+    .border-inner::before { content: '◆'; position: absolute; top: -6px; left: -6px; color: #b8973a; font-size: 9px; line-height: 1; }
+    .border-inner::after  { content: '◆'; position: absolute; bottom: -6px; right: -6px; color: #b8973a; font-size: 9px; line-height: 1; }
 
-    /* ── Watermark ── */
     .watermark {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%) rotate(-35deg);
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 110px;
+      font-size: 90px;
       font-weight: 700;
       letter-spacing: 0.12em;
       color: ${watermarkColor};
-      -webkit-text-stroke: 3px ${watermarkStroke};
-      text-stroke: 3px ${watermarkStroke};
-      opacity: 0.55;
+      -webkit-text-stroke: 2px ${watermarkStroke};
+      opacity: 0.5;
       pointer-events: none;
       user-select: none;
       white-space: nowrap;
       z-index: 2;
     }
 
-    /* ── Header ── */
+    /* Digaf logo SVG inline styles — prefixed to avoid conflicts */
+    .dg-c1 { fill: url(#dg-lg1); }
+    .dg-c1, .dg-c2, .dg-c3 { stroke-width: 0px; }
+    .dg-c2 { fill: #04072a; }
+    .dg-c3 { fill: url(#dg-lg2); }
+
     .cert-header {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 20px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #1a2e4a;
-    }
-
-    .org-block {}
-
-    .org-emblem {
-      display: flex;
       align-items: center;
-      gap: 14px;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid #1a2e4a;
     }
 
-    .emblem-circle {
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      background: #1a2e4a;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .emblem-circle svg { display: block; }
-
-    .org-name {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: #1a2e4a;
-      line-height: 1.2;
-    }
+    .org-logo { height: 36px; width: auto; display: block; flex-shrink: 0; }
 
     .org-sub {
-      font-size: 11px;
+      font-size: 9px;
       color: #64748b;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 4px;
+      letter-spacing: 0.07em;
+      margin-top: 2px;
     }
 
-    .cert-number-block {
-      text-align: right;
-      flex-shrink: 0;
-    }
+    .cert-number-block { text-align: right; flex-shrink: 0; }
+    .cert-number-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; }
+    .cert-number-value { font-family: 'EB Garamond', Georgia, serif; font-size: 16px; font-weight: 700; color: #1a2e4a; margin-top: 2px; }
 
-    .cert-number-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #64748b;
-    }
-
-    .cert-number-value {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 20px;
-      font-weight: 700;
-      color: #1a2e4a;
-      margin-top: 3px;
-    }
-
-    /* ── Title block ── */
     .title-block {
       text-align: center;
-      padding: 24px 0 18px;
-      border-bottom: 1px solid #e2d8c0;
+      padding: 10px 0 8px;
+      border-bottom: 0.75px solid #e2d8c0;
     }
-
     .cert-title {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 38px;
+      font-size: 28px;
       font-weight: 700;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: #1a2e4a;
       line-height: 1;
     }
-
     .cert-subtitle {
-      font-size: 12px;
-      letter-spacing: 0.22em;
+      font-size: 9px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       color: #b8973a;
-      margin-top: 7px;
+      margin-top: 4px;
     }
 
-    /* ── Certifying text ── */
-    .certifies-block {
-      text-align: center;
-      padding: 22px 20px 10px;
-    }
-
-    .certifies-intro {
-      font-size: 13px;
-      color: #475569;
-      line-height: 1.7;
-      font-style: italic;
-    }
-
+    .certifies-block { text-align: center; padding: 10px 16px 6px; }
+    .certifies-intro { font-size: 11px; color: #475569; font-style: italic; }
     .shareholder-name {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 30px;
+      font-size: 24px;
       font-weight: 700;
       color: #1a2e4a;
-      margin: 10px 0 4px;
-      line-height: 1.2;
+      margin: 5px 0 3px;
+      line-height: 1.15;
     }
-
     .certifies-body {
-      font-size: 13px;
+      font-size: 10.5px;
       color: #475569;
-      line-height: 1.7;
-      max-width: 560px;
+      line-height: 1.55;
+      max-width: 480px;
       margin: 0 auto;
       font-style: italic;
     }
 
-    /* ── Data fields ── */
+    .ornament { text-align: center; color: #b8973a; font-size: 13px; letter-spacing: 0.4em; margin: 5px 0 2px; }
+
     .fields-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 0;
-      margin: 20px 0;
-      border: 1px solid #ddd6c0;
+      margin: 8px 0;
+      border: 0.75px solid #ddd6c0;
     }
-
     .field {
-      padding: 13px 16px;
-      border-right: 1px solid #ddd6c0;
-      border-bottom: 1px solid #ddd6c0;
+      padding: 7px 10px;
+      border-right: 0.75px solid #ddd6c0;
+      border-bottom: 0.75px solid #ddd6c0;
     }
+    .field:nth-child(4n) { border-right: none; }
+    .field:nth-last-child(-n+4) { border-bottom: none; }
+    .field-label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.1em; color: #92836a; font-weight: 700; margin-bottom: 3px; }
+    .field-value { font-size: 12px; font-weight: 700; color: #1a2e4a; line-height: 1.2; overflow-wrap: anywhere; }
+    .status-issued  { color: #166534; }
+    .status-draft   { color: #92400e; }
+    .status-revoked { color: #991b1b; }
 
-    .field:nth-child(3n) { border-right: none; }
-    .field:nth-last-child(-n+3) { border-bottom: none; }
-
-    .field-label {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #92836a;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
-
-    .field-value {
-      font-size: 14px;
-      font-weight: 700;
-      color: #1a2e4a;
-      line-height: 1.3;
-      overflow-wrap: anywhere;
-    }
-
-    .field-value.mono {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      font-weight: 400;
-      word-break: break-all;
-    }
-
-    .status-issued   { color: #166534; }
-    .status-draft    { color: #92400e; }
-    .status-revoked  { color: #991b1b; }
-
-    /* ── Divider ornament ── */
-    .ornament {
-      text-align: center;
-      color: #b8973a;
-      font-size: 18px;
-      letter-spacing: 0.4em;
-      margin: 4px 0;
-    }
-
-    /* ── Signatures ── */
     .signatures {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 20px;
-      margin-top: 22px;
-      padding-top: 20px;
-      border-top: 1px solid #e2d8c0;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 0.75px solid #e2d8c0;
     }
-
     .sig-block { text-align: center; }
+    .sig-line { border-bottom: 0.75px solid #1a2e4a; height: 26px; margin-bottom: 4px; }
+    .sig-label { font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
+    .sig-title { font-size: 9px; color: #1a2e4a; font-weight: 600; margin-top: 1px; }
 
-    .sig-line {
-      border-bottom: 1px solid #1a2e4a;
-      height: 36px;
-      margin-bottom: 6px;
-    }
-
-    .sig-label {
-      font-size: 10px;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .sig-title {
-      font-size: 11px;
-      color: #1a2e4a;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    /* ── QR + Verification ── */
     .verification-row {
       display: flex;
       align-items: center;
-      gap: 20px;
-      margin-top: 20px;
-      padding: 16px;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 8px 10px;
       background: #f8f6f0;
-      border: 1px solid #e2d8c0;
+      border: 0.75px solid #e2d8c0;
     }
-
-    .qr-img {
-      width: 88px; height: 88px;
-      flex-shrink: 0;
-      border: 2px solid #ddd6c0;
-      background: #fff;
-      padding: 3px;
-    }
-
+    .qr-img { width: 64px; height: 64px; flex-shrink: 0; border: 1.5px solid #ddd6c0; background: #fff; padding: 2px; }
     .verify-text { flex: 1; min-width: 0; }
+    .verify-label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #92836a; font-weight: 700; margin-bottom: 2px; }
+    .verify-url { font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #1a2e4a; word-break: break-all; }
+    .verify-hash { margin-top: 4px; }
+    .verify-hash-val { font-family: 'Courier New', Courier, monospace; font-size: 8px; color: #64748b; word-break: break-all; line-height: 1.4; }
 
-    .verify-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #92836a;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .verify-url {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      color: #1a2e4a;
-      word-break: break-all;
-    }
-
-    .verify-hash {
-      margin-top: 6px;
-    }
-
-    .verify-hash-val {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 10px;
-      color: #64748b;
-      word-break: break-all;
-      line-height: 1.5;
-    }
-
-    /* ── Footer ── */
     .cert-footer {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #e2d8c0;
+      margin-top: 8px;
+      padding-top: 7px;
+      border-top: 0.75px solid #e2d8c0;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      gap: 12px;
+      gap: 10px;
     }
+    .footer-legal { font-size: 7.5px; color: #92836a; line-height: 1.5; max-width: 420px; }
+    .footer-reg { text-align: right; font-size: 7.5px; color: #92836a; flex-shrink: 0; line-height: 1.5; }
 
-    .footer-legal {
-      font-size: 9.5px;
-      color: #92836a;
-      line-height: 1.6;
-      max-width: 480px;
-    }
-
-    .footer-reg {
-      text-align: right;
-      font-size: 9.5px;
-      color: #92836a;
-      flex-shrink: 0;
-    }
-
-    /* ── Print ── */
     .print-hint {
-      max-width: 820px;
-      margin: 14px auto 0;
+      width: 190mm;
+      margin: 10px auto 0;
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
       color: #64748b;
     }
 
     @media print {
       body { background: #fff; padding: 0; }
-      .page { box-shadow: none; }
+      .page { box-shadow: none; width: 100%; }
       .print-hint { display: none; }
     }
 
-    @page { margin: 10mm; size: A4; }
+    @page { margin: 8mm; size: A4 portrait; }
   </style>
 </head>
 <body>
@@ -900,20 +715,28 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <!-- Header -->
         <header class="cert-header">
-          <div class="org-block">
-            <div class="org-emblem">
-              <div class="emblem-circle">
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="13" stroke="#b8973a" stroke-width="1.5" fill="none"/>
-                  <path d="M9 15 L15 8 L21 15 L15 22 Z" fill="#b8973a" opacity="0.9"/>
-                  <circle cx="15" cy="15" r="3" fill="#fffef9"/>
-                </svg>
-              </div>
-              <div>
-                <p class="org-name">Digaf Microcredit Provider SC</p>
-                <p class="org-sub">Addis Ababa, Ethiopia &nbsp;·&nbsp; Authorised Under NBE Directive</p>
-              </div>
-            </div>
+          <div>
+            <svg class="org-logo" viewBox="0 0 448 336" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <defs>
+                <linearGradient id="dg-lg1" x1="56.9" y1="247.7" x2="163.9" y2="131.3" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#771bfa"/>
+                  <stop offset="1" stop-color="#faf3ee"/>
+                </linearGradient>
+                <linearGradient id="dg-lg2" x1="39.2" y1="231.5" x2="146.3" y2="115" xlink:href="#dg-lg1"/>
+              </defs>
+              <g>
+                <path class="dg-c2" d="M199.9,192.7v-50h21.8c13.3,0,23.9,11.4,23.9,25.1s-10.7,24.9-23.9,24.9h-21.8ZM208.7,183.8h12.3c8.9,0,15.8-7.3,15.8-16.1s-6.8-16.2-15.3-16.2h-12.8v32.3Z"/>
+                <path class="dg-c2" d="M248.6,148.2c0-3.2,2.3-5.5,5.5-5.5s5.5,2.3,5.5,5.5-2.3,5.5-5.5,5.5-5.5-2.3-5.5-5.5ZM249.9,192.7v-35h8.8v35h-8.8Z"/>
+                <path class="dg-c2" d="M304,175.1c0-9.9,7.6-18.2,17.7-18.2s7.6,1.3,9.9,3.9v-3.2h8.8v35h-8.8v-3.3c-1.9,2.2-5.5,4-9.9,4-10.1,0-17.7-7.7-17.7-18.3ZM331.3,175.3c0-4.9-4-9.6-9.6-9.6s-9,4.6-9,9.4,3.8,9.4,9,9.5c5.3.1,9.6-3.6,9.6-9.3Z"/>
+                <path class="dg-c2" d="M290.9,157.7v3.5c-2.2-2.4-5.7-4.2-9.8-4.2-10.1,0-17.8,8.5-17.8,18.1s7.7,18.3,17.8,18.3,7-1.3,9.6-3.8v1.7c0,4.9-4.6,7.6-9.8,7.6,0,0,0,0,0,0v8.9s0,0,.1,0c10.7,0,18.7-7.2,18.7-18.6v-31.5h-8.8ZM281.1,184.6c-5.2,0-9.1-4.1-9.1-9.5s3.9-9.4,9.1-9.4,9.8,4,9.8,9.1-4,9.8-9.8,9.8Z"/>
+                <path class="dg-c2" d="M362.1,142.7s-5.2-.3-8.6,3.1c-3.4,3.4-3.6,8.7-3.6,8.7h0c0,.5,0,1.1,0,1.7v1.5h-4.4v8.5h4.4l-.3,26.5h8.9l.3-26.5h7.9v-8.5h-7.9v-1.5c0-1.3.4-2.4,1.3-3.3.8-.8,2-1.2,3.2-1.3h3.4v-8.8h-4.6Z"/>
+              </g>
+              <g>
+                <path class="dg-c1" d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
+                <rect class="dg-c3" x="64.7" y="179.6" width="23.2" height="23.2"/>
+              </g>
+            </svg>
+            <p class="org-sub">Addis Ababa, Ethiopia &nbsp;·&nbsp; Authorised Under NBE Directive</p>
           </div>
           <div class="cert-number-block">
             <p class="cert-number-label">Certificate No.</p>
@@ -941,15 +764,11 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <div class="ornament">— ◆ —</div>
 
-        <!-- Fields -->
+        <!-- Fields: 4-column grid, 1 row -->
         <div class="fields-grid">
           <div class="field">
             <p class="field-label">Shareholder Name</p>
             <p class="field-value">${escapeHtml(certificate.shareholder_name)}</p>
-          </div>
-          <div class="field">
-            <p class="field-label">Share Class</p>
-            <p class="field-value">${escapeHtml(certificate.share_class)}</p>
           </div>
           <div class="field">
             <p class="field-label">Number of Shares</p>
@@ -962,10 +781,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           <div class="field">
             <p class="field-label">Certificate Status</p>
             <p class="field-value status-${escapeHtml(certificate.status)}">${escapeHtml(certificate.status.toUpperCase())}</p>
-          </div>
-          <div class="field">
-            <p class="field-label">Issuing Entity</p>
-            <p class="field-value">${escapeHtml(certificate.issuing_company)}</p>
           </div>
         </div>
 
@@ -990,11 +805,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <!-- QR + Verification -->
         <div class="verification-row">
-          <img
-            class="qr-img"
-            src="${qrDataUri}"
-            alt="Certificate verification QR code"
-          />
+          <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
           <div class="verify-text">
             <p class="verify-label">Digital Verification</p>
             <p class="verify-url">${escapeHtml(verificationUrl)}</p>
@@ -1011,7 +822,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           <p class="footer-legal">
             This certificate is issued pursuant to the Articles of Association of Digaf Microcredit Provider Share Company.
             Transfer of shares is subject to approval under the Company's share transfer policy and applicable Ethiopian Commercial Code provisions.
-            This document should be retained in a safe place. Loss must be reported to the Company Secretary immediately.
+            Retain in a safe place — loss must be reported to the Company Secretary immediately.
           </p>
           <div class="footer-reg">
             <p>Registered: Addis Ababa, Ethiopia</p>
@@ -1019,9 +830,9 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           </div>
         </div>
 
-      </div><!-- border-inner -->
-    </div><!-- border-outer -->
-  </div><!-- page -->
+      </div>
+    </div>
+  </div>
 
   <p class="print-hint">Use <strong>File → Print → Save as PDF</strong> to generate a printable certificate.</p>
 </body>
@@ -1219,7 +1030,6 @@ certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
         c.entity_id,
         c.serial_number,
         c.shareholder_id,
-        c.share_class_id,
         c.quantity,
         c.issue_date,
         e.legal_name AS issuing_authority
@@ -1255,7 +1065,6 @@ certificateRoutes.post("/:certificateId/generate-hash", async (req, res) => {
       entityId: certificate.entity_id,
       serialNumber: certificate.serial_number,
       shareholderId: certificate.shareholder_id,
-      shareClassId: certificate.share_class_id,
       quantity: certificate.quantity,
       issueDate,
       issuingAuthority: certificate.issuing_authority,
@@ -1348,7 +1157,6 @@ certificateRoutes.post("/:certificateId/issue", async (req, res) => {
       entityId: cert.entity_id,
       serialNumber: cert.serial_number,
       shareholderId: cert.shareholder_id,
-      shareClassId: cert.share_class_id,
       quantity: cert.quantity,
       issueDate,
       issuingAuthority: cert.issuing_authority,

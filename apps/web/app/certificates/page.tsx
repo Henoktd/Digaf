@@ -3,7 +3,6 @@ import {
   fetchCertificateRenderData,
   fetchCertificates,
   fetchShareholders,
-  fetchShareClasses,
   getCertificateQrSvgUrl,
 } from "@/src/lib/api";
 import { CreateCertificateForm } from "@/src/components/CreateCertificateForm";
@@ -21,7 +20,6 @@ type Certificate = {
   certificate_id: string;
   serial_number: string;
   shareholder_name: string;
-  share_class: string;
   quantity: string;
   issue_date: string | null;
   status: string;
@@ -44,7 +42,6 @@ type CertificateRenderData = {
   serial_number: string;
   issuing_company: string;
   shareholder_name: string;
-  share_class: string;
   quantity: string;
   issue_date: string | null;
   status: string;
@@ -83,15 +80,13 @@ export default async function CertificatesPage({
   const params = searchParams ? await searchParams : {};
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const token = await getToken();
-  const [response, shareholdersResponse, shareClassesResponse] = await Promise.all([
+  const [response, shareholdersResponse] = await Promise.all([
     fetchCertificates(token ?? undefined, page, 50),
     fetchShareholders(token ?? undefined),
-    fetchShareClasses(token ?? undefined),
   ]);
   const certificates: Certificate[] = response.data;
   const total: number = response.total ?? certificates.length;
   const shareholders = (shareholdersResponse.data ?? []) as { shareholder_id: string; legal_name: string }[];
-  const shareClasses = (shareClassesResponse.data ?? []) as { share_class_id: string; class_name: string }[];
   const firstCertificate = certificates[0];
   const [eventResponse, renderDataResponse] = firstCertificate
     ? await Promise.all([
@@ -119,7 +114,7 @@ export default async function CertificatesPage({
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
             <h2 className="mb-4 text-lg font-bold text-slate-900">Create New Certificate</h2>
-            <CreateCertificateForm shareholders={shareholders} shareClasses={shareClasses} />
+            <CreateCertificateForm shareholders={shareholders} />
           </div>
 
           <CertificatesTable certificates={certificates} />
@@ -170,13 +165,6 @@ export default async function CertificatesPage({
                   <dt className="text-sm text-slate-500">Shareholder</dt>
                   <dd className="mt-1 break-words font-semibold">
                     {renderData.shareholder_name}
-                  </dd>
-                </div>
-
-                <div className="rounded-xl bg-white p-4">
-                  <dt className="text-sm text-slate-500">Share Class</dt>
-                  <dd className="mt-1 font-semibold">
-                    {renderData.share_class}
                   </dd>
                 </div>
 

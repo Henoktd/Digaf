@@ -10,7 +10,6 @@ type CapTableRow = {
   shareholder_id: string;
   shareholder_name: string;
   shareholder_type: string;
-  share_class: string;
   quantity: string;
   pledged_quantity: string;
   encumbered_quantity: string;
@@ -32,7 +31,7 @@ export default async function CapTablePage() {
         <PageHeader
           variant="page"
           title="Cap Table"
-          description="View ownership, share classes, concentration, pledged shares, encumbered shares, and historical snapshots."
+          description="View ownership, concentration, pledged shares, encumbered shares, and historical snapshots."
           badge={
             <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
               {totalShares} Total Shares
@@ -59,7 +58,6 @@ export default async function CapTablePage() {
                 <tr>
                   <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Shareholder</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Type</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Share Class</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Quantity</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Ownership %</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Pledged</th>
@@ -76,9 +74,6 @@ export default async function CapTablePage() {
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3 capitalize">
                       {row.shareholder_type}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      {row.share_class}
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
                       {row.quantity}

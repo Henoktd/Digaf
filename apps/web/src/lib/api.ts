@@ -1490,3 +1490,41 @@ export async function sendUserPasswordReset(
     token
   );
 }
+
+export async function inviteUser(
+  email: string,
+  role: string,
+  token?: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/users/invite`,
+    "POST",
+    { email, role },
+    "Failed to invite user",
+    token
+  );
+}
+
+export async function adminSetUserPassword(
+  userId: string,
+  password: string,
+  token?: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/users/${userId}/password`,
+    "PATCH",
+    { password },
+    "Failed to set password",
+    token
+  );
+}
+
+export async function deleteUser(userId: string, token?: string) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/users/${userId}`,
+    "DELETE",
+    {},
+    "Failed to delete user",
+    token
+  );
+}

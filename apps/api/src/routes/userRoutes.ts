@@ -4,6 +4,7 @@ import { requireRole, type ActorRole } from "../utils/roles";
 import {
   sendBadRequest,
   sendForbidden,
+  sendNotFound,
   sendServerError,
 } from "../utils/apiError";
 
@@ -37,7 +38,7 @@ function notConfigured(res: Parameters<typeof sendServerError>[0]) {
   );
 }
 
-// GET /api/users — list all auth users via RPC (avoids Admin API bug)
+// GET /api/users — list all auth users via RPC (avoids Admin API listUsers bug)
 userRoutes.get("/", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
   if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
@@ -46,14 +47,44 @@ userRoutes.get("/", async (req, res) => {
 
   try {
     const { data, error } = await supabaseAdmin.rpc("list_auth_users");
-
-    if (error) {
-      return sendServerError(res, "Failed to list users", error);
-    }
-
+    if (error) return sendServerError(res, "Failed to list users", error);
     res.json({ data: data ?? [] });
   } catch (error) {
     return sendServerError(res, "Failed to fetch users", error);
+  }
+});
+
+// POST /api/users/invite — invite a new user by email and set their role
+userRoutes.post("/invite", async (req, res) => {
+  const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
+  if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
+
+  if (!supabaseAdmin) return notConfigured(res);
+
+  const { email, role } = req.body ?? {};
+  if (!email || typeof email !== "string") return sendBadRequest(res, "email is required");
+  if (!role || typeof role !== "string") return sendBadRequest(res, "role is required");
+  if (!ALLOWED_ROLES.includes(role as ActorRole)) {
+    return sendBadRequest(res, `role must be one of: ${ALLOWED_ROLES.join(", ")}`);
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    if (error) return sendServerError(res, "Failed to invite user", error);
+
+    // Set governance role immediately after invite creation
+    const { error: roleError } = await supabaseAdmin.rpc("set_user_role", {
+      target_user_id: data.user.id,
+      new_role: role,
+    });
+    if (roleError) {
+      // User was created but role failed — not fatal, admin can change role manually
+      console.error("set_user_role after invite failed:", roleError);
+    }
+
+    res.json({ data: { id: data.user.id, email: data.user.email ?? null, role } });
+  } catch (error) {
+    return sendServerError(res, "Failed to invite user", error);
   }
 });
 
@@ -67,14 +98,9 @@ userRoutes.patch("/:id/role", async (req, res) => {
   const { id } = req.params;
   const { role } = req.body ?? {};
 
-  if (!role || typeof role !== "string") {
-    return sendBadRequest(res, "role is required");
-  }
+  if (!role || typeof role !== "string") return sendBadRequest(res, "role is required");
   if (!ALLOWED_ROLES.includes(role as ActorRole)) {
-    return sendBadRequest(
-      res,
-      `role must be one of: ${ALLOWED_ROLES.join(", ")}`
-    );
+    return sendBadRequest(res, `role must be one of: ${ALLOWED_ROLES.join(", ")}`);
   }
 
   try {
@@ -82,14 +108,38 @@ userRoutes.patch("/:id/role", async (req, res) => {
       target_user_id: id,
       new_role: role,
     });
-
-    if (error) {
-      return sendServerError(res, "Failed to update user role", error);
-    }
-
+    if (error) return sendServerError(res, "Failed to update user role", error);
     res.json({ data: { id, role } });
   } catch (error) {
     return sendServerError(res, "Failed to update user role", error);
+  }
+});
+
+// PATCH /api/users/:id/password — admin sets a new password directly for a user
+userRoutes.patch("/:id/password", async (req, res) => {
+  const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
+  if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
+
+  if (!supabaseAdmin) return notConfigured(res);
+
+  const { id } = req.params;
+  const { password } = req.body ?? {};
+
+  if (!password || typeof password !== "string") return sendBadRequest(res, "password is required");
+  if (password.length < 8) return sendBadRequest(res, "password must be at least 8 characters");
+
+  try {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+      password,
+      email_confirm: true,
+    });
+    if (error) {
+      if (error.message?.toLowerCase().includes("not found")) return sendNotFound(res, "User not found");
+      return sendServerError(res, "Failed to set password", error);
+    }
+    res.json({ data: { id, passwordSet: true } });
+  } catch (error) {
+    return sendServerError(res, "Failed to set password", error);
   }
 });
 
@@ -101,17 +151,34 @@ userRoutes.post("/:id/send-reset", async (req, res) => {
   if (!supabaseAdmin) return notConfigured(res);
 
   const { email } = req.body ?? {};
-  if (!email || typeof email !== "string") {
-    return sendBadRequest(res, "email is required");
-  }
+  if (!email || typeof email !== "string") return sendBadRequest(res, "email is required");
 
   try {
     const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email);
-    if (error) {
-      return sendServerError(res, "Failed to send password reset email", error);
-    }
+    if (error) return sendServerError(res, "Failed to send password reset email", error);
     res.json({ data: { sent: true } });
   } catch (error) {
     return sendServerError(res, "Failed to send password reset email", error);
+  }
+});
+
+// DELETE /api/users/:id — permanently remove a user from auth
+userRoutes.delete("/:id", async (req, res) => {
+  const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
+  if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
+
+  if (!supabaseAdmin) return notConfigured(res);
+
+  const { id } = req.params;
+
+  try {
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+    if (error) {
+      if (error.message?.toLowerCase().includes("not found")) return sendNotFound(res, "User not found");
+      return sendServerError(res, "Failed to delete user", error);
+    }
+    res.json({ data: { id, deleted: true } });
+  } catch (error) {
+    return sendServerError(res, "Failed to delete user", error);
   }
 });

@@ -41,6 +41,9 @@ function buildNavItems(role: string | undefined): NavItem[] {
     ...(isAdmin
       ? [{ type: "link" as const, href: "/users", label: "User Management" }]
       : []),
+
+    { type: "section", label: "Account" },
+    { type: "link", href: "/settings", label: "Settings" },
   ];
 }
 
@@ -93,14 +96,22 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           </div>
-          <form action={logout} className="mt-3">
-            <button
-              type="submit"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-xs font-medium text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+          <div className="mt-3 flex gap-2">
+            <Link
+              href="/settings"
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-medium text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
             >
-              Sign out
-            </button>
-          </form>
+              Settings
+            </Link>
+            <form action={logout} className="flex-1">
+              <button
+                type="submit"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
 

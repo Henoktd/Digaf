@@ -4,7 +4,6 @@ import { requireRole, type ActorRole } from "../utils/roles";
 import {
   sendBadRequest,
   sendForbidden,
-  sendNotFound,
   sendServerError,
 } from "../utils/apiError";
 
@@ -115,7 +114,7 @@ userRoutes.patch("/:id/role", async (req, res) => {
   }
 });
 
-// PATCH /api/users/:id/password — admin sets a new password directly for a user
+// PATCH /api/users/:id/password — admin sets password directly via RPC (avoids Admin API bug)
 userRoutes.patch("/:id/password", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
   if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
@@ -129,14 +128,11 @@ userRoutes.patch("/:id/password", async (req, res) => {
   if (password.length < 8) return sendBadRequest(res, "password must be at least 8 characters");
 
   try {
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
-      password,
-      email_confirm: true,
+    const { error } = await supabaseAdmin.rpc("set_user_password", {
+      target_user_id: id,
+      new_password: password,
     });
-    if (error) {
-      if (error.message?.toLowerCase().includes("not found")) return sendNotFound(res, "User not found");
-      return sendServerError(res, "Failed to set password", error);
-    }
+    if (error) return sendServerError(res, "Failed to set password", error);
     res.json({ data: { id, passwordSet: true } });
   } catch (error) {
     return sendServerError(res, "Failed to set password", error);
@@ -162,7 +158,7 @@ userRoutes.post("/:id/send-reset", async (req, res) => {
   }
 });
 
-// DELETE /api/users/:id — permanently remove a user from auth
+// DELETE /api/users/:id — permanently remove a user via RPC (avoids Admin API bug)
 userRoutes.delete("/:id", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
   if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
@@ -172,11 +168,10 @@ userRoutes.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
-    if (error) {
-      if (error.message?.toLowerCase().includes("not found")) return sendNotFound(res, "User not found");
-      return sendServerError(res, "Failed to delete user", error);
-    }
+    const { error } = await supabaseAdmin.rpc("delete_auth_user", {
+      target_user_id: id,
+    });
+    if (error) return sendServerError(res, "Failed to delete user", error);
     res.json({ data: { id, deleted: true } });
   } catch (error) {
     return sendServerError(res, "Failed to delete user", error);

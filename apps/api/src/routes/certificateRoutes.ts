@@ -577,7 +577,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       color: #1a1a2e;
     }
 
-    .am { font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif; }
+    .am { font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif; display: block; }
 
     .page {
       width: 190mm;
@@ -589,22 +589,22 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     }
 
     .border-outer {
-      margin: 10px;
-      border: 2px solid #6d28d9;
-      padding: 8px;
+      margin: 12px;
+      border: 2.5px solid #6d28d9;
+      padding: 9px;
       position: relative;
     }
-    .border-outer::before { content: '◆'; position: absolute; top: -6px; left: -6px; color: #6d28d9; font-size: 9px; line-height: 1; }
-    .border-outer::after  { content: '◆'; position: absolute; bottom: -6px; right: -6px; color: #6d28d9; font-size: 9px; line-height: 1; }
+    .border-outer::before { content: '◆'; position: absolute; top: -7px; left: -7px; color: #771bfa; font-size: 11px; line-height: 1; }
+    .border-outer::after  { content: '◆'; position: absolute; bottom: -7px; right: -7px; color: #771bfa; font-size: 11px; line-height: 1; }
 
     .border-inner {
-      border: 0.75px solid #6d28d9;
-      padding: 14px 22px 14px;
+      border: 0.75px solid #b39ce6;
+      padding: 22px 30px 24px;
       position: relative;
       overflow: hidden;
     }
-    .border-inner::before { content: '◆'; position: absolute; top: -6px; left: -6px; color: #6d28d9; font-size: 9px; line-height: 1; z-index: 3; }
-    .border-inner::after  { content: '◆'; position: absolute; bottom: -6px; right: -6px; color: #6d28d9; font-size: 9px; line-height: 1; z-index: 3; }
+    .border-inner::before { content: '◆'; position: absolute; top: -7px; left: -7px; color: #771bfa; font-size: 11px; line-height: 1; z-index: 3; }
+    .border-inner::after  { content: '◆'; position: absolute; bottom: -7px; right: -7px; color: #771bfa; font-size: 11px; line-height: 1; z-index: 3; }
 
     .icon-watermark-pattern {
       position: absolute;
@@ -644,86 +644,93 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .dg-c2 { fill: #04072a; }
     .dg-c3 { fill: url(#dg-lg2); }
 
-    .cert-header {
+    .cert-header { text-align: center; padding-bottom: 4px; }
+    .org-logo { height: 62px; width: auto; display: block; margin: 0 auto; }
+    .org-sub-am { font-size: 10px; color: #475569; margin-top: 8px; }
+    .org-sub-en { font-size: 8.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+    .title-block {
+      text-align: center;
+      padding: 14px 0 12px;
+      margin-top: 10px;
+      border-top: 1px solid #e5dff5;
+      border-bottom: 1px solid #e5dff5;
+    }
+    .title-am-big { font-size: 26px; font-weight: 700; color: #1a2e4a; line-height: 1.25; }
+    .title-en-big { font-size: 13px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #771bfa; margin-top: 5px; }
+    .entity-am-sub { font-size: 11px; font-weight: 600; color: #1a2e4a; margin-top: 10px; }
+    .entity-en-sub { font-size: 9px; font-weight: 600; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+
+    .ornament { text-align: center; color: #771bfa; font-size: 13px; letter-spacing: 0.45em; margin: 10px 0; }
+
+    .info-grid {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 8px;
-      padding-bottom: 8px;
-      border-bottom: 1.5px solid #6d28d9;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin: 10px 0;
+      border: 0.75px solid #e0d5f5;
+      border-radius: 2px;
     }
-
-    .org-logo { height: 32px; width: auto; display: block; }
-
-    .bilingual-title { text-align: center; }
-    .title-am { font-size: 13px; font-weight: 700; color: #1a2e4a; line-height: 1.3; }
-    .title-en { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6d28d9; margin-top: 1px; }
-
-    .entity-name-block { text-align: right; }
-    .entity-am { font-size: 9.5px; font-weight: 600; color: #1a2e4a; line-height: 1.3; }
-    .entity-en { font-size: 8px; font-weight: 600; color: #64748b; letter-spacing: 0.02em; margin-top: 1px; }
-
-    .top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      margin-top: 8px;
-      padding-bottom: 8px;
-      border-bottom: 0.75px solid #e5dff5;
-    }
-    .top-row-item { font-size: 9.5px; }
-    .top-row-label { color: #6d28d9; font-weight: 600; }
-    .top-row-label .am { font-size: 9px; }
-    .top-row-value { font-weight: 700; color: #1a2e4a; font-size: 11px; margin-top: 1px; }
-
-    .license-paragraph {
-      margin-top: 8px;
-      padding: 7px 10px;
-      background: #faf8ff;
-      border: 0.75px solid #e5dff5;
+    .info-field {
+      padding: 9px 11px;
+      border-right: 0.75px solid #e0d5f5;
       text-align: center;
     }
-    .license-paragraph .am { font-size: 8.5px; color: #1a2e4a; line-height: 1.55; }
-    .license-paragraph .en { font-size: 7.8px; color: #475569; line-height: 1.5; margin-top: 4px; font-style: italic; }
+    .info-field:last-child { border-right: none; }
+    .info-field-label-am { font-size: 8.5px; color: #475569; font-weight: 600; }
+    .info-field-label-en { font-size: 7px; text-transform: uppercase; letter-spacing: 0.08em; color: #9381c4; font-weight: 700; margin-top: 1px; }
+    .info-field-value { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; font-weight: 700; color: #1a2e4a; margin-top: 4px; overflow-wrap: anywhere; }
+
+    .license-paragraph {
+      margin: 10px 0;
+      padding: 14px 20px;
+      background: #faf8ff;
+      border: 0.75px solid #e5dff5;
+      border-radius: 2px;
+      text-align: center;
+    }
+    .license-paragraph .am { font-size: 10px; color: #1a2e4a; line-height: 1.7; }
+    .license-paragraph .en { font-size: 9px; color: #64748b; line-height: 1.6; margin-top: 8px; font-style: italic; }
 
     .details-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
-      margin-top: 8px;
-      border: 0.75px solid #ddd6c0;
+      margin: 10px 0;
+      border: 0.75px solid #e0d5f5;
     }
-    .details-col { padding: 6px 10px; }
-    .details-col:first-child { border-right: 0.75px solid #ddd6c0; }
-    .details-col-title { font-size: 8px; font-weight: 700; color: #6d28d9; margin-bottom: 4px; }
-    .details-col-title .am { font-size: 8px; }
-    .detail-row { display: flex; justify-content: space-between; gap: 6px; padding: 2px 0; font-size: 9px; }
-    .detail-row-label { color: #64748b; }
-    .detail-row-label .am { color: #475569; }
-    .detail-row-value { font-weight: 700; color: #1a2e4a; text-align: right; white-space: nowrap; }
+    .details-col { padding: 12px 16px; }
+    .details-col:first-child { border-right: 0.75px solid #e0d5f5; }
+    .details-col-title-am { font-size: 9.5px; font-weight: 700; color: #1a2e4a; }
+    .details-col-title-en { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #771bfa; margin-top: 1px; margin-bottom: 8px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 0.5px dotted #e5dff5; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-label-am { font-size: 9px; color: #475569; }
+    .detail-row-label-en { font-size: 7.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+    .detail-row-value { font-weight: 700; color: #1a2e4a; text-align: right; white-space: nowrap; font-size: 10.5px; flex-shrink: 0; }
 
     .par-value-row {
-      margin-top: 6px;
-      padding: 6px 10px;
-      border: 0.75px solid #ddd6c0;
+      margin: 10px 0;
+      padding: 10px 16px;
+      border: 0.75px solid #e0d5f5;
+      background: #faf8ff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 9.5px;
     }
-    .par-value-label { color: #6d28d9; font-weight: 600; }
-    .par-value-value { font-weight: 700; color: #1a2e4a; font-size: 12px; }
+    .par-value-label-am { font-size: 10px; color: #1a2e4a; font-weight: 600; }
+    .par-value-label-en { font-size: 7.5px; color: #771bfa; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+    .par-value-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; color: #1a2e4a; font-size: 17px; }
 
-    .certifies-block { text-align: center; padding: 9px 10px 4px; }
-    .certifies-intro-am { font-size: 9.5px; color: #475569; }
-    .certifies-intro-en { font-size: 9px; color: #475569; font-style: italic; }
+    .certifies-block { text-align: center; padding: 14px 16px 8px; }
+    .certifies-intro-am { font-size: 11px; color: #475569; }
+    .certifies-intro-en { font-size: 9.5px; color: #94a3b8; font-style: italic; margin-top: 2px; }
     .shareholder-name {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 21px;
+      font-size: 28px;
       font-weight: 700;
       color: #1a2e4a;
-      margin: 4px 0 2px;
+      margin: 8px 0 4px;
       line-height: 1.15;
     }
 
@@ -731,37 +738,36 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 0;
-      margin: 6px 0;
-      border: 0.75px solid #ddd6c0;
+      margin: 10px 0;
+      border: 0.75px solid #e0d5f5;
     }
     .addr-field {
-      padding: 5px 6px;
-      border-right: 0.75px solid #ddd6c0;
+      padding: 9px 7px;
+      border-right: 0.75px solid #e0d5f5;
       text-align: center;
     }
     .addr-field:last-child { border-right: none; }
-    .addr-field-label { font-size: 6.5px; text-transform: uppercase; letter-spacing: 0.04em; color: #92836a; font-weight: 700; line-height: 1.3; }
-    .addr-field-label .am { font-size: 7px; display: block; }
-    .addr-field-value { font-size: 10px; font-weight: 700; color: #1a2e4a; margin-top: 2px; overflow-wrap: anywhere; }
+    .addr-field-label-am { font-size: 8px; color: #475569; font-weight: 600; }
+    .addr-field-label-en { font-size: 6.5px; text-transform: uppercase; letter-spacing: 0.04em; color: #9381c4; font-weight: 700; margin-top: 1px; }
+    .addr-field-value { font-size: 11px; font-weight: 700; color: #1a2e4a; margin-top: 4px; overflow-wrap: anywhere; }
 
     .transfer-note {
-      margin-top: 7px;
-      padding: 6px 9px;
+      margin: 10px 0;
+      padding: 10px 16px;
       background: #fdf5f5;
       border: 0.75px solid #f3dada;
+      border-radius: 2px;
       text-align: center;
     }
-    .transfer-note .am { font-size: 7.5px; color: #7f1d1d; line-height: 1.5; }
-    .transfer-note .en { font-size: 7px; color: #991b1b; line-height: 1.45; margin-top: 3px; font-style: italic; }
-
-    .ornament { text-align: center; color: #6d28d9; font-size: 11px; letter-spacing: 0.4em; margin: 4px 0; }
+    .transfer-note .am { font-size: 8.5px; color: #7f1d1d; line-height: 1.6; }
+    .transfer-note .en { font-size: 7.5px; color: #b45959; line-height: 1.55; margin-top: 4px; font-style: italic; }
 
     .status-banner {
       text-align: center;
-      margin-top: 6px;
-      font-size: 9px;
+      margin: 8px 0;
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
     .status-issued  { color: #166534; }
@@ -771,31 +777,31 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .signatures {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 0.75px solid #e2d8c0;
+      gap: 24px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 0.75px solid #e5dff5;
     }
     .sig-block { text-align: center; }
-    .sig-line { border-bottom: 0.75px solid #1a2e4a; height: 24px; margin-bottom: 4px; }
-    .sig-label-am { font-size: 9px; color: #1a2e4a; font-weight: 600; }
-    .sig-label-en { font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+    .sig-line { border-bottom: 0.75px solid #1a2e4a; height: 30px; margin-bottom: 6px; }
+    .sig-label-am { font-size: 10px; color: #1a2e4a; font-weight: 600; }
+    .sig-label-en { font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
 
     .verification-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-top: 9px;
-      padding: 7px 9px;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 10px 12px;
       background: #f8f6f0;
       border: 0.75px solid #e2d8c0;
     }
-    .qr-img { width: 52px; height: 52px; flex-shrink: 0; border: 1.5px solid #ddd6c0; background: #fff; padding: 2px; }
+    .qr-img { width: 56px; height: 56px; flex-shrink: 0; border: 1.5px solid #ddd6c0; background: #fff; padding: 2px; }
     .verify-text { flex: 1; min-width: 0; }
-    .verify-label { font-size: 7px; text-transform: uppercase; letter-spacing: 0.06em; color: #92836a; font-weight: 700; margin-bottom: 1px; }
-    .verify-url { font-family: 'Courier New', Courier, monospace; font-size: 8px; color: #1a2e4a; word-break: break-all; }
-    .verify-hash { margin-top: 3px; }
-    .verify-hash-val { font-family: 'Courier New', Courier, monospace; font-size: 7px; color: #64748b; word-break: break-all; line-height: 1.3; }
+    .verify-label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #92836a; font-weight: 700; margin-bottom: 2px; }
+    .verify-url { font-family: 'Courier New', Courier, monospace; font-size: 8.5px; color: #1a2e4a; word-break: break-all; }
+    .verify-hash { margin-top: 4px; }
+    .verify-hash-val { font-family: 'Courier New', Courier, monospace; font-size: 7.5px; color: #64748b; word-break: break-all; line-height: 1.4; }
 
     .print-hint {
       width: 190mm;
@@ -826,49 +832,57 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <!-- Header -->
         <header class="cert-header">
-          <div>
-            <svg class="org-logo" viewBox="0 0 448 336" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-              <defs>
-                <linearGradient id="dg-lg1" x1="56.9" y1="247.7" x2="163.9" y2="131.3" gradientUnits="userSpaceOnUse">
-                  <stop offset="0" stop-color="#771bfa"/>
-                  <stop offset="1" stop-color="#faf3ee"/>
-                </linearGradient>
-                <linearGradient id="dg-lg2" x1="39.2" y1="231.5" x2="146.3" y2="115" xlink:href="#dg-lg1"/>
-              </defs>
-              <g>
-                <path class="dg-c2" d="M199.9,192.7v-50h21.8c13.3,0,23.9,11.4,23.9,25.1s-10.7,24.9-23.9,24.9h-21.8ZM208.7,183.8h12.3c8.9,0,15.8-7.3,15.8-16.1s-6.8-16.2-15.3-16.2h-12.8v32.3Z"/>
-                <path class="dg-c2" d="M248.6,148.2c0-3.2,2.3-5.5,5.5-5.5s5.5,2.3,5.5,5.5-2.3,5.5-5.5,5.5-5.5-2.3-5.5-5.5ZM249.9,192.7v-35h8.8v35h-8.8Z"/>
-                <path class="dg-c2" d="M304,175.1c0-9.9,7.6-18.2,17.7-18.2s7.6,1.3,9.9,3.9v-3.2h8.8v35h-8.8v-3.3c-1.9,2.2-5.5,4-9.9,4-10.1,0-17.7-7.7-17.7-18.3ZM331.3,175.3c0-4.9-4-9.6-9.6-9.6s-9,4.6-9,9.4,3.8,9.4,9,9.5c5.3.1,9.6-3.6,9.6-9.3Z"/>
-                <path class="dg-c2" d="M290.9,157.7v3.5c-2.2-2.4-5.7-4.2-9.8-4.2-10.1,0-17.8,8.5-17.8,18.1s7.7,18.3,17.8,18.3,7-1.3,9.6-3.8v1.7c0,4.9-4.6,7.6-9.8,7.6,0,0,0,0,0,0v8.9s0,0,.1,0c10.7,0,18.7-7.2,18.7-18.6v-31.5h-8.8ZM281.1,184.6c-5.2,0-9.1-4.1-9.1-9.5s3.9-9.4,9.1-9.4,9.8,4,9.8,9.1-4,9.8-9.8,9.8Z"/>
-                <path class="dg-c2" d="M362.1,142.7s-5.2-.3-8.6,3.1c-3.4,3.4-3.6,8.7-3.6,8.7h0c0,.5,0,1.1,0,1.7v1.5h-4.4v8.5h4.4l-.3,26.5h8.9l.3-26.5h7.9v-8.5h-7.9v-1.5c0-1.3.4-2.4,1.3-3.3.8-.8,2-1.2,3.2-1.3h3.4v-8.8h-4.6Z"/>
-              </g>
-              <g>
-                <path class="dg-c1" d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
-                <rect class="dg-c3" x="64.7" y="179.6" width="23.2" height="23.2"/>
-              </g>
-            </svg>
-          </div>
-          <div class="bilingual-title">
-            <p class="title-am am">የአክሲዮን ምስክርነት</p>
-            <p class="title-en">Share Certificate</p>
-          </div>
-          <div class="entity-name-block">
-            <p class="entity-am am">ድጋፍ አነስተኛ የብድር አክሲዮን ማህበር አ/ማ</p>
-            <p class="entity-en">Digaf Micro Credit Provider S.Co</p>
-          </div>
+          <svg class="org-logo" viewBox="0 0 448 336" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+              <linearGradient id="dg-lg1" x1="56.9" y1="247.7" x2="163.9" y2="131.3" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#771bfa"/>
+                <stop offset="1" stop-color="#faf3ee"/>
+              </linearGradient>
+              <linearGradient id="dg-lg2" x1="39.2" y1="231.5" x2="146.3" y2="115" xlink:href="#dg-lg1"/>
+            </defs>
+            <g>
+              <path class="dg-c2" d="M199.9,192.7v-50h21.8c13.3,0,23.9,11.4,23.9,25.1s-10.7,24.9-23.9,24.9h-21.8ZM208.7,183.8h12.3c8.9,0,15.8-7.3,15.8-16.1s-6.8-16.2-15.3-16.2h-12.8v32.3Z"/>
+              <path class="dg-c2" d="M248.6,148.2c0-3.2,2.3-5.5,5.5-5.5s5.5,2.3,5.5,5.5-2.3,5.5-5.5,5.5-5.5-2.3-5.5-5.5ZM249.9,192.7v-35h8.8v35h-8.8Z"/>
+              <path class="dg-c2" d="M304,175.1c0-9.9,7.6-18.2,17.7-18.2s7.6,1.3,9.9,3.9v-3.2h8.8v35h-8.8v-3.3c-1.9,2.2-5.5,4-9.9,4-10.1,0-17.7-7.7-17.7-18.3ZM331.3,175.3c0-4.9-4-9.6-9.6-9.6s-9,4.6-9,9.4,3.8,9.4,9,9.5c5.3.1,9.6-3.6,9.6-9.3Z"/>
+              <path class="dg-c2" d="M290.9,157.7v3.5c-2.2-2.4-5.7-4.2-9.8-4.2-10.1,0-17.8,8.5-17.8,18.1s7.7,18.3,17.8,18.3,7-1.3,9.6-3.8v1.7c0,4.9-4.6,7.6-9.8,7.6,0,0,0,0,0,0v8.9s0,0,.1,0c10.7,0,18.7-7.2,18.7-18.6v-31.5h-8.8ZM281.1,184.6c-5.2,0-9.1-4.1-9.1-9.5s3.9-9.4,9.1-9.4,9.8,4,9.8,9.1-4,9.8-9.8,9.8Z"/>
+              <path class="dg-c2" d="M362.1,142.7s-5.2-.3-8.6,3.1c-3.4,3.4-3.6,8.7-3.6,8.7h0c0,.5,0,1.1,0,1.7v1.5h-4.4v8.5h4.4l-.3,26.5h8.9l.3-26.5h7.9v-8.5h-7.9v-1.5c0-1.3.4-2.4,1.3-3.3.8-.8,2-1.2,3.2-1.3h3.4v-8.8h-4.6Z"/>
+            </g>
+            <g>
+              <path class="dg-c1" d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
+              <rect class="dg-c3" x="64.7" y="179.6" width="23.2" height="23.2"/>
+            </g>
+          </svg>
+          <p class="org-sub-am am">ድጋፍ አነስተኛ የብድር አክሲዮን ማህበር አ/ማ</p>
+          <p class="org-sub-en">Digaf Micro Credit Provider S.Co</p>
         </header>
 
-        <!-- Top row: certificate no / registered shares / date -->
-        <div class="top-row">
-          <div class="top-row-item">
-            <p class="top-row-label"><span class="am">የምስክርነት ቁ.</span> / Certificate No.</p>
-            <p class="top-row-value">${escapeHtml(certificate.serial_number)}</p>
+        <!-- Title block -->
+        <div class="title-block">
+          <p class="title-am-big am">የአክሲዮን ምስክርነት</p>
+          <p class="title-en-big">Share Certificate</p>
+        </div>
+
+        <!-- Certificate identity grid -->
+        <div class="info-grid">
+          <div class="info-field">
+            <p class="info-field-label-am am">የምስክርነት ቁ.</p>
+            <p class="info-field-label-en">Certificate No.</p>
+            <p class="info-field-value">${escapeHtml(certificate.serial_number)}</p>
           </div>
-          <div class="top-row-item" style="text-align: right;">
-            <p class="top-row-label"><span class="am">የተመዘገበ ድርሻ ቁጥር</span> / No. of Registered Shares</p>
-            <p class="top-row-value">${escapeHtml(Number(certificate.quantity).toLocaleString("en-US"))}</p>
-            <p class="top-row-label" style="margin-top:3px;"><span class="am">የተመዘገበበት ቀን</span> / Date of Registered</p>
-            <p class="top-row-value">${escapeHtml(formatCertificateDate(certificate.issue_date))}</p>
+          <div class="info-field">
+            <p class="info-field-label-am am">የተመዘገበ ድርሻ ቁጥር</p>
+            <p class="info-field-label-en">No. of Registered Shares</p>
+            <p class="info-field-value">${escapeHtml(Number(certificate.quantity).toLocaleString("en-US"))}</p>
+          </div>
+          <div class="info-field">
+            <p class="info-field-label-am am">የተመዘገበበት ቀን</p>
+            <p class="info-field-label-en">Date of Registered</p>
+            <p class="info-field-value">${escapeHtml(formatCertificateDate(certificate.issue_date))}</p>
+          </div>
+          <div class="info-field">
+            <p class="info-field-label-am am">ሁኔታ</p>
+            <p class="info-field-label-en">Status</p>
+            <p class="info-field-value status-${escapeHtml(certificate.status)}">${escapeHtml(certificate.status.toUpperCase())}</p>
           </div>
         </div>
 
@@ -890,36 +904,38 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <!-- Head office + Capital details -->
         <div class="details-grid">
           <div class="details-col">
-            <p class="details-col-title"><span class="am">የመስራት ቤት አድራሻ</span> / Head Office Address</p>
+            <p class="details-col-title-am am">የመስራት ቤት አድራሻ</p>
+            <p class="details-col-title-en">Head Office Address</p>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">ከተማ</span> / City</span>
+              <span><span class="detail-row-label-am am">ከተማ</span><span class="detail-row-label-en">City</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_city ?? "—")}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">ወረዳ</span> / Wereda</span>
+              <span><span class="detail-row-label-am am">ወረዳ</span><span class="detail-row-label-en">Wereda</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_wereda ?? "—")}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">ቤት ቁ.</span> / House No.</span>
+              <span><span class="detail-row-label-am am">ቤት ቁ.</span><span class="detail-row-label-en">House No.</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_house_no ?? "—")}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">ፖ.ሣ.ቁ.</span> / P.O.Box</span>
+              <span><span class="detail-row-label-am am">ፖ.ሣ.ቁ.</span><span class="detail-row-label-en">P.O.Box</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_po_box ?? "—")}</span>
             </div>
           </div>
           <div class="details-col">
-            <p class="details-col-title"><span class="am">ካፒታል መዋቅር</span> / Capital Structure (Birr)</p>
+            <p class="details-col-title-am am">ካፒታል መዋቅር</p>
+            <p class="details-col-title-en">Capital Structure (Birr)</p>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">የተፈቀደ ካፒታል</span> / Authorized Capital</span>
+              <span><span class="detail-row-label-am am">የተፈቀደ ካፒታል</span><span class="detail-row-label-en">Authorized Capital</span></span>
               <span class="detail-row-value">${escapeHtml(formatBirr(certificate.authorized_capital))}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">የተመዘገበ ካፒታል</span> / Subscribed Capital</span>
+              <span><span class="detail-row-label-am am">የተመዘገበ ካፒታል</span><span class="detail-row-label-en">Subscribed Capital</span></span>
               <span class="detail-row-value">${escapeHtml(formatBirr(certificate.subscribed_capital))}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-row-label"><span class="am">የተከፈለ ካፒታል</span> / Paid up Capital</span>
+              <span><span class="detail-row-label-am am">የተከፈለ ካፒታል</span><span class="detail-row-label-en">Paid up Capital</span></span>
               <span class="detail-row-value">${escapeHtml(formatBirr(certificate.paid_up_capital))}</span>
             </div>
           </div>
@@ -927,7 +943,10 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <!-- Par value -->
         <div class="par-value-row">
-          <span class="par-value-label"><span class="am">የአንዱ ድርሻ ዋጋ ብር</span> / Each Per Value of Birr</span>
+          <span>
+            <span class="par-value-label-am am">የአንዱ ድርሻ ዋጋ ብር</span>
+            <span class="par-value-label-en">Each Per Value of Birr</span>
+          </span>
           <span class="par-value-value">${escapeHtml(formatBirr(certificate.par_value))}</span>
         </div>
 
@@ -943,23 +962,28 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <!-- Shareholder address -->
         <div class="address-grid">
           <div class="addr-field">
-            <p class="addr-field-label"><span class="am">አድራሻ ከተማ</span>Address City</p>
+            <p class="addr-field-label-am am">አድራሻ ከተማ</p>
+            <p class="addr-field-label-en">Address City</p>
             <p class="addr-field-value">${escapeHtml(certificate.address_city ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label"><span class="am">ወረዳ ቀ.ክ</span>Wereda K.K</p>
+            <p class="addr-field-label-am am">ወረዳ ቀ.ክ</p>
+            <p class="addr-field-label-en">Wereda K.K</p>
             <p class="addr-field-value">${escapeHtml(certificate.wereda_kk ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label"><span class="am">ቀበሌ</span>Kebele</p>
+            <p class="addr-field-label-am am">ቀበሌ</p>
+            <p class="addr-field-label-en">Kebele</p>
             <p class="addr-field-value">${escapeHtml(certificate.kebele ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label"><span class="am">ቤት ቁ.</span>House No.</p>
+            <p class="addr-field-label-am am">ቤት ቁ.</p>
+            <p class="addr-field-label-en">House No.</p>
             <p class="addr-field-value">${escapeHtml(certificate.house_no ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label"><span class="am">ስልክ ቁ.</span>Tel.No.</p>
+            <p class="addr-field-label-am am">ስልክ ቁ.</p>
+            <p class="addr-field-label-en">Tel.No.</p>
             <p class="addr-field-value">${escapeHtml(certificate.mobile_number ?? "—")}</p>
           </div>
         </div>

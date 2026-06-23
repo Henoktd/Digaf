@@ -44,8 +44,8 @@ function formatCertificateDate(value: Date | string | null) {
 // watermark pattern across the certificate border, matching the official
 // Digaf template's repeating diamond/logo texture.
 function buildDigafIconWatermarkDataUri() {
-  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="56" viewBox="58 124 112 88">
-    <g fill="#771bfa" fill-opacity="0.07">
+  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="86" viewBox="58 124 112 88">
+    <g fill="#771bfa" fill-opacity="0.028">
       <path d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
       <rect x="64.7" y="179.6" width="23.2" height="23.2"/>
     </g>
@@ -634,7 +634,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       inset: 0;
       background-image: url('${iconWatermarkDataUri}');
       background-repeat: repeat;
-      background-size: 72px 56px;
+      background-size: 110px 86px;
       z-index: 0;
       pointer-events: none;
     }
@@ -922,6 +922,49 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           <p class="shareholder-name">${escapeHtml(certificate.shareholder_name)}</p>
         </div>
 
+        <!-- Shareholder Information -->
+        <p class="section-label-am am">የባለአክሲዮኑ መረጃ</p>
+        <p class="section-label-en">Shareholder Information</p>
+        <div class="address-grid">
+          <div class="addr-field">
+            <p class="addr-field-label-am am">አድራሻ ከተማ</p>
+            <p class="addr-field-label-en">Address City</p>
+            <p class="addr-field-value">${escapeHtml(certificate.address_city ?? "—")}</p>
+          </div>
+          <div class="addr-field">
+            <p class="addr-field-label-am am">ወረዳ ክፍለ ከተማ</p>
+            <p class="addr-field-label-en">Wereda K.K</p>
+            <p class="addr-field-value">${escapeHtml(certificate.wereda_kk ?? "—")}</p>
+          </div>
+          <div class="addr-field">
+            <p class="addr-field-label-am am">ቀበሌ</p>
+            <p class="addr-field-label-en">Kebele</p>
+            <p class="addr-field-value">${escapeHtml(certificate.kebele ?? "—")}</p>
+          </div>
+          <div class="addr-field">
+            <p class="addr-field-label-am am">የቤት ቁጥር</p>
+            <p class="addr-field-label-en">House No.</p>
+            <p class="addr-field-value">${escapeHtml(certificate.house_no ?? "—")}</p>
+          </div>
+          <div class="addr-field">
+            <p class="addr-field-label-am am">የስልክ ቁጥር</p>
+            <p class="addr-field-label-en">Tel.No.</p>
+            <p class="addr-field-value">${escapeHtml(certificate.mobile_number ?? "—")}</p>
+          </div>
+        </div>
+
+        <!-- Transfer restriction note -->
+        <div class="transfer-note">
+          <p class="am">
+            ማሳሰቢያ: ይህንን ሰርተፊኬት በመመለስና የተዘጋጀውን ቅጽ በመሙላት እነዚህን አክሲዮኖች ለኢትዮጵያዊ ዜግነት ላለው ማንኛውም ሰው በሙሉ ወይም
+            በከፊል ማስተላለፍ ይቻላል። ሆኖም ህጉ በስተቀር ይህንን አክሲዮን ለውጭ ሀገር ዜጋ ማስተላለፍ አይቻልም።
+          </p>
+          <p class="en">
+            Note: Shares may be transferred to any Ethiopian national upon surrender of this certificate and completion
+            of the prescribed forms of transfer. No shares may be transferred to foreigners.
+          </p>
+        </div>
+
         </div>
         <div class="col-right">
 
@@ -1019,49 +1062,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
             <span class="par-value-label-en">Each Per Value of Birr</span>
           </span>
           <span class="par-value-value">${escapeHtml(formatBirr(certificate.par_value))}</span>
-        </div>
-
-        <!-- Shareholder Information -->
-        <p class="section-label-am am">የባለአክሲዮኑ መረጃ</p>
-        <p class="section-label-en">Shareholder Information</p>
-        <div class="address-grid">
-          <div class="addr-field">
-            <p class="addr-field-label-am am">አድራሻ ከተማ</p>
-            <p class="addr-field-label-en">Address City</p>
-            <p class="addr-field-value">${escapeHtml(certificate.address_city ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">ወረዳ ክፍለ ከተማ</p>
-            <p class="addr-field-label-en">Wereda K.K</p>
-            <p class="addr-field-value">${escapeHtml(certificate.wereda_kk ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">ቀበሌ</p>
-            <p class="addr-field-label-en">Kebele</p>
-            <p class="addr-field-value">${escapeHtml(certificate.kebele ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">የቤት ቁጥር</p>
-            <p class="addr-field-label-en">House No.</p>
-            <p class="addr-field-value">${escapeHtml(certificate.house_no ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">የስልክ ቁጥር</p>
-            <p class="addr-field-label-en">Tel.No.</p>
-            <p class="addr-field-value">${escapeHtml(certificate.mobile_number ?? "—")}</p>
-          </div>
-        </div>
-
-        <!-- Transfer restriction note -->
-        <div class="transfer-note">
-          <p class="am">
-            ማሳሰቢያ: ይህንን ሰርተፊኬት በመመለስና የተዘጋጀውን ቅጽ በመሙላት እነዚህን አክሲዮኖች ለኢትዮጵያዊ ዜግነት ላለው ማንኛውም ሰው በሙሉ ወይም
-            በከፊል ማስተላለፍ ይቻላል። ሆኖም ህጉ በስተቀር ይህንን አክሲዮን ለውጭ ሀገር ዜጋ ማስተላለፍ አይቻልም።
-          </p>
-          <p class="en">
-            Note: Shares may be transferred to any Ethiopian national upon surrender of this certificate and completion
-            of the prescribed forms of transfer. No shares may be transferred to foreigners.
-          </p>
         </div>
 
         ${certificate.status !== "issued" ? `

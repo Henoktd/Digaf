@@ -40,32 +40,6 @@ function formatCertificateDate(value: Date | string | null) {
   return value;
 }
 
-// Small tile of the Digaf "D" mark, used as a repeating security-paper
-// watermark pattern across the certificate border, matching the official
-// Digaf template's repeating diamond/logo texture.
-function buildDigafIconWatermarkDataUri() {
-  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="86" viewBox="58 124 112 88">
-    <g fill="#771bfa" fill-opacity="0.028">
-      <path d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
-      <rect x="64.7" y="179.6" width="23.2" height="23.2"/>
-    </g>
-  </svg>`;
-  return `data:image/svg+xml;base64,${Buffer.from(tileSvg).toString("base64")}`;
-}
-
-// A more visible, smaller tile of the same mark used to form a literal
-// ring of tiny repeated logos framing the certificate border, matching
-// the decorative edge of the official Digaf template.
-function buildDigafIconBorderTileDataUri() {
-  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="20" viewBox="58 124 112 88">
-    <g fill="#771bfa" fill-opacity="0.4">
-      <path d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
-      <rect x="64.7" y="179.6" width="23.2" height="23.2"/>
-    </g>
-  </svg>`;
-  return `data:image/svg+xml;base64,${Buffer.from(tileSvg).toString("base64")}`;
-}
-
 function formatBirr(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
@@ -438,11 +412,11 @@ certificateRoutes.get("/:certificateId/render-data", async (req, res) => {
         VALUES (
           $1,
           'render_data_accessed',
-          req.auth.actorId,
+          $2,
           'Certificate render data accessed for PDF preview'
         )
         `,
-        [certificateId]
+        [certificateId, req.auth?.actorId ?? null]
       )
       .catch(() => undefined);
 
@@ -535,8 +509,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     const verificationUrl = buildPublicVerificationUrl(
       certificate.serial_number
     );
-    const verificationToken =
-      certificate.qr_token || certificate.signature_token || null;
 
     void pool
       .query(
@@ -550,11 +522,11 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         VALUES (
           $1,
           'print_preview_accessed',
-          req.auth.actorId,
+          $2,
           'Certificate print preview accessed'
         )
         `,
-        [certificateId]
+        [certificateId, req.auth?.actorId ?? null]
       )
       .catch(() => undefined);
 
@@ -565,13 +537,11 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       width: 240,
     });
     const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
-    const iconWatermarkDataUri = buildDigafIconWatermarkDataUri();
-    const iconBorderTileDataUri = buildDigafIconBorderTileDataUri();
 
     const isRevoked = certificate.status === "revoked" || certificate.revocation_status === "revoked";
     const isDraft = certificate.status === "draft";
     const watermarkText = isRevoked ? "VOID" : isDraft ? "DRAFT" : null;
-    const watermarkColor = isRevoked ? "rgba(185,28,28,0.13)" : "rgba(100,116,139,0.10)";
+    const watermarkColor = isRevoked ? "rgba(185,28,28,0.12)" : "rgba(100,116,139,0.10)";
     const watermarkStroke = isRevoked ? "#b91c1c" : "#64748b";
 
     const html = `<!doctype html>
@@ -581,84 +551,61 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Share Certificate — ${escapeHtml(certificate.serial_number)}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap');
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: #c8c5bd;
-      font-family: 'Inter', 'Noto Sans Ethiopic', 'Segoe UI', Arial, sans-serif;
-      padding: 20px 16px 32px;
-      color: #1a1a2e;
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
     }
 
-    .am { font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif; display: block; }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #333333;
+      background: #d9d6cf;
+    }
+
+    .am { font-family: 'Noto Sans Ethiopic', 'Segoe UI', Arial, sans-serif; }
 
     .page {
       width: 277mm;
       margin: 0 auto;
-      background: #fffef9;
-      box-shadow: 0 24px 72px rgba(0,0,0,0.26);
+      background: #ffffff;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+      position: relative;
+    }
+
+    .certificate-border {
+      border: 10px solid #4a2c73;
+      padding: 14px;
+      background: #faf9fc;
+      position: relative;
+    }
+
+    .inner-border {
+      border: 2px dashed #7b52ab;
+      padding: 16px 22px;
       position: relative;
       overflow: hidden;
-    }
-
-    .frame-band {
-      padding: 13px;
-      background-image: url('${iconBorderTileDataUri}');
-      background-repeat: repeat;
-      background-size: 26px 20px;
-    }
-
-    .border-outer {
-      margin: 0;
-      border: 2.5px solid #6d28d9;
-      padding: 7px;
-      position: relative;
-      background: #fffef9;
-    }
-    .border-outer::before { content: '◆'; position: absolute; top: -7px; left: -7px; color: #771bfa; font-size: 11px; line-height: 1; }
-    .border-outer::after  { content: '◆'; position: absolute; bottom: -7px; right: -7px; color: #771bfa; font-size: 11px; line-height: 1; }
-
-    .border-inner {
-      border: 0.75px solid #b39ce6;
-      padding: 16px 26px 16px;
-      position: relative;
-      overflow: hidden;
-    }
-    .border-inner::before { content: '◆'; position: absolute; top: -7px; left: -7px; color: #771bfa; font-size: 11px; line-height: 1; z-index: 3; }
-    .border-inner::after  { content: '◆'; position: absolute; bottom: -7px; right: -7px; color: #771bfa; font-size: 11px; line-height: 1; z-index: 3; }
-
-    .icon-watermark-pattern {
-      position: absolute;
-      inset: 0;
-      background-image: url('${iconWatermarkDataUri}');
-      background-repeat: repeat;
-      background-size: 110px 86px;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .cert-content {
-      position: relative;
-      z-index: 1;
     }
 
     .watermark {
       position: absolute;
       top: 50%; left: 50%;
-      transform: translate(-50%, -50%) rotate(-35deg);
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 90px;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 80px;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       color: ${watermarkColor};
       -webkit-text-stroke: 2px ${watermarkStroke};
-      opacity: 0.5;
+      opacity: 0.6;
       pointer-events: none;
       user-select: none;
       white-space: nowrap;
-      z-index: 2;
+      z-index: 5;
     }
 
     /* Digaf logo SVG inline styles — prefixed to avoid conflicts */
@@ -667,444 +614,320 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .dg-c2 { fill: #04072a; }
     .dg-c3 { fill: url(#dg-lg2); }
 
-    .cert-header { text-align: center; padding-bottom: 4px; }
-    .org-logo { height: 62px; width: auto; display: block; margin: 0 auto; }
-    .org-sub-am { font-size: 10px; color: #475569; margin-top: 8px; }
-    .org-sub-en { font-size: 8.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+    table { border-collapse: collapse; }
 
-    .two-col-layout {
-      display: flex;
-      gap: 28px;
-      align-items: flex-start;
-      margin-top: 6px;
+    .header-table { width: 100%; margin-bottom: 10px; }
+    .logo-area { width: 26%; vertical-align: middle; }
+    .org-logo { height: 50px; width: auto; display: block; }
+    .title-area { width: 44%; text-align: center; vertical-align: middle; }
+    .title-amharic { font-size: 19px; font-weight: 700; color: #4a2c73; }
+    .title-english {
+      font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1.5px;
+      border-top: 1px solid #7b52ab; padding-top: 4px; margin-top: 4px;
     }
-    .col-left { flex: 1.05; min-width: 0; }
-    .col-right { flex: 1; min-width: 0; }
+    .company-area { width: 30%; text-align: right; vertical-align: middle; }
+    .comp-amharic { font-size: 12px; font-weight: 700; color: #4a2c73; }
+    .comp-english { font-size: 10.5px; font-weight: 700; color: #003366; margin-top: 2px; }
 
-    .title-block {
-      text-align: center;
-      padding: 10px 0 8px;
-      margin-top: 8px;
-      border-top: 1px solid #e5dff5;
-      border-bottom: 1px solid #e5dff5;
+    .meta-table { width: 100%; margin-bottom: 10px; }
+    .meta-label { font-size: 9.5px; font-weight: 700; color: #444; line-height: 1.3; padding: 3px 6px; vertical-align: bottom; }
+    .meta-label-sub { font-weight: normal; font-size: 8px; color: #666; }
+    .meta-value-cell { padding: 3px 6px; vertical-align: bottom; }
+    .meta-value {
+      border-bottom: 1px solid #7b52ab; padding: 3px 5px; font-size: 12px; font-weight: 700;
+      color: #1a1a2e; background: #ffffff; display: block; min-height: 16px;
     }
-    .title-am-big { font-size: 26px; font-weight: 700; color: #1a2e4a; line-height: 1.25; }
-    .title-en-big { font-size: 13px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #771bfa; margin-top: 5px; }
-    .entity-am-sub { font-size: 11px; font-weight: 600; color: #1a2e4a; margin-top: 10px; }
-    .entity-en-sub { font-size: 9px; font-weight: 600; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+    .cert-no-value { color: #4a2c73; }
 
-    .ornament { text-align: center; color: #771bfa; font-size: 13px; letter-spacing: 0.45em; margin: 10px 0; }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0;
-      margin: 0 0 8px;
-      border: 0.75px solid #e0d5f5;
-      border-radius: 2px;
+    .legal-text {
+      font-size: 9px; line-height: 1.5; text-align: justify; margin-bottom: 10px;
+      padding: 7px 10px; background-color: #f2eef7; border-radius: 4px;
     }
-    .info-field {
-      padding: 7px 10px;
-      border-right: 0.75px solid #e0d5f5;
-      border-bottom: 0.75px solid #e0d5f5;
-      text-align: center;
+    .legal-text .am-line { margin-bottom: 4px; }
+    .legal-text strong.am { font-weight: 700; }
+
+    .two-col-table { width: 100%; margin-bottom: 10px; }
+    .two-col-table > tbody > tr > td { vertical-align: top; }
+    .left-col-cell { width: 48%; padding-right: 14px; }
+    .right-col-cell { width: 52%; padding-left: 14px; border-left: 1px dashed #7b52ab; }
+
+    .section-title {
+      font-size: 9.5px; font-weight: 700; color: #4a2c73; background-color: #e6def2;
+      padding: 4px 8px; margin-bottom: 5px;
     }
-    .info-field:nth-child(2n) { border-right: none; }
-    .info-field:nth-last-child(-n+2) { border-bottom: none; }
-    .info-field:last-child { border-right: none; }
-    .info-field-label-am { font-size: 8.5px; color: #475569; font-weight: 600; }
-    .info-field-label-en { font-size: 7px; text-transform: uppercase; letter-spacing: 0.08em; color: #9381c4; font-weight: 700; margin-top: 1px; }
-    .info-field-value { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; font-weight: 700; color: #1a2e4a; margin-top: 4px; overflow-wrap: anywhere; }
+    .section-title .en { text-transform: uppercase; letter-spacing: 0.05em; font-size: 8px; }
 
-    .license-paragraph {
-      margin: 0 0 8px;
-      padding: 9px 14px;
-      background: #faf8ff;
-      border: 0.75px solid #e5dff5;
-      border-radius: 2px;
-      text-align: center;
-    }
-    .license-paragraph .am { font-size: 9px; color: #1a2e4a; line-height: 1.5; }
-    .license-paragraph .en { font-size: 8px; color: #64748b; line-height: 1.45; margin-top: 6px; font-style: italic; }
-
-    .details-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      margin: 0 0 8px;
-      border: 0.75px solid #e0d5f5;
-    }
-    .details-col { padding: 8px 12px; }
-    .details-col:first-child { border-right: 0.75px solid #e0d5f5; }
-    .details-col-title-am { font-size: 9px; font-weight: 700; color: #1a2e4a; }
-    .details-col-title-en { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #771bfa; margin-top: 1px; margin-bottom: 5px; }
-    .details-col-note-am { font-size: 7px; color: #94a3b8; font-style: italic; margin-bottom: 4px; }
-    .details-col-note-en { font-size: 6.5px; color: #b8aedb; font-style: italic; margin-bottom: 4px; margin-top: -2px; }
-
-    .section-label-am { font-size: 9.5px; font-weight: 700; color: #1a2e4a; margin: 6px 0 0; }
-    .section-label-en { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #771bfa; margin-bottom: 4px; }
-
-    .detail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 2.5px 0; border-bottom: 0.5px dotted #e5dff5; }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-row-label-am { font-size: 8.5px; color: #475569; }
-    .detail-row-label-en { font-size: 7px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em; }
-    .detail-row-value { font-weight: 700; color: #1a2e4a; text-align: right; white-space: nowrap; font-size: 9.5px; flex-shrink: 0; }
+    .kv-table { width: 100%; font-size: 9px; }
+    .kv-table td { padding: 2.5px 3px; }
+    .kv-label-am { font-weight: 600; }
+    .kv-label-en { color: #666; font-size: 8px; }
+    .kv-value { font-weight: 700; color: #1a1a2e; }
 
     .par-value-row {
-      margin: 0 0 8px;
-      padding: 7px 14px;
-      border: 0.75px solid #e0d5f5;
-      background: #faf8ff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      width: 100%; margin-bottom: 10px; padding: 6px 10px; background: #f2eef7;
+      border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
     }
-    .par-value-label-am { font-size: 9px; color: #1a2e4a; font-weight: 600; }
-    .par-value-label-en { font-size: 7px; color: #771bfa; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
-    .par-value-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; color: #1a2e4a; font-size: 15px; }
+    .par-value-label-am { font-size: 9.5px; font-weight: 600; color: #4a2c73; }
+    .par-value-label-en { font-size: 7.5px; color: #666; }
+    .par-value-value { font-size: 13px; font-weight: 700; color: #1a1a2e; }
 
-    .certifies-block { text-align: center; padding: 12px 12px 4px; }
-    .certifies-intro-am { font-size: 10.5px; color: #475569; }
-    .certifies-intro-en { font-size: 9px; color: #94a3b8; font-style: italic; margin-top: 2px; }
-    .shareholder-name {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 25px;
-      font-weight: 700;
-      color: #1a2e4a;
-      margin: 7px 0 3px;
-      line-height: 1.15;
+    .shareholder-row-table { width: 100%; margin-top: 6px; font-size: 9.5px; }
+    .shareholder-row-table td { padding: 4px 5px; vertical-align: middle; }
+    .certify-label { width: 24%; }
+    .certify-label-en { color: #666; font-size: 8.5px; }
+    .shareholder-name-value {
+      font-size: 17px; font-weight: 700; color: #1a1a2e; border-bottom: 1px solid #7b52ab;
+      padding: 3px 6px; display: block;
+    }
+    .addr-label-am { font-weight: 600; }
+    .addr-label-en { color: #666; font-size: 8px; }
+    .addr-value {
+      border-bottom: 1px solid #7b52ab; padding: 2px 4px; font-weight: 700; color: #1a1a2e;
+      display: inline-block; min-width: 60px;
     }
 
-    .address-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0;
-      margin: 0 0 8px;
-      border: 0.75px solid #e0d5f5;
+    .note-text {
+      font-size: 8px; font-style: italic; color: #555; border-left: 3px solid #7b52ab;
+      padding-left: 8px; margin: 10px 0; line-height: 1.5;
     }
-    .addr-field {
-      padding: 6px 5px;
-      border-right: 0.75px solid #e0d5f5;
-      text-align: center;
-    }
-    .addr-field:last-child { border-right: none; }
-    .addr-field-label-am { font-size: 7.5px; color: #475569; font-weight: 600; }
-    .addr-field-label-en { font-size: 6px; text-transform: uppercase; letter-spacing: 0.03em; color: #9381c4; font-weight: 700; margin-top: 1px; }
-    .addr-field-value { font-size: 10px; font-weight: 700; color: #1a2e4a; margin-top: 3px; overflow-wrap: anywhere; }
-
-    .transfer-note {
-      margin: 0 0 8px;
-      padding: 7px 14px;
-      background: #fdf5f5;
-      border: 0.75px solid #f3dada;
-      border-radius: 2px;
-      text-align: center;
-    }
-    .transfer-note .am { font-size: 8px; color: #7f1d1d; line-height: 1.5; }
-    .transfer-note .en { font-size: 7px; color: #b45959; line-height: 1.45; margin-top: 3px; font-style: italic; }
 
     .status-banner {
-      text-align: center;
-      margin: 8px 0;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      text-align: center; margin: 6px 0; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
     }
     .status-issued  { color: #166534; }
     .status-draft   { color: #92400e; }
     .status-revoked { color: #991b1b; }
 
-    .bottom-footer {
-      display: flex;
-      gap: 28px;
-      align-items: stretch;
-      margin-top: 10px;
-      padding-top: 12px;
-      border-top: 0.75px solid #e5dff5;
+    .footer-table { width: 100%; margin-top: 14px; }
+    .sig-block { text-align: center; width: 33%; }
+    .sig-line {
+      border-top: 1px solid #7b52ab; margin-top: 34px; padding-top: 5px;
+      font-size: 9.5px; font-weight: 700; color: #1a1a2e;
     }
+    .sig-line .en { font-weight: normal; font-size: 8px; color: #666; }
+    .verify-block {
+      width: 34%; vertical-align: top; padding: 7px 9px; background: #f2eef7;
+      border-radius: 4px; font-size: 7.5px; color: #444;
+    }
+    .verify-flex { display: flex; align-items: center; gap: 8px; }
+    .qr-img { width: 44px; height: 44px; flex-shrink: 0; border: 1px solid #ccc; background: #fff; padding: 2px; }
+    .verify-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #4a2c73; margin-bottom: 2px; }
+    .verify-url { font-family: 'Courier New', Courier, monospace; word-break: break-all; }
+    .verify-hash-val { font-family: 'Courier New', Courier, monospace; word-break: break-all; margin-top: 2px; color: #666; }
 
-    .signatures {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      flex: 1.1;
-    }
-    .sig-block { text-align: center; align-self: end; }
-    .sig-line { border-bottom: 0.75px solid #1a2e4a; height: 28px; margin-bottom: 6px; }
-    .sig-label-am { font-size: 9.5px; color: #1a2e4a; font-weight: 600; }
-    .sig-label-en { font-size: 7.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
-
-    .verification-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      padding: 9px 11px;
-      background: #f8f6f0;
-      border: 0.75px solid #e2d8c0;
-    }
-    .qr-img { width: 50px; height: 50px; flex-shrink: 0; border: 1.5px solid #ddd6c0; background: #fff; padding: 2px; }
-    .verify-text { flex: 1; min-width: 0; }
-    .verify-label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #92836a; font-weight: 700; margin-bottom: 2px; }
-    .verify-url { font-family: 'Courier New', Courier, monospace; font-size: 8.5px; color: #1a2e4a; word-break: break-all; }
-    .verify-hash { margin-top: 4px; }
-    .verify-hash-val { font-family: 'Courier New', Courier, monospace; font-size: 7.5px; color: #64748b; word-break: break-all; line-height: 1.4; }
-
-    .print-hint {
-      width: 277mm;
-      margin: 10px auto 0;
-      text-align: center;
-      font-size: 11px;
-      color: #64748b;
-    }
+    .print-hint { width: 277mm; margin: 10px auto 0; text-align: center; font-size: 11px; color: #64748b; }
 
     @media print {
       body { background: #fff; padding: 0; }
       .page { box-shadow: none; width: 100%; }
       .print-hint { display: none; }
     }
-
-    @page { margin: 8mm; size: A4 landscape; }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="border-outer">
-      <div class="border-inner">
+    <div class="certificate-border">
+      <div class="inner-border">
 
-        <div class="icon-watermark-pattern"></div>
         ${watermarkText ? `<div class="watermark">${watermarkText}</div>` : ""}
 
-        <div class="cert-content">
-
         <!-- Header -->
-        <header class="cert-header">
-          <svg class="org-logo" viewBox="0 0 448 336" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <defs>
-              <linearGradient id="dg-lg1" x1="56.9" y1="247.7" x2="163.9" y2="131.3" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#771bfa"/>
-                <stop offset="1" stop-color="#faf3ee"/>
-              </linearGradient>
-              <linearGradient id="dg-lg2" x1="39.2" y1="231.5" x2="146.3" y2="115" xlink:href="#dg-lg1"/>
-            </defs>
-            <g>
-              <path class="dg-c2" d="M199.9,192.7v-50h21.8c13.3,0,23.9,11.4,23.9,25.1s-10.7,24.9-23.9,24.9h-21.8ZM208.7,183.8h12.3c8.9,0,15.8-7.3,15.8-16.1s-6.8-16.2-15.3-16.2h-12.8v32.3Z"/>
-              <path class="dg-c2" d="M248.6,148.2c0-3.2,2.3-5.5,5.5-5.5s5.5,2.3,5.5,5.5-2.3,5.5-5.5,5.5-5.5-2.3-5.5-5.5ZM249.9,192.7v-35h8.8v35h-8.8Z"/>
-              <path class="dg-c2" d="M304,175.1c0-9.9,7.6-18.2,17.7-18.2s7.6,1.3,9.9,3.9v-3.2h8.8v35h-8.8v-3.3c-1.9,2.2-5.5,4-9.9,4-10.1,0-17.7-7.7-17.7-18.3ZM331.3,175.3c0-4.9-4-9.6-9.6-9.6s-9,4.6-9,9.4,3.8,9.4,9,9.5c5.3.1,9.6-3.6,9.6-9.3Z"/>
-              <path class="dg-c2" d="M290.9,157.7v3.5c-2.2-2.4-5.7-4.2-9.8-4.2-10.1,0-17.8,8.5-17.8,18.1s7.7,18.3,17.8,18.3,7-1.3,9.6-3.8v1.7c0,4.9-4.6,7.6-9.8,7.6,0,0,0,0,0,0v8.9s0,0,.1,0c10.7,0,18.7-7.2,18.7-18.6v-31.5h-8.8ZM281.1,184.6c-5.2,0-9.1-4.1-9.1-9.5s3.9-9.4,9.1-9.4,9.8,4,9.8,9.1-4,9.8-9.8,9.8Z"/>
-              <path class="dg-c2" d="M362.1,142.7s-5.2-.3-8.6,3.1c-3.4,3.4-3.6,8.7-3.6,8.7h0c0,.5,0,1.1,0,1.7v1.5h-4.4v8.5h4.4l-.3,26.5h8.9l.3-26.5h7.9v-8.5h-7.9v-1.5c0-1.3.4-2.4,1.3-3.3.8-.8,2-1.2,3.2-1.3h3.4v-8.8h-4.6Z"/>
-            </g>
-            <g>
-              <path class="dg-c1" d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
-              <rect class="dg-c3" x="64.7" y="179.6" width="23.2" height="23.2"/>
-            </g>
-          </svg>
-          <p class="org-sub-am am">ድጋፍ አነስተኛ የብድር አክሲዮን ማህበር አ/ማ</p>
-          <p class="org-sub-en">Digaf Micro Credit Provider S.Co</p>
-        </header>
+        <table class="header-table">
+          <tr>
+            <td class="logo-area">
+              <svg class="org-logo" viewBox="0 0 448 336" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <defs>
+                  <linearGradient id="dg-lg1" x1="56.9" y1="247.7" x2="163.9" y2="131.3" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#771bfa"/>
+                    <stop offset="1" stop-color="#faf3ee"/>
+                  </linearGradient>
+                  <linearGradient id="dg-lg2" x1="39.2" y1="231.5" x2="146.3" y2="115" xlink:href="#dg-lg1"/>
+                </defs>
+                <g>
+                  <path class="dg-c2" d="M199.9,192.7v-50h21.8c13.3,0,23.9,11.4,23.9,25.1s-10.7,24.9-23.9,24.9h-21.8ZM208.7,183.8h12.3c8.9,0,15.8-7.3,15.8-16.1s-6.8-16.2-15.3-16.2h-12.8v32.3Z"/>
+                  <path class="dg-c2" d="M248.6,148.2c0-3.2,2.3-5.5,5.5-5.5s5.5,2.3,5.5,5.5-2.3,5.5-5.5,5.5-5.5-2.3-5.5-5.5ZM249.9,192.7v-35h8.8v35h-8.8Z"/>
+                  <path class="dg-c2" d="M304,175.1c0-9.9,7.6-18.2,17.7-18.2s7.6,1.3,9.9,3.9v-3.2h8.8v35h-8.8v-3.3c-1.9,2.2-5.5,4-9.9,4-10.1,0-17.7-7.7-17.7-18.3ZM331.3,175.3c0-4.9-4-9.6-9.6-9.6s-9,4.6-9,9.4,3.8,9.4,9,9.5c5.3.1,9.6-3.6,9.6-9.3Z"/>
+                  <path class="dg-c2" d="M290.9,157.7v3.5c-2.2-2.4-5.7-4.2-9.8-4.2-10.1,0-17.8,8.5-17.8,18.1s7.7,18.3,17.8,18.3,7-1.3,9.6-3.8v1.7c0,4.9-4.6,7.6-9.8,7.6,0,0,0,0,0,0v8.9s0,0,.1,0c10.7,0,18.7-7.2,18.7-18.6v-31.5h-8.8ZM281.1,184.6c-5.2,0-9.1-4.1-9.1-9.5s3.9-9.4,9.1-9.4,9.8,4,9.8,9.1-4,9.8-9.8,9.8Z"/>
+                  <path class="dg-c2" d="M362.1,142.7s-5.2-.3-8.6,3.1c-3.4,3.4-3.6,8.7-3.6,8.7h0c0,.5,0,1.1,0,1.7v1.5h-4.4v8.5h4.4l-.3,26.5h8.9l.3-26.5h7.9v-8.5h-7.9v-1.5c0-1.3.4-2.4,1.3-3.3.8-.8,2-1.2,3.2-1.3h3.4v-8.8h-4.6Z"/>
+                </g>
+                <g>
+                  <path class="dg-c1" d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
+                  <rect class="dg-c3" x="64.7" y="179.6" width="23.2" height="23.2"/>
+                </g>
+              </svg>
+            </td>
+            <td class="title-area">
+              <div class="title-amharic am">የአክሲዮን ሠርተፌኬት</div>
+              <div class="title-english">SHARE CERTIFICATE</div>
+            </td>
+            <td class="company-area">
+              <div class="comp-amharic am">ድጋፍ አነስተኛ የብድር አክሲዮን ማህበር አ/ማ</div>
+              <div class="comp-english">DIGAF MICRO CREDIT PROVIDER S.Co.</div>
+            </td>
+          </tr>
+        </table>
 
-        <div class="two-col-layout">
-        <div class="col-left">
+        <!-- Top Metadata Fields -->
+        <table class="meta-table">
+          <tr>
+            <td class="meta-label" style="width: 17%;">
+              <span class="am">የአክሲዮን ይዞታ መጠን</span>
+              <span class="meta-label-sub">No. of Registered Shares</span>
+            </td>
+            <td class="meta-value-cell" style="width: 17%;">
+              <span class="meta-value">${escapeHtml(Number(certificate.quantity).toLocaleString("en-US"))}</span>
+            </td>
+            <td style="width: 3%;"></td>
+            <td class="meta-label" style="width: 15%;">
+              <span class="am">የተመዘገበበት ቀን</span>
+              <span class="meta-label-sub">Date of Registered</span>
+            </td>
+            <td class="meta-value-cell" style="width: 17%;">
+              <span class="meta-value">${escapeHtml(formatCertificateDate(certificate.issue_date))}</span>
+            </td>
+            <td style="width: 3%;"></td>
+            <td class="meta-label" style="width: 13%;">
+              <span class="am">የሠርተፌኬት ቁጥር</span>
+              <span class="meta-label-sub">Certificate No.</span>
+            </td>
+            <td class="meta-value-cell" style="width: 15%;">
+              <span class="meta-value cert-no-value">${escapeHtml(certificate.serial_number)}</span>
+            </td>
+          </tr>
+        </table>
 
-        <!-- Title block -->
-        <div class="title-block">
-          <p class="title-am-big am">የአክሲዮን ሠርተፌኬት</p>
-          <p class="title-en-big">Share Certificate</p>
-        </div>
-
-        <div class="ornament">— ◆ —</div>
-
-        <!-- Certifying text -->
-        <div class="certifies-block">
-          <p class="certifies-intro-am am">ይህ ሰርተፊኬት ለ (አቶ/ወ/ሮ/ወ/ት/ድርጅት)</p>
-          <p class="certifies-intro-en">This is to certify that (Ato/W/ro W/t M/s)</p>
-          <p class="shareholder-name">${escapeHtml(certificate.shareholder_name)}</p>
-        </div>
-
-        <!-- Shareholder Information -->
-        <p class="section-label-am am">የባለአክሲዮኑ መረጃ</p>
-        <p class="section-label-en">Shareholder Information</p>
-        <div class="address-grid">
-          <div class="addr-field">
-            <p class="addr-field-label-am am">አድራሻ ከተማ</p>
-            <p class="addr-field-label-en">Address City</p>
-            <p class="addr-field-value">${escapeHtml(certificate.address_city ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">ወረዳ ክፍለ ከተማ</p>
-            <p class="addr-field-label-en">Wereda K.K</p>
-            <p class="addr-field-value">${escapeHtml(certificate.wereda_kk ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">ቀበሌ</p>
-            <p class="addr-field-label-en">Kebele</p>
-            <p class="addr-field-value">${escapeHtml(certificate.kebele ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">የቤት ቁጥር</p>
-            <p class="addr-field-label-en">House No.</p>
-            <p class="addr-field-value">${escapeHtml(certificate.house_no ?? "—")}</p>
-          </div>
-          <div class="addr-field">
-            <p class="addr-field-label-am am">የስልክ ቁጥር</p>
-            <p class="addr-field-label-en">Tel.No.</p>
-            <p class="addr-field-value">${escapeHtml(certificate.mobile_number ?? "—")}</p>
-          </div>
-        </div>
-
-        <!-- Transfer restriction note -->
-        <div class="transfer-note">
-          <p class="am">
-            ማሳሰቢያ: ይህንን ሰርተፊኬት በመመለስና የተዘጋጀውን ቅጽ በመሙላት እነዚህን አክሲዮኖች ለኢትዮጵያዊ ዜግነት ላለው ማንኛውም ሰው በሙሉ ወይም
-            በከፊል ማስተላለፍ ይቻላል። ሆኖም ህጉ በስተቀር ይህንን አክሲዮን ለውጭ ሀገር ዜጋ ማስተላለፍ አይቻልም።
-          </p>
-          <p class="en">
-            Note: Shares may be transferred to any Ethiopian national upon surrender of this certificate and completion
-            of the prescribed forms of transfer. No shares may be transferred to foreigners.
-          </p>
-        </div>
-
-        </div>
-        <div class="col-right">
-
-        <!-- Certificate identity grid -->
-        <div class="info-grid">
-          <div class="info-field">
-            <p class="info-field-label-am am">የሠርተፌኬት ቁጥር</p>
-            <p class="info-field-label-en">Certificate No.</p>
-            <p class="info-field-value">${escapeHtml(certificate.serial_number)}</p>
-          </div>
-          <div class="info-field">
-            <p class="info-field-label-am am">የአክሲዮን ይዞታ መጠን</p>
-            <p class="info-field-label-en">No. of Registered Shares</p>
-            <p class="info-field-value">${escapeHtml(Number(certificate.quantity).toLocaleString("en-US"))}</p>
-          </div>
-          <div class="info-field">
-            <p class="info-field-label-am am">የተመዘገበበት ቀን</p>
-            <p class="info-field-label-en">Date of Registered</p>
-            <p class="info-field-value">${escapeHtml(formatCertificateDate(certificate.issue_date))}</p>
-          </div>
-          <div class="info-field">
-            <p class="info-field-label-am am">ሁኔታ</p>
-            <p class="info-field-label-en">Status</p>
-            <p class="info-field-value status-${escapeHtml(certificate.status)}">${escapeHtml(certificate.status.toUpperCase())}</p>
-          </div>
-        </div>
-
-        <!-- Legal Declaration -->
-        <p class="section-label-am am">ህጋዊ መግለጫ</p>
-        <p class="section-label-en">Legal Declaration</p>
-        <div class="license-paragraph">
-          <p class="am">
-            ድጋፍ አነስተኛ ብድር አቅራቢ አ/ማ በአነስተኛ የፋይናንስ ስራ አዋጅ ቁጥር ${escapeHtml(certificate.proclamation_reference ?? "40/96")} መሠረት
+        <!-- Legal Background -->
+        <div class="legal-text">
+          <div class="am-line am">
+            <strong class="am">ድጋፍ አነስተኛ ብድር አቅራቢ አ/ማ</strong> በአነስተኛ የፋይናንስ ስራ አዋጅ ቁጥር ${escapeHtml(certificate.proclamation_reference ?? "40/96")} መሠረት
             በኢ.ብ.ባ. ፈቃድ ቁጥር ${escapeHtml(certificate.license_number ?? "MFI/027/2005")} እና በንግድ ም.ቁጥር
             ${escapeHtml(certificate.trade_registration_number ?? "10/2/5481/97")} በ28/07/2005 እ.ኤ.አ. ጀምሮ ስራ ላይ ያለ የአነስተኛ ፋይናንስ ተቋም ነው።
-          </p>
-          <p class="en">
-            Digaf Micro Credit Provider S.Co. was established &amp; operating as per Micro Finance Proclamation
+          </div>
+          <div>
+            <strong>Digaf Micro Credit Provider S.Co.</strong> was established &amp; operating as per Micro Finance Proclamation
             # ${escapeHtml(certificate.proclamation_reference ?? "40/96")} and licensed by National Bank of Ethiopia
-            ${escapeHtml(certificate.license_number ?? "MFI/027/2005")}, registered under Trade Registration
+            ${escapeHtml(certificate.license_number ?? "MFI/027/2005")} registered under Trade Registration
             # ${escapeHtml(certificate.trade_registration_number ?? "10/2/5481/97")} on 28/07/2005 GC.
-          </p>
+          </div>
         </div>
 
-        <!-- Head office + Capital details -->
-        <div class="details-grid">
-          <div class="details-col">
-            <p class="details-col-title-am am">የዋናው መሥሪያ ቤት አድራሻ</p>
-            <p class="details-col-title-en">Head Office Address</p>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">ከተማ</span><span class="detail-row-label-en">City</span></span>
-              <span class="detail-row-value">${escapeHtml(certificate.head_office_city ?? "—")}</span>
-            </div>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">ክፍለ ከተማ</span><span class="detail-row-label-en">K.K</span></span>
-              <span class="detail-row-value">${escapeHtml(certificate.head_office_kk ?? "—")}</span>
-            </div>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">ወረዳ</span><span class="detail-row-label-en">Wereda</span></span>
-              <span class="detail-row-value">${escapeHtml(certificate.head_office_wereda ?? "—")}</span>
-            </div>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">የቤት ቁጥር</span><span class="detail-row-label-en">House No.</span></span>
-              <span class="detail-row-value">${escapeHtml(certificate.head_office_house_no ?? "—")}</span>
-            </div>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">ፖ.ሣ.ቁ</span><span class="detail-row-label-en">P.O.Box</span></span>
-              <span class="detail-row-value">${escapeHtml(certificate.head_office_po_box ?? "—")}</span>
-            </div>
-          </div>
-          <div class="details-col">
-            <p class="details-col-title-am am">የካፒታል ዝርዝር</p>
-            <p class="details-col-title-en">Capital Details</p>
-            <p class="details-col-note-am am">ይህ ሠርተፌኬት በተሰጠበት ቀን</p>
-            <p class="details-col-note-en">As of the date of issuance of this certificate</p>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">የተፈቀደለት ካፒታል</span><span class="detail-row-label-en">Authorized Capital</span></span>
-              <span class="detail-row-value">${escapeHtml(formatBirr(certificate.authorized_capital))}</span>
-            </div>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">የተፈረመ ካፒታል</span><span class="detail-row-label-en">Subscribed Capital</span></span>
-              <span class="detail-row-value">${escapeHtml(formatBirr(certificate.subscribed_capital))}</span>
-            </div>
-            <div class="detail-row">
-              <span><span class="detail-row-label-am am">የተከፈለ ካፒታል</span><span class="detail-row-label-en">Paid up Capital</span></span>
-              <span class="detail-row-value">${escapeHtml(formatBirr(certificate.paid_up_capital))}</span>
-            </div>
-          </div>
-        </div>
+        <!-- Head Office & Capital Table Grid -->
+        <table class="two-col-table">
+          <tr>
+            <!-- Head Office Address -->
+            <td class="left-col-cell">
+              <div class="section-title"><span class="am">የዋናው መሥሪያ ቤት አድራሻ</span> / <span class="en">Head Office Address</span></div>
+              <table class="kv-table">
+                <tr>
+                  <td><span class="kv-label-am am">ከተማ</span> <span class="kv-label-en">/ City:</span> <span class="kv-value">${escapeHtml(certificate.head_office_city ?? "—")}</span></td>
+                  <td><span class="kv-label-am am">ክፍለ ከተማ</span> <span class="kv-label-en">/ K.K:</span> <span class="kv-value">${escapeHtml(certificate.head_office_kk ?? "—")}</span></td>
+                </tr>
+                <tr>
+                  <td><span class="kv-label-am am">ወረዳ</span> <span class="kv-label-en">/ Wereda:</span> <span class="kv-value">${escapeHtml(certificate.head_office_wereda ?? "—")}</span></td>
+                  <td><span class="kv-label-am am">የቤት ቁጥር</span> <span class="kv-label-en">/ House No:</span> <span class="kv-value">${escapeHtml(certificate.head_office_house_no ?? "—")}</span></td>
+                </tr>
+                <tr>
+                  <td colspan="2"><span class="kv-label-am am">ፖ.ሣ.ቁ</span> <span class="kv-label-en">/ P.O.Box:</span> <span class="kv-value">${escapeHtml(certificate.head_office_po_box ?? "—")}</span></td>
+                </tr>
+              </table>
+            </td>
+            <!-- Capital Details -->
+            <td class="right-col-cell">
+              <div class="section-title">
+                <span class="am">የካፒታል ዝርዝር</span> / <span class="en">Capital Details</span>
+                <span style="font-weight:400; font-size:7.5px; color:#666;">(<span class="am">ይህ ሠርተፌኬት በተሰጠበት ቀን</span> / As of Date of Issuance)</span>
+              </div>
+              <table class="kv-table">
+                <tr>
+                  <td style="width:55%;"><span class="kv-label-am am">የተፈቀደለት ካፒታል</span> <span class="kv-label-en">/ Authorized Capital:</span></td>
+                  <td class="kv-value">${escapeHtml(formatBirr(certificate.authorized_capital))} <span class="kv-label-en">Birr</span></td>
+                </tr>
+                <tr>
+                  <td><span class="kv-label-am am">የተፈረመ ካፒታል</span> <span class="kv-label-en">/ Subscribed Capital:</span></td>
+                  <td class="kv-value">${escapeHtml(formatBirr(certificate.subscribed_capital))} <span class="kv-label-en">Birr</span></td>
+                </tr>
+                <tr>
+                  <td><span class="kv-label-am am">የተከፈለ ካፒታል</span> <span class="kv-label-en">/ Paid up Capital:</span></td>
+                  <td class="kv-value">${escapeHtml(formatBirr(certificate.paid_up_capital))} <span class="kv-label-en">Birr</span></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
 
         <!-- Par value -->
         <div class="par-value-row">
-          <span>
-            <span class="par-value-label-am am">እያንዳንዱ ዋጋ/ፐር ሻር/ ብር</span>
-            <span class="par-value-label-en">Each Per Value of Birr</span>
-          </span>
+          <span><span class="par-value-label-am am">እያንዳንዱ ዋጋ/ፐር ሻር/ ብር</span><br><span class="par-value-label-en">Each Per Value of Birr</span></span>
           <span class="par-value-value">${escapeHtml(formatBirr(certificate.par_value))}</span>
         </div>
+
+        <!-- Shareholder Information -->
+        <div class="section-title"><span class="am">የባለአክሲዮኑ መረጃ</span> / <span class="en">Shareholder Information</span></div>
+        <table class="shareholder-row-table">
+          <tr>
+            <td class="certify-label">
+              <span class="am">ይህ ሰርተፊኬት ለ (አቶ/ወ/ሮ/ወ/ት/ድርጅት)</span><br>
+              <span class="certify-label-en">This is to certify that (Ato/W/ro W/t M/s):</span>
+            </td>
+            <td colspan="5"><span class="shareholder-name-value">${escapeHtml(certificate.shareholder_name)}</span></td>
+          </tr>
+          <tr>
+            <td><span class="addr-label-am am">አድራሻ ከተማ</span><br><span class="addr-label-en">Address City:</span></td>
+            <td><span class="addr-value">${escapeHtml(certificate.address_city ?? "—")}</span></td>
+            <td style="text-align:right;"><span class="addr-label-am am">ወረዳ ክፍለ ከተማ</span><br><span class="addr-label-en">Wereda K.K:</span></td>
+            <td><span class="addr-value">${escapeHtml(certificate.wereda_kk ?? "—")}</span></td>
+            <td style="text-align:right;"><span class="addr-label-am am">ቀበሌ</span><br><span class="addr-label-en">Kebele:</span></td>
+            <td><span class="addr-value">${escapeHtml(certificate.kebele ?? "—")}</span></td>
+          </tr>
+          <tr>
+            <td><span class="addr-label-am am">የቤት ቁጥር</span><br><span class="addr-label-en">House No.:</span></td>
+            <td><span class="addr-value">${escapeHtml(certificate.house_no ?? "—")}</span></td>
+            <td style="text-align:right;"><span class="addr-label-am am">የስልክ ቁጥር</span><br><span class="addr-label-en">Tel.No.:</span></td>
+            <td><span class="addr-value">${escapeHtml(certificate.mobile_number ?? "—")}</span></td>
+            <td colspan="2"></td>
+          </tr>
+        </table>
 
         ${certificate.status !== "issued" ? `
         <div class="status-banner status-${escapeHtml(certificate.status)}">${escapeHtml(certificate.status.toUpperCase())}</div>
         ` : ""}
 
-        </div>
-        </div>
-
-        <!-- Bottom footer: signatures + verification side by side -->
-        <div class="bottom-footer">
-          <div class="signatures">
-            <div class="sig-block">
-              <div class="sig-line"></div>
-              <p class="sig-label-am am">ዋና ስራ አስፈፃሚ</p>
-              <p class="sig-label-en">CEO</p>
-              <p class="sig-label-am am" style="margin-top:3px;">ፊርማ</p>
-              <p class="sig-label-en">Signature</p>
-            </div>
-            <div class="sig-block">
-              <div class="sig-line"></div>
-              <p class="sig-label-am am">የቦርድ ሊቀመንበር</p>
-              <p class="sig-label-en">Board Chairman</p>
-              <p class="sig-label-am am" style="margin-top:3px;">ፊርማ</p>
-              <p class="sig-label-en">Signature</p>
-            </div>
+        <!-- Note Section -->
+        <div class="note-text">
+          <div class="am">
+            <strong class="am">ማሳሰቢያ:</strong> ይህንን ሰርተፊኬት በመመለስና የተዘጋጀውን ቅጽ በመሙላት እነዚህን አክሲዮኖች ለኢትዮጵያዊ ዜግነት ላለው ማንኛውም ሰው በሙሉ ወይም
+            በከፊል ማስተላለፍ ይቻላል። ሆኖም ህጉ በስተቀር ይህንን አክሲዮን ለውጭ ሀገር ዜጋ ማስተላለፍ አይቻልም።
           </div>
-
-          <div class="verification-row">
-            <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
-            <div class="verify-text">
-              <p class="verify-label">Digital Verification</p>
-              <p class="verify-url">${escapeHtml(verificationUrl)}</p>
-              ${certificate.certificate_hash ? `
-              <div class="verify-hash">
-                <p class="verify-label">Integrity Hash (${escapeHtml(certificate.hash_algorithm || "SHA-256")})</p>
-                <p class="verify-hash-val">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
-              </div>` : ""}
-            </div>
+          <div>
+            <strong>Note:</strong> Shares may be transferred to any Ethiopian national upon surrender of this certificate and completion
+            of the prescribed forms of transfer. No shares may be transferred to foreigners.
           </div>
         </div>
 
-        </div>
+        <!-- Signatures + Verification -->
+        <table class="footer-table">
+          <tr>
+            <td class="sig-block">
+              <div class="sig-line"><span class="am">ዋና ስራ አስፈፃሚ</span><br><span class="en">CEO</span><br><span class="en">Signature</span></div>
+            </td>
+            <td class="sig-block">
+              <div class="sig-line"><span class="am">የቦርድ ሊቀመንበር</span><br><span class="en">Board Chairman</span><br><span class="en">Signature</span></div>
+            </td>
+            <td class="verify-block">
+              <div class="verify-flex">
+                <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
+                <div>
+                  <div class="verify-label">Digital Verification</div>
+                  <div class="verify-url">${escapeHtml(verificationUrl)}</div>
+                  ${certificate.certificate_hash ? `
+                  <div class="verify-hash-val">SHA-256: ${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</div>
+                  ` : ""}
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
 
       </div>
     </div>

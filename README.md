@@ -4,6 +4,8 @@
 
 Production deployment uses Vercel for the frontend and API, with Neon PostgreSQL for the database. See [docs/deployment-vercel.md](docs/deployment-vercel.md) for project settings, required environment variables, health checks, and troubleshooting.
 
+A planned migration to a self-hosted Ubuntu VM on Digaf's own cloud subscription (replacing Vercel and Neon, keeping Supabase Auth) is documented in [docs/deployment-self-hosted-ubuntu.md](docs/deployment-self-hosted-ubuntu.md), covering hardware sizing, software requirements, server setup, database migration, subdomain/TLS cutover, ongoing deploys, and backups.
+
 Security cleanup, environment variables, and pre-demo deployment synchronization are documented in [docs/security-secrets-checklist.md](docs/security-secrets-checklist.md), [docs/environment-variable-reference.md](docs/environment-variable-reference.md), and [docs/pre-demo-deployment-sync.md](docs/pre-demo-deployment-sync.md).
 
 ## Role Model

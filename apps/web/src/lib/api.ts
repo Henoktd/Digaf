@@ -476,6 +476,10 @@ export type CreateShareholderInput = {
   riskClassification?: "low" | "medium" | "high";
   proxyEligible?: boolean;
   relationshipStartDate?: string;
+  addressCity?: string;
+  weredaKk?: string;
+  kebele?: string;
+  houseNo?: string;
 };
 
 export async function createShareholder(
@@ -1203,7 +1207,15 @@ export async function fetchCertificates(token?: string, page = 1, limit = 50) {
 }
 
 export async function createCertificate(
-  data: { shareholder_id: string; quantity: number; serial_number: string },
+  data: {
+    shareholder_id: string;
+    quantity: number;
+    serial_number: string;
+    authorized_capital?: number;
+    subscribed_capital?: number;
+    paid_up_capital?: number;
+    par_value?: number;
+  },
   token?: string
 ) {
   return sendJsonRequest(`${API_BASE_URL}/api/certificates`, "POST", data, "Failed to create certificate", token);

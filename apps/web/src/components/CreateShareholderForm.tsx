@@ -24,6 +24,10 @@ type FormState = {
   riskClassification: RiskClassification;
   proxyEligible: boolean;
   relationshipStartDate: string;
+  addressCity: string;
+  weredaKk: string;
+  kebele: string;
+  houseNo: string;
 };
 
 const initialFormState: FormState = {
@@ -36,6 +40,10 @@ const initialFormState: FormState = {
   riskClassification: "low",
   proxyEligible: false,
   relationshipStartDate: "",
+  addressCity: "",
+  weredaKk: "",
+  kebele: "",
+  houseNo: "",
 };
 
 const fieldClass =
@@ -84,6 +92,10 @@ export function CreateShareholderForm({
         riskClassification: formState.riskClassification,
         proxyEligible: formState.proxyEligible,
         relationshipStartDate: formState.relationshipStartDate || undefined,
+        addressCity: formState.addressCity.trim() || undefined,
+        weredaKk: formState.weredaKk.trim() || undefined,
+        kebele: formState.kebele.trim() || undefined,
+        houseNo: formState.houseNo.trim() || undefined,
       }, token);
 
       setFormState(initialFormState);
@@ -197,6 +209,66 @@ export function CreateShareholderForm({
             }
             className={fieldClass}
             placeholder="+251..."
+          />
+        </label>
+
+        <label className={labelClass}>
+          Address city
+          <input
+            value={formState.addressCity}
+            onChange={(event) =>
+              setFormState((current) => ({
+                ...current,
+                addressCity: event.target.value,
+              }))
+            }
+            className={fieldClass}
+            placeholder="e.g. Addis Ababa"
+          />
+        </label>
+
+        <label className={labelClass}>
+          Wereda K.K
+          <input
+            value={formState.weredaKk}
+            onChange={(event) =>
+              setFormState((current) => ({
+                ...current,
+                weredaKk: event.target.value,
+              }))
+            }
+            className={fieldClass}
+            placeholder="Wereda / Kifle Ketema"
+          />
+        </label>
+
+        <label className={labelClass}>
+          Kebele
+          <input
+            value={formState.kebele}
+            onChange={(event) =>
+              setFormState((current) => ({
+                ...current,
+                kebele: event.target.value,
+              }))
+            }
+            className={fieldClass}
+            placeholder="e.g. 07"
+          />
+        </label>
+
+        <label className={labelClass}>
+          House No.
+          <input
+            value={formState.houseNo}
+            onChange={(event) =>
+              setFormState((current) => ({
+                ...current,
+                houseNo: event.target.value,
+              }))
+            }
+            className={fieldClass}
+            placeholder="House number"
           />
         </label>
 

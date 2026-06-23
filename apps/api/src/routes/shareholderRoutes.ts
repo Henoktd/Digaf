@@ -176,6 +176,10 @@ const shareholderCoreSelect = `
   s.mobile_number,
   s.email_address,
   s.physical_address,
+  s.address_city,
+  s.wereda_kk,
+  s.kebele,
+  s.house_no,
   s.source_of_funds_declaration,
   s.created_at,
   s.updated_at
@@ -278,6 +282,10 @@ shareholderRoutes.get("/", async (req, res) => {
           s.mobile_number,
           s.email_address,
           s.physical_address,
+          s.address_city,
+          s.wereda_kk,
+          s.kebele,
+          s.house_no,
           s.source_of_funds_declaration,
           s.created_at,
           s.updated_at
@@ -325,6 +333,10 @@ shareholderRoutes.post("/", async (req, res) => {
   let mobileNumber: string | null = null;
   let emailAddress: string | null = null;
   let physicalAddress: string | null = null;
+  let addressCity: string | null = null;
+  let weredaKk: string | null = null;
+  let kebele: string | null = null;
+  let houseNo: string | null = null;
   let sourceOfFundsDeclaration: string | null = null;
 
   try {
@@ -398,6 +410,10 @@ shareholderRoutes.post("/", async (req, res) => {
       req.body?.physicalAddress,
       "physicalAddress"
     );
+    addressCity = normalizeOptionalString(req.body?.addressCity, "addressCity");
+    weredaKk = normalizeOptionalString(req.body?.weredaKk, "weredaKk");
+    kebele = normalizeOptionalString(req.body?.kebele, "kebele");
+    houseNo = normalizeOptionalString(req.body?.houseNo, "houseNo");
     sourceOfFundsDeclaration = normalizeOptionalString(
       req.body?.sourceOfFundsDeclaration,
       "sourceOfFundsDeclaration"
@@ -478,6 +494,10 @@ shareholderRoutes.post("/", async (req, res) => {
         mobile_number,
         email_address,
         physical_address,
+        address_city,
+        wereda_kk,
+        kebele,
+        house_no,
         source_of_funds_declaration
       )
       VALUES (
@@ -501,7 +521,11 @@ shareholderRoutes.post("/", async (req, res) => {
         $18,
         $19,
         $20,
-        $21
+        $21,
+        $22,
+        $23,
+        $24,
+        $25
       )
       RETURNING
         shareholder_id,
@@ -525,6 +549,10 @@ shareholderRoutes.post("/", async (req, res) => {
         mobile_number,
         email_address,
         physical_address,
+        address_city,
+        wereda_kk,
+        kebele,
+        house_no,
         source_of_funds_declaration,
         created_at,
         updated_at
@@ -550,6 +578,10 @@ shareholderRoutes.post("/", async (req, res) => {
         mobileNumber,
         emailAddress,
         physicalAddress,
+        addressCity,
+        weredaKk,
+        kebele,
+        houseNo,
         sourceOfFundsDeclaration,
       ]
     );
@@ -577,6 +609,10 @@ shareholderRoutes.post("/", async (req, res) => {
       mobile_number: shareholder.mobile_number,
       email_address: shareholder.email_address,
       physical_address: shareholder.physical_address,
+      address_city: shareholder.address_city,
+      wereda_kk: shareholder.wereda_kk,
+      kebele: shareholder.kebele,
+      house_no: shareholder.house_no,
       source_of_funds_declaration: shareholder.source_of_funds_declaration,
     };
 
@@ -994,6 +1030,10 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
   let mobileNumber: string | null = null;
   let emailAddress: string | null = null;
   let physicalAddress: string | null = null;
+  let addressCity: string | null = null;
+  let weredaKk: string | null = null;
+  let kebele: string | null = null;
+  let houseNo: string | null = null;
   let sourceOfFundsDeclaration: string | null = null;
 
   try {
@@ -1027,6 +1067,10 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
       req.body?.physicalAddress,
       "physicalAddress"
     );
+    addressCity = normalizeOptionalString(req.body?.addressCity, "addressCity");
+    weredaKk = normalizeOptionalString(req.body?.weredaKk, "weredaKk");
+    kebele = normalizeOptionalString(req.body?.kebele, "kebele");
+    houseNo = normalizeOptionalString(req.body?.houseNo, "houseNo");
     sourceOfFundsDeclaration = normalizeOptionalString(
       req.body?.sourceOfFundsDeclaration,
       "sourceOfFundsDeclaration"
@@ -1085,6 +1129,10 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
         mobile_number = COALESCE($9, mobile_number),
         email_address = COALESCE($10, email_address),
         physical_address = COALESCE($11, physical_address),
+        address_city = COALESCE($13, address_city),
+        wereda_kk = COALESCE($14, wereda_kk),
+        kebele = COALESCE($15, kebele),
+        house_no = COALESCE($16, house_no),
         source_of_funds_declaration = COALESCE($12, source_of_funds_declaration),
         contact_details = COALESCE(contact_details, '{}'::jsonb) || jsonb_strip_nulls(
           jsonb_build_object(
@@ -1109,6 +1157,10 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
         emailAddress,
         physicalAddress,
         sourceOfFundsDeclaration,
+        addressCity,
+        weredaKk,
+        kebele,
+        houseNo,
       ]
     );
 

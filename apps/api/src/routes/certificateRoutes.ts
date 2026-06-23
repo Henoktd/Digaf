@@ -40,6 +40,19 @@ function formatCertificateDate(value: Date | string | null) {
   return value;
 }
 
+// Small tile of the Digaf "D" mark, used as a repeating security-paper
+// watermark pattern across the certificate border, matching the official
+// Digaf template's repeating diamond/logo texture.
+function buildDigafIconWatermarkDataUri() {
+  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="56" viewBox="58 124 112 88">
+    <g fill="#771bfa" fill-opacity="0.07">
+      <path d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
+      <rect x="64.7" y="179.6" width="23.2" height="23.2"/>
+    </g>
+  </svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(tileSvg).toString("base64")}`;
+}
+
 function formatBirr(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
@@ -538,6 +551,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       width: 240,
     });
     const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
+    const iconWatermarkDataUri = buildDigafIconWatermarkDataUri();
 
     const isRevoked = certificate.status === "revoked" || certificate.revocation_status === "revoked";
     const isDraft = certificate.status === "draft";
@@ -587,9 +601,25 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       border: 0.75px solid #6d28d9;
       padding: 14px 22px 14px;
       position: relative;
+      overflow: hidden;
     }
-    .border-inner::before { content: '◆'; position: absolute; top: -6px; left: -6px; color: #6d28d9; font-size: 9px; line-height: 1; }
-    .border-inner::after  { content: '◆'; position: absolute; bottom: -6px; right: -6px; color: #6d28d9; font-size: 9px; line-height: 1; }
+    .border-inner::before { content: '◆'; position: absolute; top: -6px; left: -6px; color: #6d28d9; font-size: 9px; line-height: 1; z-index: 3; }
+    .border-inner::after  { content: '◆'; position: absolute; bottom: -6px; right: -6px; color: #6d28d9; font-size: 9px; line-height: 1; z-index: 3; }
+
+    .icon-watermark-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: url('${iconWatermarkDataUri}');
+      background-repeat: repeat;
+      background-size: 72px 56px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .cert-content {
+      position: relative;
+      z-index: 1;
+    }
 
     .watermark {
       position: absolute;
@@ -789,7 +819,10 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     <div class="border-outer">
       <div class="border-inner">
 
+        <div class="icon-watermark-pattern"></div>
         ${watermarkText ? `<div class="watermark">${watermarkText}</div>` : ""}
+
+        <div class="cert-content">
 
         <!-- Header -->
         <header class="cert-header">
@@ -973,6 +1006,8 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
               <p class="verify-hash-val">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
             </div>` : ""}
           </div>
+        </div>
+
         </div>
 
       </div>

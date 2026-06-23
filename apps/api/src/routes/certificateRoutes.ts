@@ -53,6 +53,19 @@ function buildDigafIconWatermarkDataUri() {
   return `data:image/svg+xml;base64,${Buffer.from(tileSvg).toString("base64")}`;
 }
 
+// A more visible, smaller tile of the same mark used to form a literal
+// ring of tiny repeated logos framing the certificate border, matching
+// the decorative edge of the official Digaf template.
+function buildDigafIconBorderTileDataUri() {
+  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="20" viewBox="58 124 112 88">
+    <g fill="#771bfa" fill-opacity="0.4">
+      <path d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
+      <rect x="64.7" y="179.6" width="23.2" height="23.2"/>
+    </g>
+  </svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(tileSvg).toString("base64")}`;
+}
+
 function formatBirr(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
@@ -552,6 +565,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     });
     const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
     const iconWatermarkDataUri = buildDigafIconWatermarkDataUri();
+    const iconBorderTileDataUri = buildDigafIconBorderTileDataUri();
 
     const isRevoked = certificate.status === "revoked" || certificate.revocation_status === "revoked";
     const isDraft = certificate.status === "draft";
@@ -580,7 +594,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .am { font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif; display: block; }
 
     .page {
-      width: 190mm;
+      width: 277mm;
       margin: 0 auto;
       background: #fffef9;
       box-shadow: 0 24px 72px rgba(0,0,0,0.26);
@@ -588,18 +602,26 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       overflow: hidden;
     }
 
+    .frame-band {
+      padding: 13px;
+      background-image: url('${iconBorderTileDataUri}');
+      background-repeat: repeat;
+      background-size: 26px 20px;
+    }
+
     .border-outer {
-      margin: 12px;
+      margin: 0;
       border: 2.5px solid #6d28d9;
-      padding: 9px;
+      padding: 7px;
       position: relative;
+      background: #fffef9;
     }
     .border-outer::before { content: '◆'; position: absolute; top: -7px; left: -7px; color: #771bfa; font-size: 11px; line-height: 1; }
     .border-outer::after  { content: '◆'; position: absolute; bottom: -7px; right: -7px; color: #771bfa; font-size: 11px; line-height: 1; }
 
     .border-inner {
       border: 0.75px solid #b39ce6;
-      padding: 22px 30px 24px;
+      padding: 16px 26px 16px;
       position: relative;
       overflow: hidden;
     }
@@ -649,10 +671,19 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .org-sub-am { font-size: 10px; color: #475569; margin-top: 8px; }
     .org-sub-en { font-size: 8.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
 
+    .two-col-layout {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      margin-top: 6px;
+    }
+    .col-left { flex: 1.05; min-width: 0; }
+    .col-right { flex: 1; min-width: 0; }
+
     .title-block {
       text-align: center;
-      padding: 14px 0 12px;
-      margin-top: 10px;
+      padding: 10px 0 8px;
+      margin-top: 8px;
       border-top: 1px solid #e5dff5;
       border-bottom: 1px solid #e5dff5;
     }
@@ -665,72 +696,75 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 0;
-      margin: 10px 0;
+      margin: 0 0 8px;
       border: 0.75px solid #e0d5f5;
       border-radius: 2px;
     }
     .info-field {
-      padding: 9px 11px;
+      padding: 7px 10px;
       border-right: 0.75px solid #e0d5f5;
+      border-bottom: 0.75px solid #e0d5f5;
       text-align: center;
     }
+    .info-field:nth-child(2n) { border-right: none; }
+    .info-field:nth-last-child(-n+2) { border-bottom: none; }
     .info-field:last-child { border-right: none; }
     .info-field-label-am { font-size: 8.5px; color: #475569; font-weight: 600; }
     .info-field-label-en { font-size: 7px; text-transform: uppercase; letter-spacing: 0.08em; color: #9381c4; font-weight: 700; margin-top: 1px; }
     .info-field-value { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; font-weight: 700; color: #1a2e4a; margin-top: 4px; overflow-wrap: anywhere; }
 
     .license-paragraph {
-      margin: 10px 0;
-      padding: 14px 20px;
+      margin: 0 0 8px;
+      padding: 9px 14px;
       background: #faf8ff;
       border: 0.75px solid #e5dff5;
       border-radius: 2px;
       text-align: center;
     }
-    .license-paragraph .am { font-size: 10px; color: #1a2e4a; line-height: 1.7; }
-    .license-paragraph .en { font-size: 9px; color: #64748b; line-height: 1.6; margin-top: 8px; font-style: italic; }
+    .license-paragraph .am { font-size: 9px; color: #1a2e4a; line-height: 1.5; }
+    .license-paragraph .en { font-size: 8px; color: #64748b; line-height: 1.45; margin-top: 6px; font-style: italic; }
 
     .details-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
-      margin: 10px 0;
+      margin: 0 0 8px;
       border: 0.75px solid #e0d5f5;
     }
-    .details-col { padding: 12px 16px; }
+    .details-col { padding: 8px 12px; }
     .details-col:first-child { border-right: 0.75px solid #e0d5f5; }
-    .details-col-title-am { font-size: 9.5px; font-weight: 700; color: #1a2e4a; }
-    .details-col-title-en { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #771bfa; margin-top: 1px; margin-bottom: 8px; }
-    .detail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 0.5px dotted #e5dff5; }
+    .details-col-title-am { font-size: 9px; font-weight: 700; color: #1a2e4a; }
+    .details-col-title-en { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #771bfa; margin-top: 1px; margin-bottom: 5px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 2.5px 0; border-bottom: 0.5px dotted #e5dff5; }
     .detail-row:last-child { border-bottom: none; }
-    .detail-row-label-am { font-size: 9px; color: #475569; }
-    .detail-row-label-en { font-size: 7.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
-    .detail-row-value { font-weight: 700; color: #1a2e4a; text-align: right; white-space: nowrap; font-size: 10.5px; flex-shrink: 0; }
+    .detail-row-label-am { font-size: 8.5px; color: #475569; }
+    .detail-row-label-en { font-size: 7px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em; }
+    .detail-row-value { font-weight: 700; color: #1a2e4a; text-align: right; white-space: nowrap; font-size: 9.5px; flex-shrink: 0; }
 
     .par-value-row {
-      margin: 10px 0;
-      padding: 10px 16px;
+      margin: 0 0 8px;
+      padding: 7px 14px;
       border: 0.75px solid #e0d5f5;
       background: #faf8ff;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .par-value-label-am { font-size: 10px; color: #1a2e4a; font-weight: 600; }
-    .par-value-label-en { font-size: 7.5px; color: #771bfa; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
-    .par-value-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; color: #1a2e4a; font-size: 17px; }
+    .par-value-label-am { font-size: 9px; color: #1a2e4a; font-weight: 600; }
+    .par-value-label-en { font-size: 7px; color: #771bfa; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+    .par-value-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; color: #1a2e4a; font-size: 15px; }
 
-    .certifies-block { text-align: center; padding: 14px 16px 8px; }
-    .certifies-intro-am { font-size: 11px; color: #475569; }
-    .certifies-intro-en { font-size: 9.5px; color: #94a3b8; font-style: italic; margin-top: 2px; }
+    .certifies-block { text-align: center; padding: 12px 12px 4px; }
+    .certifies-intro-am { font-size: 10.5px; color: #475569; }
+    .certifies-intro-en { font-size: 9px; color: #94a3b8; font-style: italic; margin-top: 2px; }
     .shareholder-name {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 28px;
+      font-size: 25px;
       font-weight: 700;
       color: #1a2e4a;
-      margin: 8px 0 4px;
+      margin: 7px 0 3px;
       line-height: 1.15;
     }
 
@@ -738,29 +772,29 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 0;
-      margin: 10px 0;
+      margin: 0 0 8px;
       border: 0.75px solid #e0d5f5;
     }
     .addr-field {
-      padding: 9px 7px;
+      padding: 6px 5px;
       border-right: 0.75px solid #e0d5f5;
       text-align: center;
     }
     .addr-field:last-child { border-right: none; }
-    .addr-field-label-am { font-size: 8px; color: #475569; font-weight: 600; }
-    .addr-field-label-en { font-size: 6.5px; text-transform: uppercase; letter-spacing: 0.04em; color: #9381c4; font-weight: 700; margin-top: 1px; }
-    .addr-field-value { font-size: 11px; font-weight: 700; color: #1a2e4a; margin-top: 4px; overflow-wrap: anywhere; }
+    .addr-field-label-am { font-size: 7.5px; color: #475569; font-weight: 600; }
+    .addr-field-label-en { font-size: 6px; text-transform: uppercase; letter-spacing: 0.03em; color: #9381c4; font-weight: 700; margin-top: 1px; }
+    .addr-field-value { font-size: 10px; font-weight: 700; color: #1a2e4a; margin-top: 3px; overflow-wrap: anywhere; }
 
     .transfer-note {
-      margin: 10px 0;
-      padding: 10px 16px;
+      margin: 0 0 8px;
+      padding: 7px 14px;
       background: #fdf5f5;
       border: 0.75px solid #f3dada;
       border-radius: 2px;
       text-align: center;
     }
-    .transfer-note .am { font-size: 8.5px; color: #7f1d1d; line-height: 1.6; }
-    .transfer-note .en { font-size: 7.5px; color: #b45959; line-height: 1.55; margin-top: 4px; font-style: italic; }
+    .transfer-note .am { font-size: 8px; color: #7f1d1d; line-height: 1.5; }
+    .transfer-note .en { font-size: 7px; color: #b45959; line-height: 1.45; margin-top: 3px; font-style: italic; }
 
     .status-banner {
       text-align: center;
@@ -774,29 +808,36 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .status-draft   { color: #92400e; }
     .status-revoked { color: #991b1b; }
 
+    .bottom-footer {
+      display: flex;
+      gap: 28px;
+      align-items: stretch;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 0.75px solid #e5dff5;
+    }
+
     .signatures {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-top: 18px;
-      padding-top: 16px;
-      border-top: 0.75px solid #e5dff5;
+      gap: 20px;
+      flex: 1.1;
     }
-    .sig-block { text-align: center; }
-    .sig-line { border-bottom: 0.75px solid #1a2e4a; height: 30px; margin-bottom: 6px; }
-    .sig-label-am { font-size: 10px; color: #1a2e4a; font-weight: 600; }
-    .sig-label-en { font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+    .sig-block { text-align: center; align-self: end; }
+    .sig-line { border-bottom: 0.75px solid #1a2e4a; height: 28px; margin-bottom: 6px; }
+    .sig-label-am { font-size: 9.5px; color: #1a2e4a; font-weight: 600; }
+    .sig-label-en { font-size: 7.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 
     .verification-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-top: 14px;
-      padding: 10px 12px;
+      gap: 10px;
+      flex: 1;
+      padding: 9px 11px;
       background: #f8f6f0;
       border: 0.75px solid #e2d8c0;
     }
-    .qr-img { width: 56px; height: 56px; flex-shrink: 0; border: 1.5px solid #ddd6c0; background: #fff; padding: 2px; }
+    .qr-img { width: 50px; height: 50px; flex-shrink: 0; border: 1.5px solid #ddd6c0; background: #fff; padding: 2px; }
     .verify-text { flex: 1; min-width: 0; }
     .verify-label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #92836a; font-weight: 700; margin-bottom: 2px; }
     .verify-url { font-family: 'Courier New', Courier, monospace; font-size: 8.5px; color: #1a2e4a; word-break: break-all; }
@@ -804,7 +845,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .verify-hash-val { font-family: 'Courier New', Courier, monospace; font-size: 7.5px; color: #64748b; word-break: break-all; line-height: 1.4; }
 
     .print-hint {
-      width: 190mm;
+      width: 277mm;
       margin: 10px auto 0;
       text-align: center;
       font-size: 11px;
@@ -817,7 +858,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       .print-hint { display: none; }
     }
 
-    @page { margin: 8mm; size: A4 portrait; }
+    @page { margin: 8mm; size: A4 landscape; }
   </style>
 </head>
 <body>
@@ -856,11 +897,26 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           <p class="org-sub-en">Digaf Micro Credit Provider S.Co</p>
         </header>
 
+        <div class="two-col-layout">
+        <div class="col-left">
+
         <!-- Title block -->
         <div class="title-block">
           <p class="title-am-big am">የአክሲዮን ምስክርነት</p>
           <p class="title-en-big">Share Certificate</p>
         </div>
+
+        <div class="ornament">— ◆ —</div>
+
+        <!-- Certifying text -->
+        <div class="certifies-block">
+          <p class="certifies-intro-am am">ይህም የሚያረጋግጠው (አቶ/ወ/ሮ/ወ/ት/ድ/ጅት)</p>
+          <p class="certifies-intro-en">This is to certify that (Ato/W/ro W/t M/s)</p>
+          <p class="shareholder-name">${escapeHtml(certificate.shareholder_name)}</p>
+        </div>
+
+        </div>
+        <div class="col-right">
 
         <!-- Certificate identity grid -->
         <div class="info-grid">
@@ -950,15 +1006,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           <span class="par-value-value">${escapeHtml(formatBirr(certificate.par_value))}</span>
         </div>
 
-        <div class="ornament">— ◆ —</div>
-
-        <!-- Certifying text -->
-        <div class="certifies-block">
-          <p class="certifies-intro-am am">ይህም የሚያረጋግጠው (አቶ/ወ/ሮ/ወ/ት/ድ/ጅት)</p>
-          <p class="certifies-intro-en">This is to certify that (Ato/W/ro W/t M/s)</p>
-          <p class="shareholder-name">${escapeHtml(certificate.shareholder_name)}</p>
-        </div>
-
         <!-- Shareholder address -->
         <div class="address-grid">
           <div class="addr-field">
@@ -1004,31 +1051,35 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <div class="status-banner status-${escapeHtml(certificate.status)}">${escapeHtml(certificate.status.toUpperCase())}</div>
         ` : ""}
 
-        <!-- Signature blocks -->
-        <div class="signatures">
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <p class="sig-label-am am">ዋና ስ/ ኦፊሰር</p>
-            <p class="sig-label-en">CEO — Signature</p>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <p class="sig-label-am am">የቦርድ ሊ/ መንበር</p>
-            <p class="sig-label-en">Board Chairman — Signature</p>
-          </div>
+        </div>
         </div>
 
-        <!-- QR + Verification -->
-        <div class="verification-row">
-          <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
-          <div class="verify-text">
-            <p class="verify-label">Digital Verification</p>
-            <p class="verify-url">${escapeHtml(verificationUrl)}</p>
-            ${certificate.certificate_hash ? `
-            <div class="verify-hash">
-              <p class="verify-label">Integrity Hash (${escapeHtml(certificate.hash_algorithm || "SHA-256")})</p>
-              <p class="verify-hash-val">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
-            </div>` : ""}
+        <!-- Bottom footer: signatures + verification side by side -->
+        <div class="bottom-footer">
+          <div class="signatures">
+            <div class="sig-block">
+              <div class="sig-line"></div>
+              <p class="sig-label-am am">ዋና ስ/ ኦፊሰር</p>
+              <p class="sig-label-en">CEO — Signature</p>
+            </div>
+            <div class="sig-block">
+              <div class="sig-line"></div>
+              <p class="sig-label-am am">የቦርድ ሊ/ መንበር</p>
+              <p class="sig-label-en">Board Chairman — Signature</p>
+            </div>
+          </div>
+
+          <div class="verification-row">
+            <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
+            <div class="verify-text">
+              <p class="verify-label">Digital Verification</p>
+              <p class="verify-url">${escapeHtml(verificationUrl)}</p>
+              ${certificate.certificate_hash ? `
+              <div class="verify-hash">
+                <p class="verify-label">Integrity Hash (${escapeHtml(certificate.hash_algorithm || "SHA-256")})</p>
+                <p class="verify-hash-val">${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</p>
+              </div>` : ""}
+            </div>
           </div>
         </div>
 

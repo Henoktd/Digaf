@@ -494,6 +494,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         e.legal_name AS issuing_company,
         e.head_office_city,
         e.head_office_wereda,
+        e.head_office_kk,
         e.head_office_house_no,
         e.head_office_po_box,
         e.trade_registration_number,
@@ -737,6 +738,12 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .details-col:first-child { border-right: 0.75px solid #e0d5f5; }
     .details-col-title-am { font-size: 9px; font-weight: 700; color: #1a2e4a; }
     .details-col-title-en { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #771bfa; margin-top: 1px; margin-bottom: 5px; }
+    .details-col-note-am { font-size: 7px; color: #94a3b8; font-style: italic; margin-bottom: 4px; }
+    .details-col-note-en { font-size: 6.5px; color: #b8aedb; font-style: italic; margin-bottom: 4px; margin-top: -2px; }
+
+    .section-label-am { font-size: 9.5px; font-weight: 700; color: #1a2e4a; margin: 6px 0 0; }
+    .section-label-en { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #771bfa; margin-bottom: 4px; }
+
     .detail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 2.5px 0; border-bottom: 0.5px dotted #e5dff5; }
     .detail-row:last-child { border-bottom: none; }
     .detail-row-label-am { font-size: 8.5px; color: #475569; }
@@ -902,7 +909,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <!-- Title block -->
         <div class="title-block">
-          <p class="title-am-big am">የአክሲዮን ምስክርነት</p>
+          <p class="title-am-big am">የአክሲዮን ሠርተፌኬት</p>
           <p class="title-en-big">Share Certificate</p>
         </div>
 
@@ -910,7 +917,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
         <!-- Certifying text -->
         <div class="certifies-block">
-          <p class="certifies-intro-am am">ይህም የሚያረጋግጠው (አቶ/ወ/ሮ/ወ/ት/ድ/ጅት)</p>
+          <p class="certifies-intro-am am">ይህ ሰርተፊኬት ለ (አቶ/ወ/ሮ/ወ/ት/ድርጅት)</p>
           <p class="certifies-intro-en">This is to certify that (Ato/W/ro W/t M/s)</p>
           <p class="shareholder-name">${escapeHtml(certificate.shareholder_name)}</p>
         </div>
@@ -921,12 +928,12 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <!-- Certificate identity grid -->
         <div class="info-grid">
           <div class="info-field">
-            <p class="info-field-label-am am">የምስክርነት ቁ.</p>
+            <p class="info-field-label-am am">የሠርተፌኬት ቁጥር</p>
             <p class="info-field-label-en">Certificate No.</p>
             <p class="info-field-value">${escapeHtml(certificate.serial_number)}</p>
           </div>
           <div class="info-field">
-            <p class="info-field-label-am am">የተመዘገበ ድርሻ ቁጥር</p>
+            <p class="info-field-label-am am">የአክሲዮን ይዞታ መጠን</p>
             <p class="info-field-label-en">No. of Registered Shares</p>
             <p class="info-field-value">${escapeHtml(Number(certificate.quantity).toLocaleString("en-US"))}</p>
           </div>
@@ -942,15 +949,17 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           </div>
         </div>
 
-        <!-- Licensing paragraph -->
+        <!-- Legal Declaration -->
+        <p class="section-label-am am">ህጋዊ መግለጫ</p>
+        <p class="section-label-en">Legal Declaration</p>
         <div class="license-paragraph">
           <p class="am">
-            ድጋፍ አነስተኛ የብድር አክሲዮን ማህበር አ/ማ በማክሮ ፋይናንስ አዋጅ ቁ. ${escapeHtml(certificate.proclamation_reference ?? "40/96")} መሠረት የተቋቋመ ሆኖ
-            በብሔራዊ ባንክ ፈቃድ ቁ. ${escapeHtml(certificate.license_number ?? "MFI/027/2005")} የተፈቀደ እና በንግድ ምክር ቤት ምዝገባ ቁ.
-            ${escapeHtml(certificate.trade_registration_number ?? "10/2/5481/97")} በ 28/07/2005 ዓ.ም የተመዘገበ ድርጅት ነው።
+            ድጋፍ አነስተኛ ብድር አቅራቢ አ/ማ በአነስተኛ የፋይናንስ ስራ አዋጅ ቁጥር ${escapeHtml(certificate.proclamation_reference ?? "40/96")} መሠረት
+            በኢ.ብ.ባ. ፈቃድ ቁጥር ${escapeHtml(certificate.license_number ?? "MFI/027/2005")} እና በንግድ ም.ቁጥር
+            ${escapeHtml(certificate.trade_registration_number ?? "10/2/5481/97")} በ28/07/2005 እ.ኤ.አ. ጀምሮ ስራ ላይ ያለ የአነስተኛ ፋይናንስ ተቋም ነው።
           </p>
           <p class="en">
-            Digaf Micro Credit Provider S.Co was established &amp; operating as per Micro Finance Proclamation
+            Digaf Micro Credit Provider S.Co. was established &amp; operating as per Micro Finance Proclamation
             # ${escapeHtml(certificate.proclamation_reference ?? "40/96")} and licensed by National Bank of Ethiopia
             ${escapeHtml(certificate.license_number ?? "MFI/027/2005")}, registered under Trade Registration
             # ${escapeHtml(certificate.trade_registration_number ?? "10/2/5481/97")} on 28/07/2005 GC.
@@ -960,34 +969,40 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <!-- Head office + Capital details -->
         <div class="details-grid">
           <div class="details-col">
-            <p class="details-col-title-am am">የመስራት ቤት አድራሻ</p>
+            <p class="details-col-title-am am">የዋናው መሥሪያ ቤት አድራሻ</p>
             <p class="details-col-title-en">Head Office Address</p>
             <div class="detail-row">
               <span><span class="detail-row-label-am am">ከተማ</span><span class="detail-row-label-en">City</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_city ?? "—")}</span>
             </div>
             <div class="detail-row">
+              <span><span class="detail-row-label-am am">ክፍለ ከተማ</span><span class="detail-row-label-en">K.K</span></span>
+              <span class="detail-row-value">${escapeHtml(certificate.head_office_kk ?? "—")}</span>
+            </div>
+            <div class="detail-row">
               <span><span class="detail-row-label-am am">ወረዳ</span><span class="detail-row-label-en">Wereda</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_wereda ?? "—")}</span>
             </div>
             <div class="detail-row">
-              <span><span class="detail-row-label-am am">ቤት ቁ.</span><span class="detail-row-label-en">House No.</span></span>
+              <span><span class="detail-row-label-am am">የቤት ቁጥር</span><span class="detail-row-label-en">House No.</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_house_no ?? "—")}</span>
             </div>
             <div class="detail-row">
-              <span><span class="detail-row-label-am am">ፖ.ሣ.ቁ.</span><span class="detail-row-label-en">P.O.Box</span></span>
+              <span><span class="detail-row-label-am am">ፖ.ሣ.ቁ</span><span class="detail-row-label-en">P.O.Box</span></span>
               <span class="detail-row-value">${escapeHtml(certificate.head_office_po_box ?? "—")}</span>
             </div>
           </div>
           <div class="details-col">
-            <p class="details-col-title-am am">ካፒታል መዋቅር</p>
-            <p class="details-col-title-en">Capital Structure (Birr)</p>
+            <p class="details-col-title-am am">የካፒታል ዝርዝር</p>
+            <p class="details-col-title-en">Capital Details</p>
+            <p class="details-col-note-am am">ይህ ሠርተፌኬት በተሰጠበት ቀን</p>
+            <p class="details-col-note-en">As of the date of issuance of this certificate</p>
             <div class="detail-row">
-              <span><span class="detail-row-label-am am">የተፈቀደ ካፒታል</span><span class="detail-row-label-en">Authorized Capital</span></span>
+              <span><span class="detail-row-label-am am">የተፈቀደለት ካፒታል</span><span class="detail-row-label-en">Authorized Capital</span></span>
               <span class="detail-row-value">${escapeHtml(formatBirr(certificate.authorized_capital))}</span>
             </div>
             <div class="detail-row">
-              <span><span class="detail-row-label-am am">የተመዘገበ ካፒታል</span><span class="detail-row-label-en">Subscribed Capital</span></span>
+              <span><span class="detail-row-label-am am">የተፈረመ ካፒታል</span><span class="detail-row-label-en">Subscribed Capital</span></span>
               <span class="detail-row-value">${escapeHtml(formatBirr(certificate.subscribed_capital))}</span>
             </div>
             <div class="detail-row">
@@ -1000,13 +1015,15 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <!-- Par value -->
         <div class="par-value-row">
           <span>
-            <span class="par-value-label-am am">የአንዱ ድርሻ ዋጋ ብር</span>
+            <span class="par-value-label-am am">እያንዳንዱ ዋጋ/ፐር ሻር/ ብር</span>
             <span class="par-value-label-en">Each Per Value of Birr</span>
           </span>
           <span class="par-value-value">${escapeHtml(formatBirr(certificate.par_value))}</span>
         </div>
 
-        <!-- Shareholder address -->
+        <!-- Shareholder Information -->
+        <p class="section-label-am am">የባለአክሲዮኑ መረጃ</p>
+        <p class="section-label-en">Shareholder Information</p>
         <div class="address-grid">
           <div class="addr-field">
             <p class="addr-field-label-am am">አድራሻ ከተማ</p>
@@ -1014,7 +1031,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
             <p class="addr-field-value">${escapeHtml(certificate.address_city ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label-am am">ወረዳ ቀ.ክ</p>
+            <p class="addr-field-label-am am">ወረዳ ክፍለ ከተማ</p>
             <p class="addr-field-label-en">Wereda K.K</p>
             <p class="addr-field-value">${escapeHtml(certificate.wereda_kk ?? "—")}</p>
           </div>
@@ -1024,12 +1041,12 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
             <p class="addr-field-value">${escapeHtml(certificate.kebele ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label-am am">ቤት ቁ.</p>
+            <p class="addr-field-label-am am">የቤት ቁጥር</p>
             <p class="addr-field-label-en">House No.</p>
             <p class="addr-field-value">${escapeHtml(certificate.house_no ?? "—")}</p>
           </div>
           <div class="addr-field">
-            <p class="addr-field-label-am am">ስልክ ቁ.</p>
+            <p class="addr-field-label-am am">የስልክ ቁጥር</p>
             <p class="addr-field-label-en">Tel.No.</p>
             <p class="addr-field-value">${escapeHtml(certificate.mobile_number ?? "—")}</p>
           </div>
@@ -1038,12 +1055,12 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
         <!-- Transfer restriction note -->
         <div class="transfer-note">
           <p class="am">
-            ማስታወሻ: ይህ የምስክርነት ወረቀት በስም ዝውውር ሲፈለግ ለማንኛውም የኢትዮጲያ ዜጋ ብቻ ሊተላለፍ የሚችለው ይህንኑ ምስክርነት ወረቀት በማስረከብ
-            እና የተደነገገውን የዝውውር ስርዓት ካሟላ በኋላ ብቻ ነው። ድርሻ ለማንኛውም የውጭ ዜጋ ሊተላለፍ አይችልም።
+            ማሳሰቢያ: ይህንን ሰርተፊኬት በመመለስና የተዘጋጀውን ቅጽ በመሙላት እነዚህን አክሲዮኖች ለኢትዮጵያዊ ዜግነት ላለው ማንኛውም ሰው በሙሉ ወይም
+            በከፊል ማስተላለፍ ይቻላል። ሆኖም ህጉ በስተቀር ይህንን አክሲዮን ለውጭ ሀገር ዜጋ ማስተላለፍ አይቻልም።
           </p>
           <p class="en">
             Note: Shares may be transferred to any Ethiopian national upon surrender of this certificate and completion
-            of the prescribed forms of transfer. No share may be transferred to foreigners.
+            of the prescribed forms of transfer. No shares may be transferred to foreigners.
           </p>
         </div>
 
@@ -1059,13 +1076,17 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           <div class="signatures">
             <div class="sig-block">
               <div class="sig-line"></div>
-              <p class="sig-label-am am">ዋና ስ/ ኦፊሰር</p>
-              <p class="sig-label-en">CEO — Signature</p>
+              <p class="sig-label-am am">ዋና ስራ አስፈፃሚ</p>
+              <p class="sig-label-en">CEO</p>
+              <p class="sig-label-am am" style="margin-top:3px;">ፊርማ</p>
+              <p class="sig-label-en">Signature</p>
             </div>
             <div class="sig-block">
               <div class="sig-line"></div>
-              <p class="sig-label-am am">የቦርድ ሊ/ መንበር</p>
-              <p class="sig-label-en">Board Chairman — Signature</p>
+              <p class="sig-label-am am">የቦርድ ሊቀመንበር</p>
+              <p class="sig-label-en">Board Chairman</p>
+              <p class="sig-label-am am" style="margin-top:3px;">ፊርማ</p>
+              <p class="sig-label-en">Signature</p>
             </div>
           </div>
 

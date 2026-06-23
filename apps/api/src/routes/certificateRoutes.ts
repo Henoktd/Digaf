@@ -59,12 +59,6 @@ function formatBirr(value: unknown) {
   return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatWrappedToken(value: string | null) {
-  if (!value) return "Not generated";
-
-  return value.match(/.{1,16}/g)?.join(" ") ?? value;
-}
-
 function getFrontendBaseUrl() {
   return (
     process.env.FRONTEND_PUBLIC_BASE_URL || "http://localhost:3000"
@@ -728,21 +722,15 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .status-revoked { color: #991b1b; }
 
     .footer-table { width: 100%; margin-top: 14px; }
-    .sig-block { text-align: center; width: 33%; }
+    .sig-block { text-align: center; width: 40%; }
     .sig-line {
       border-top: 1px solid #7b52ab; margin-top: 34px; padding-top: 5px;
       font-size: 9.5px; font-weight: 700; color: #1a1a2e;
     }
     .sig-line .en { font-weight: normal; font-size: 8px; color: #666; }
-    .verify-block {
-      width: 34%; vertical-align: top; padding: 7px 9px; background: #f2eef7;
-      border-radius: 4px; font-size: 7.5px; color: #444;
-    }
-    .verify-flex { display: flex; align-items: center; gap: 8px; }
-    .qr-img { width: 44px; height: 44px; flex-shrink: 0; border: 1px solid #ccc; background: #fff; padding: 2px; }
-    .verify-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #4a2c73; margin-bottom: 2px; }
-    .verify-url { font-family: 'Courier New', Courier, monospace; word-break: break-all; }
-    .verify-hash-val { font-family: 'Courier New', Courier, monospace; word-break: break-all; margin-top: 2px; color: #666; }
+    .verify-block { width: 20%; text-align: center; vertical-align: top; }
+    .qr-img { width: 52px; height: 52px; border: 1px solid #ccc; background: #fff; padding: 2px; }
+    .verify-caption { font-size: 6.5px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
 
     .print-hint { width: 277mm; margin: 10px auto 0; text-align: center; font-size: 11px; color: #64748b; }
 
@@ -947,16 +935,8 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
               <div class="sig-line"><span class="am">የቦርድ ሊቀመንበር</span><br><span class="en">Board Chairman</span><br><span class="en">Signature</span></div>
             </td>
             <td class="verify-block">
-              <div class="verify-flex">
-                <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
-                <div>
-                  <div class="verify-label">Digital Verification</div>
-                  <div class="verify-url">${escapeHtml(verificationUrl)}</div>
-                  ${certificate.certificate_hash ? `
-                  <div class="verify-hash-val">SHA-256: ${escapeHtml(formatWrappedToken(certificate.certificate_hash))}</div>
-                  ` : ""}
-                </div>
-              </div>
+              <img class="qr-img" src="${qrDataUri}" alt="Certificate verification QR code" />
+              <div class="verify-caption">Scan to verify</div>
             </td>
           </tr>
         </table>

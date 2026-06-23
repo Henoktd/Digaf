@@ -40,6 +40,18 @@ function formatCertificateDate(value: Date | string | null) {
   return value;
 }
 
+// Small tile of the Digaf "D" mark, used as a faint repeating
+// security-paper watermark pattern across the certificate background.
+function buildDigafIconWatermarkDataUri() {
+  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="86" viewBox="58 124 112 88">
+    <g fill="#4a2c73" fill-opacity="0.035">
+      <path d="M130.4,133.2c-.1,0-.2,0-.3,0h0s-13.4,0-13.4,0v23.2h13.4c.1,0,.2,0,.3,0,6.4,0,11.6,5.2,11.6,11.6s-5.2,11.6-11.6,11.6-.2,0-.3,0h0s-13.4,0-13.4,0v-23.2h-23.2v46.4h36.6c.1,0,.2,0,.3,0,19.2,0,34.8-15.6,34.8-34.8s-15.6-34.8-34.8-34.8Z"/>
+      <rect x="64.7" y="179.6" width="23.2" height="23.2"/>
+    </g>
+  </svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(tileSvg).toString("base64")}`;
+}
+
 function formatBirr(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
@@ -537,6 +549,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       width: 240,
     });
     const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
+    const iconWatermarkDataUri = buildDigafIconWatermarkDataUri();
 
     const isRevoked = certificate.status === "revoked" || certificate.revocation_status === "revoked";
     const isDraft = certificate.status === "draft";
@@ -590,6 +603,21 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       padding: 16px 22px;
       position: relative;
       overflow: hidden;
+    }
+
+    .icon-watermark-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: url('${iconWatermarkDataUri}');
+      background-repeat: repeat;
+      background-size: 110px 86px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .cert-content {
+      position: relative;
+      z-index: 1;
     }
 
     .watermark {
@@ -730,7 +758,10 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     <div class="certificate-border">
       <div class="inner-border">
 
+        <div class="icon-watermark-pattern"></div>
         ${watermarkText ? `<div class="watermark">${watermarkText}</div>` : ""}
+
+        <div class="cert-content">
 
         <!-- Header -->
         <table class="header-table">
@@ -856,14 +887,15 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           </tr>
         </table>
 
+        <!-- Shareholder Information -->
+        <div class="section-title"><span class="am">የባለአክሲዮኑ መረጃ</span> / <span class="en">Shareholder Information</span></div>
+
         <!-- Par value -->
         <div class="par-value-row">
           <span><span class="par-value-label-am am">እያንዳንዱ ዋጋ/ፐር ሻር/ ብር</span><br><span class="par-value-label-en">Each Per Value of Birr</span></span>
           <span class="par-value-value">${escapeHtml(formatBirr(certificate.par_value))}</span>
         </div>
 
-        <!-- Shareholder Information -->
-        <div class="section-title"><span class="am">የባለአክሲዮኑ መረጃ</span> / <span class="en">Shareholder Information</span></div>
         <table class="shareholder-row-table">
           <tr>
             <td class="certify-label">
@@ -928,6 +960,8 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
             </td>
           </tr>
         </table>
+
+        </div>
 
       </div>
     </div>

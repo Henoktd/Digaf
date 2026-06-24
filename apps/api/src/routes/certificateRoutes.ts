@@ -660,10 +660,11 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       padding-bottom: 10px;
       border-bottom: 1.5px solid #4a2c73;
     }
-    .header-logo-block { flex-shrink: 0; width: 130px; }
+    .header-logo-block { flex-shrink: 0; }
     .org-logo-big { height: 86px; width: auto; display: block; }
-    .org-sub-am { font-size: 9px; color: #6b6b80; margin-top: 6px; }
-    .org-sub-en { font-size: 7.5px; color: #9a98ab; text-transform: uppercase; letter-spacing: 0.07em; margin-top: 1px; }
+    .org-tagline { font-size: 9px; font-weight: 700; color: #4a2c73; letter-spacing: 0.04em; margin-top: 5px; white-space: nowrap; }
+    .org-sub-am { font-size: 9px; color: #6b6b80; margin-top: 5px; white-space: nowrap; }
+    .org-sub-en { font-size: 7.5px; color: #9a98ab; text-transform: uppercase; letter-spacing: 0.07em; margin-top: 1px; white-space: nowrap; }
 
     .header-title-block { flex: 1; text-align: center; padding-top: 4px; }
     .title-am-big { font-size: 25px; font-weight: 700; color: #1a1a2e; }
@@ -821,8 +822,9 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
                 <rect class="dg-c3" x="64.7" y="179.6" width="23.2" height="23.2"/>
               </g>
             </svg>
-            <p class="org-sub-am am">ድጋፍ አነስተኛ የብድር አክሲዮን ማህበር አ/ማ</p>
-            <p class="org-sub-en">Digaf Micro Credit Provider S.Co</p>
+            <p class="org-tagline am">ድጋፍ mfi</p>
+            <p class="org-sub-am am">ድጋፍ አነስተኛ ብድር አቅራቢ አ/ማ</p>
+            <p class="org-sub-en">DIGAF MICRO CREDIT PROVIDER S.Co.</p>
           </div>
 
           <div class="header-title-block">

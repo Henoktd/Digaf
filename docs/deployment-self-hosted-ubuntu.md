@@ -337,3 +337,140 @@ Because the Vercel deployment stays live and untouched throughout the migration 
 - [ ] Whether Option A or Option B (Section 10) is acceptable for ongoing deploys
 - [ ] Where off-VM backup copies should be stored (Section 11)
 - [ ] Confirmation that Supabase Cloud (auth) remains acceptable, or whether Digaf wants auth data on-premises too (separate future project, not in scope here)
+- [ ] Native (PM2, Sections 4–12) vs Docker (Section 16) — pick one path before starting server prep
+
+## 16. Appendix: Docker-based alternative
+
+Everything above (Sections 4–12) installs Node, PM2, and PostgreSQL directly on the Ubuntu host. Docker is a legitimate alternative — here's what it actually buys you, the tradeoff against the plan above, and the artifacts to use it if you pick it.
+
+### What Docker changes
+
+| | Native (Sections 4–12) | Docker |
+| --- | --- | --- |
+| Host needs | Node 22, PM2, PostgreSQL 16/17 installed directly | Just Docker Engine + Compose plugin |
+| Version pinning | Whatever `apt`/NodeSource gives you at install time | Exact, reproducible — `node:22-alpine`, `postgres:16-alpine`, pinned in the Dockerfile |
+| Redeploy | `git pull && npm install && npm run build && pm2 restart` | `git pull && docker compose up -d --build` |
+| Postgres isolation | Runs directly on the host, own systemd service | Runs in its own container, own network namespace, can't be reached from outside the VM even on `localhost` unless you explicitly map the port |
+| Local dev parity | Different from your Windows dev machine (you don't run PM2 locally) | Same `docker compose` file can run on your dev machine too, if you want true parity |
+| Ops familiarity needed | Standard Linux sysadmin (systemd, apt, PM2) | Docker concepts (images, volumes, networks, compose) — a second thing to learn if Digaf IT hasn't used it before |
+| Resource overhead | Lower (no container runtime layer) | Slightly higher (a few hundred MB RAM for the Docker daemon + per-container overhead) — negligible at the "Recommended" VM tier from Section 2 |
+
+**Bottom line:** for a small internal tool with one VM and no plans to scale to multiple servers, native + PM2 is operationally simpler day-to-day. Docker earns its keep if Digaf IT already runs other Dockerized services (so it's not a new skill), wants the exact same environment in dev/staging/prod, or wants to be able to wipe and rebuild the whole stack from scratch in one command during an incident. Both are production-fine choices — this is a preference call, not a correctness one.
+
+### Docker Compose layout
+
+```
+/opt/digaf-governance/app/
+├── docker-compose.yml
+├── apps/api/Dockerfile
+├── apps/web/Dockerfile
+└── database/migrations/   (mounted into the postgres container to run migrations)
+```
+
+**`apps/api/Dockerfile`:**
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY . .
+EXPOSE 4000
+CMD ["npx", "tsx", "src/server.ts"]
+```
+
+**`apps/web/Dockerfile`** (multi-stage so the final image doesn't carry build tooling):
+
+```dockerfile
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 3000
+CMD ["npm", "run", "start"]
+```
+
+**`docker-compose.yml`** (repo root):
+
+```yaml
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: digaf_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: digaf_governance
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"   # localhost-only, never exposed to the public network
+
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    env_file: ./apps/api/.env
+    depends_on:
+      - postgres
+    ports:
+      - "127.0.0.1:4000:4000"
+
+  web:
+    build: ./apps/web
+    restart: unless-stopped
+    env_file: ./apps/web/.env.local
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  pgdata:
+```
+
+Nginx (Section 8) stays exactly the same either way — it proxies to `localhost:3000` and `localhost:4000` regardless of whether those ports are backed by PM2 processes or Docker containers. The subdomain/TLS/DNS plan (Sections 8–9) is identical.
+
+Inside `apps/api/.env`, change `DATABASE_URL` to use the Docker service name instead of `localhost` when connecting *from inside another container* — but since `api`'s container reaches `postgres` over the Docker-internal network, use `postgresql://digaf_app:${POSTGRES_PASSWORD}@postgres:5432/digaf_governance` (hostname `postgres`, the Compose service name) rather than `localhost`.
+
+### Running migrations with Docker
+
+```bash
+# one-time per migration file, in numeric order
+for f in database/migrations/*.sql; do
+  docker compose exec -T postgres psql -U digaf_app -d digaf_governance < "$f"
+done
+```
+
+### Redeploy workflow with Docker
+
+```bash
+#!/usr/bin/env bash
+# /opt/digaf-governance/deploy.sh (Docker version)
+set -euo pipefail
+cd /opt/digaf-governance/app
+git pull origin main
+docker compose up -d --build
+docker image prune -f   # clean up old image layers so disk doesn't fill up
+```
+
+### Backups with Docker
+
+Same `pg_dump` approach as Section 11, just run through the container:
+
+```bash
+docker compose exec -T postgres pg_dump -U digaf_app digaf_governance -F c > "/opt/digaf-governance/backups/digaf_governance_$(date +%Y%m%d_%H%M%S).dump"
+```
+
+### If you pick Docker, skip these from the native plan
+
+Sections 5 and 6 (installing Node and PostgreSQL directly) are not needed — Docker images supply both. Section 7's `npm install`/`npm run build` steps happen inside the Dockerfile build instead of on the host. PM2 (Section 7's process management, Section 12's `pm2 logs`) is replaced by `docker compose logs -f` and `docker compose ps`; Docker's `restart: unless-stopped` policy covers what PM2's `pm2 startup` was doing (auto-restart on crash and on VM reboot).

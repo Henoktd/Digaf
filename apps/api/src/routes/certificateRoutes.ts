@@ -23,14 +23,11 @@ import {
 
 export const certificateRoutes = Router();
 
-// Logo assets loaded once at module init. apps/api/vercel.json's
-// `includeFiles` config ensures these binary files ship with the
+// Logo asset loaded once at module init. apps/api/vercel.json's
+// `includeFiles` config ensures this binary file ships with the
 // serverless bundle in production, not just locally.
 const digafLogoDataUri = `data:image/png;base64,${fs
   .readFileSync(path.join(__dirname, "../assets/digaf-logo.png"))
-  .toString("base64")}`;
-const digafLogoTinyDataUri = `data:image/png;base64,${fs
-  .readFileSync(path.join(__dirname, "../assets/digaf-logo-tiny.png"))
   .toString("base64")}`;
 
 function escapeHtml(value: unknown) {
@@ -599,17 +596,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       overflow: hidden;
     }
 
-    .icon-watermark-pattern {
-      position: absolute;
-      inset: 0;
-      background-image: url('${digafLogoTinyDataUri}');
-      background-repeat: repeat;
-      background-size: 230px 150px;
-      opacity: 0.4;
-      z-index: 0;
-      pointer-events: none;
-    }
-
     .cert-content { position: relative; z-index: 1; }
 
     .watermark {
@@ -715,7 +701,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     <div class="border-outer">
       <div class="border-inner">
 
-        <div class="icon-watermark-pattern"></div>
         ${watermarkText ? `<div class="watermark">${watermarkText}</div>` : ""}
 
         <div class="cert-content">

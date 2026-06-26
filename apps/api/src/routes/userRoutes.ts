@@ -29,6 +29,21 @@ function makeSupabaseAdmin() {
 
 const supabaseAdmin = makeSupabaseAdmin();
 
+function getFrontendBaseUrl() {
+  return (
+    process.env.FRONTEND_PUBLIC_BASE_URL || "http://localhost:3000"
+  ).replace(/\/+$/, "");
+}
+
+// Where invite/reset emails should land after Supabase exchanges the link's
+// code for a session — our callback route, which then forwards to the
+// password-set page. Without this, Supabase falls back to its dashboard
+// "Site URL", which is why these links were landing on /login with no way
+// to set a password.
+function buildAuthRedirectTo() {
+  return `${getFrontendBaseUrl()}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`;
+}
+
 function notConfigured(res: Parameters<typeof sendServerError>[0]) {
   return sendServerError(
     res,
@@ -68,7 +83,9 @@ userRoutes.post("/invite", async (req, res) => {
   }
 
   try {
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: buildAuthRedirectTo(),
+    });
     if (error) return sendServerError(res, "Failed to invite user", error);
 
     // Set governance role immediately after invite creation
@@ -150,7 +167,9 @@ userRoutes.post("/:id/send-reset", async (req, res) => {
   if (!email || typeof email !== "string") return sendBadRequest(res, "email is required");
 
   try {
-    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email);
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: buildAuthRedirectTo(),
+    });
     if (error) return sendServerError(res, "Failed to send password reset email", error);
     res.json({ data: { sent: true } });
   } catch (error) {

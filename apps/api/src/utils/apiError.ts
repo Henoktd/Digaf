@@ -48,6 +48,29 @@ export function sendForbidden(
   return sendApiError(res, 403, "FORBIDDEN", message, details);
 }
 
+function extractErrorDetails(error: unknown): { message: string } | undefined {
+  if (error instanceof Error) {
+    return { message: error.message };
+  }
+
+  // Supabase/Postgrest errors are plain objects shaped like
+  // { message, code, details, hint } — not Error instances — so the
+  // `instanceof Error` check above silently drops them.
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  ) {
+    const e = error as { message: string; code?: string; details?: string; hint?: string };
+    return {
+      message: [e.message, e.details, e.hint].filter(Boolean).join(" — "),
+    };
+  }
+
+  return undefined;
+}
+
 export function sendServerError(
   res: Response,
   message: string,
@@ -56,11 +79,5 @@ export function sendServerError(
   if (error !== undefined) {
     console.error(`[SERVER_ERROR] ${message}:`, error);
   }
-  return sendApiError(
-    res,
-    500,
-    "SERVER_ERROR",
-    message,
-    error instanceof Error ? { message: error.message } : undefined
-  );
+  return sendApiError(res, 500, "SERVER_ERROR", message, extractErrorDetails(error));
 }

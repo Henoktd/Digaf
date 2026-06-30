@@ -627,7 +627,8 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .corner-tl { top: 10px; left: 10px; } .corner-tr { top: 10px; right: 10px; }
     .corner-bl { bottom: 10px; left: 10px; } .corner-br { bottom: 10px; right: 10px; }
 
-    .content { position: relative; height: 100%; padding: 16px 50px 14px; display: flex; flex-direction: column; z-index: 1; }
+    .content { position: relative; padding: 16px 50px 110px; z-index: 1; }
+    .bottom-block { position: absolute; bottom: 14px; left: 50px; right: 50px; z-index: 2; }
 
     .cert-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .org-logo-img { height: 44px; width: auto; display: block; }
@@ -689,7 +690,6 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
     .status-line { text-align: center; margin-top: 8px; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 
-    .bottom-block { margin-top: auto; }
     .footer-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 8px; }
     .sig-col { text-align: center; width: 230px; }
     .sig-gap { height: 30px; }
@@ -819,7 +819,10 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
       ${statusBannerHtml}
 
-      <div class="bottom-block">
+    </div><!-- /.content -->
+
+    <!-- bottom-block is a direct child of .sheet so position:absolute anchors to the sheet, not content -->
+    <div class="bottom-block">
       <!-- Transfer note -->
       <div class="transfer-note">
         <div class="transfer-am am">ይህ አክሲዮን ለማንኛውም ኢትዮጵያዊ ዜጋ ይህን ሰርተፊኬት በማስረከብ ሊተላለፍ ይችላል፤ ለውጭ ዜጋ ሊተላለፍ አይችልም።</div>
@@ -851,10 +854,9 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           </div>
         </div>
       </div>
-      </div><!-- /.bottom-block -->
+    </div><!-- /.bottom-block -->
 
-    </div>
-  </div>
+  </div><!-- /.sheet -->
 
   <p class="print-hint">Use <strong>File → Print → Save as PDF</strong> to generate a printable certificate.</p>
 </body>

@@ -689,7 +689,8 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
     .status-line { text-align: center; margin-top: 8px; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 
-    .footer-row { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; padding-top: 8px; }
+    .bottom-block { margin-top: auto; }
+    .footer-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 8px; }
     .sig-col { text-align: center; width: 230px; }
     .sig-gap { height: 30px; }
     .sig-line { border-top: 1.2px solid #15122e; padding-top: 5px; }
@@ -818,6 +819,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
 
       ${statusBannerHtml}
 
+      <div class="bottom-block">
       <!-- Transfer note -->
       <div class="transfer-note">
         <div class="transfer-am am">ይህ አክሲዮን ለማንኛውም ኢትዮጵያዊ ዜጋ ይህን ሰርተፊኬት በማስረከብ ሊተላለፍ ይችላል፤ ለውጭ ዜጋ ሊተላለፍ አይችልም።</div>
@@ -849,6 +851,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
           </div>
         </div>
       </div>
+      </div><!-- /.bottom-block -->
 
     </div>
   </div>

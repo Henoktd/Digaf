@@ -573,10 +573,10 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
       padding: 24px;
     }
 
-    @page { size: 297mm 210mm; margin: 0; }
+    @page { size: A4 landscape; margin: 0; }
 
     @media print {
-      body { background: #fff; padding: 0; }
+      html, body { width: 297mm; height: 210mm; margin: 0; padding: 0; background: #fff; overflow: hidden; }
       .print-hint { display: none; }
     }
 

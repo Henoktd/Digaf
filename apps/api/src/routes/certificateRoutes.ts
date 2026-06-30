@@ -627,7 +627,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .corner-tl { top: 10px; left: 10px; } .corner-tr { top: 10px; right: 10px; }
     .corner-bl { bottom: 10px; left: 10px; } .corner-br { bottom: 10px; right: 10px; }
 
-    .content { position: relative; padding: 16px 50px 110px; z-index: 1; }
+    .content { position: relative; height: 100%; padding: 16px 50px 110px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; z-index: 1; }
     .bottom-block { position: absolute; bottom: 14px; left: 50px; right: 50px; z-index: 2; }
 
     .cert-header { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -636,7 +636,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .entity-am { font-family: 'Cormorant Garamond', 'Noto Serif Ethiopic', serif; font-weight: 600; font-size: 17px; color: #15122e; line-height: 1.1; }
     .entity-en { font-size: 10.5px; letter-spacing: .14em; color: #6d54ad; font-weight: 600; margin-top: 4px; }
 
-    .title-block { text-align: center; margin-top: 5px; }
+    .title-block { text-align: center; }
     .title-am { font-family: 'Cormorant Garamond', 'Noto Serif Ethiopic', serif; font-size: 19px; color: #6d54ad; font-weight: 600; letter-spacing: .02em; }
     .title-en-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 4px; }
     .title-rule { height: 1px; width: 120px; }
@@ -645,7 +645,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .title-diamond { width: 6px; height: 6px; background: #a8823f; transform: rotate(45deg); flex: none; }
     .title-en { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 27px; letter-spacing: .14em; color: #15122e; text-transform: uppercase; }
 
-    .meta-strip { display: flex; border-top: 1px solid rgba(21,18,46,.16); border-bottom: 1px solid rgba(21,18,46,.16); margin-top: 10px; }
+    .meta-strip { display: flex; border-top: 1px solid rgba(21,18,46,.16); border-bottom: 1px solid rgba(21,18,46,.16); }
     .meta-cell { flex: 1; padding: 4px 16px; }
     .meta-cell + .meta-cell { border-left: 1px solid rgba(21,18,46,.12); }
     .meta-cell.wide { flex: 1.2; }
@@ -653,11 +653,11 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .meta-value { font-size: 14px; font-weight: 600; color: #15122e; margin-top: 1px; }
     .meta-value.certno { font-family: 'Archivo'; font-size: 15px; font-weight: 700; letter-spacing: .04em; color: #a8823f; margin-top: 3px; }
 
-    .legal { text-align: center; margin: 4px auto 0; max-width: 900px; }
+    .legal { text-align: center; margin: 0 auto; max-width: 900px; }
     .legal-am { font-family: 'Noto Sans Ethiopic', sans-serif; font-size: 10px; line-height: 1.35; color: #3f3a55; }
     .legal-en { font-size: 9.5px; line-height: 1.3; color: #6b6685; margin-top: 3px; }
 
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 46px; margin-top: 5px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 46px; }
     .col-head { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(21,18,46,.14); padding-bottom: 3px; margin-bottom: 2px; }
     .col-diamond { width: 7px; height: 7px; background: #a8823f; transform: rotate(45deg); flex: none; }
     .col-title-am { font-family: 'Cormorant Garamond', 'Noto Serif Ethiopic', serif; font-size: 15px; font-weight: 600; color: #6d54ad; }
@@ -671,7 +671,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
     .kv-unit { color: #6d54ad; font-weight: 500; }
 
     .shareholder-panel {
-      margin-top: 4px; background: rgba(109,84,173,.045); border: 1px solid rgba(109,84,173,.18);
+      background: rgba(109,84,173,.045); border: 1px solid rgba(109,84,173,.18);
       border-left: 3px solid #a8823f; border-radius: 2px; padding: 5px 20px;
     }
     .shareholder-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }

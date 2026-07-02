@@ -21,6 +21,7 @@ function buildNavItems(role: string | undefined): NavItem[] {
     { type: "link", href: "/cap-table", label: "Cap Table" },
 
     { type: "section", label: "Governance" },
+    { type: "link", href: "/share-classes", label: "Share Classes" },
     { type: "link", href: "/certificates", label: "Certificates" },
     { type: "link", href: "/transfers", label: "Transfers" },
     { type: "link", href: "/dividends", label: "Dividend Register" },

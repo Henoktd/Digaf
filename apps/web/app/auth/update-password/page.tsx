@@ -16,29 +16,27 @@ export default function UpdatePasswordPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Check for an already-established session first
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setReady(true);
-      }
-    });
-
-    // Also listen for auth state change (handles cases where session is
-    // established asynchronously by the callback page)
+    // onAuthStateChange fires for both:
+    // - existing cookie session (INITIAL_SESSION)
+    // - hash-based invite/reset tokens in the URL (SIGNED_IN / PASSWORD_RECOVERY)
+    // It must be set up BEFORE getSession() so no events are missed.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         setReady(true);
       }
     });
 
-    // If no session after 4s, assume the link is expired
+    // Also check immediately in case session is already established
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true);
+    });
+
+    // If nothing fires after 5s the link is expired or invalid
     const timeout = setTimeout(() => {
       supabase.auth.getSession().then(({ data }) => {
-        if (!data.session) {
-          router.replace("/login?error=link-expired");
-        }
+        if (!data.session) router.replace("/login?error=link-expired");
       });
-    }, 4000);
+    }, 5000);
 
     return () => {
       subscription.unsubscribe();

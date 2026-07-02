@@ -55,7 +55,7 @@ export function ImportBatchActions({
       const token = await getAccessToken();
       await commitShareholderImportBatch(batchId, token);
       setCommitted(true);
-      router.refresh();
+      router.push("/shareholders");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to commit batch");
     } finally {

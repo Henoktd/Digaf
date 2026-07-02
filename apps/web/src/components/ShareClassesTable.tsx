@@ -88,6 +88,34 @@ export function ShareClassesTable({ shareClasses }: { shareClasses: ShareClass[]
     }
   }
 
+  async function deactivate(sc: ShareClass) {
+    if (!confirm(`Deactivate "${sc.class_name}"? It will no longer appear in dropdowns but existing ownership records are kept.`)) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      const resp = await fetch(`${API_BASE_URL}/api/share-classes/${sc.share_class_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          className: sc.class_name,
+          parValue: sc.par_value,
+          votingRights: sc.voting_rights,
+          votesPerShare: sc.votes_per_share,
+          votingClassTier: sc.voting_class_tier || null,
+          status: "inactive",
+          notes: sc.notes || null,
+        }),
+      });
+      if (!resp.ok) throw new Error("Failed to deactivate");
+      toast("Share class deactivated", "success");
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const inputClass =
     "w-full rounded-lg border border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400";
 
@@ -215,13 +243,25 @@ export function ShareClassesTable({ shareClasses }: { shareClasses: ShareClass[]
               <td className="px-4 py-3 text-slate-500">{sc.notes ?? "—"}</td>
               <td className="px-4 py-3 text-slate-500">{formatDate(sc.created_at, { style: "date" })}</td>
               <td className="px-4 py-3">
-                <button
-                  type="button"
-                  onClick={() => startEdit(sc)}
-                  className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
-                >
-                  Edit
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => startEdit(sc)}
+                    className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  >
+                    Edit
+                  </button>
+                  {sc.status === "active" && (
+                    <button
+                      type="button"
+                      onClick={() => deactivate(sc)}
+                      disabled={saving}
+                      className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                    >
+                      Deactivate
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           )

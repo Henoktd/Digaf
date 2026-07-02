@@ -779,7 +779,7 @@ certificateRoutes.get("/:certificateId/print-preview", async (req, res) => {
             <span class="col-title-en">Head Office Address</span>
           </div>
           <div class="kv-row"><span class="kv-label">ከተማ / City</span><span class="kv-value">${escapeHtml(certificate.head_office_city ?? "—")}</span></div>
-          <div class="kv-row"><span class="kv-label">ክፍለ ከተማ / K.K.</span><span class="kv-value">${escapeHtml(certificate.head_office_kk ?? "—")}</span></div>
+          <div class="kv-row"><span class="kv-label">ክፍለ ከተማ / Sub-City</span><span class="kv-value">${escapeHtml(certificate.head_office_kk ?? "—")}</span></div>
           <div class="kv-row"><span class="kv-label">ወረዳ / Wereda</span><span class="kv-value">${escapeHtml(certificate.head_office_wereda ?? "—")}</span></div>
           <div class="kv-row"><span class="kv-label">የቤት ቁጥር / House No.</span><span class="kv-value">${escapeHtml(certificate.head_office_house_no ?? "—")}</span></div>
           <div class="kv-row"><span class="kv-label">ፖ.ሣ.ቁ / P.O.Box</span><span class="kv-value">${escapeHtml(certificate.head_office_po_box ?? "—")}</span></div>

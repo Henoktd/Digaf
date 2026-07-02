@@ -247,7 +247,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ክፍለ ከተማ / K.K.</label>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ክፍለ ከተማ / Sub-City</label>
                       <input
                         type="text"
                         value={kk}

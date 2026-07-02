@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useActionState } from "react";
 import { login } from "../auth/actions";
 
@@ -26,6 +26,19 @@ function DiafLogo() {
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, initialState);
+
+  // Supabase redirects invite/reset links to the Site URL (/login) with hash tokens.
+  // Detect this and forward to the set-password page with the hash intact.
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get("access_token");
+    const type = params.get("type");
+    if (accessToken && (type === "invite" || type === "recovery")) {
+      window.location.href = `/auth/update-password${window.location.hash}`;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">

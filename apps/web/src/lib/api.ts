@@ -498,6 +498,9 @@ export type CreateShareholderInput = {
   weredaKk?: string;
   kebele?: string;
   houseNo?: string;
+  shareClassId?: string;
+  initialShares?: number;
+  purchaseDate?: string;
 };
 
 export async function createShareholder(
@@ -743,6 +746,7 @@ export type UpdateCoreDetailsInput = {
   nationality?: string | undefined;
   occupation?: string | undefined;
   tinNumber?: string | undefined;
+  nationalIdFayda?: string | null | undefined;
   primaryIdNumber?: string | undefined;
   mobileNumber?: string | undefined;
   emailAddress?: string | undefined;

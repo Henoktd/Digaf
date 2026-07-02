@@ -6,7 +6,7 @@ import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { PaginationBar } from "@/src/components/PaginationBar";
 import { ExportCsvButton } from "@/src/components/ExportCsvButton";
-import { fetchEntities, fetchShareholders } from "@/src/lib/api";
+import { fetchEntities, fetchShareClasses, fetchShareholders } from "@/src/lib/api";
 import { getToken } from "@/src/lib/dal";
 
 type Shareholder = {
@@ -28,6 +28,12 @@ type Entity = {
   entity_id: string;
 };
 
+type ShareClass = {
+  share_class_id: string;
+  class_name: string;
+  par_value: number | null;
+};
+
 export default async function ShareholdersPage({
   searchParams,
 }: {
@@ -36,14 +42,17 @@ export default async function ShareholdersPage({
   const params = searchParams ? await searchParams : {};
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const token = await getToken();
-  const [shareholderResponse, entityResponse] = await Promise.all([
+  const [shareholderResponse, entityResponse, shareClassResponse] = await Promise.all([
     fetchShareholders(token ?? undefined, page, 50),
     fetchEntities(token ?? undefined),
+    fetchShareClasses(token ?? undefined).catch(() => ({ data: [] })),
   ]);
   const shareholders: Shareholder[] = shareholderResponse.data;
   const total: number = shareholderResponse.total ?? shareholders.length;
   const entities: Entity[] = entityResponse.data;
   const entityId = entities[0]?.entity_id ?? null;
+  const allShareClasses: (ShareClass & { status?: string })[] = (shareClassResponse as { data: (ShareClass & { status?: string })[] }).data ?? [];
+  const shareClasses: ShareClass[] = allShareClasses.filter((sc) => !sc.status || sc.status === "active");
 
   return (
     <PageContainer>
@@ -84,7 +93,7 @@ export default async function ShareholdersPage({
         />
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-          <CreateShareholderForm entityId={entityId} />
+          <CreateShareholderForm entityId={entityId} shareClasses={shareClasses} />
 
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             {shareholders.length > 0 ? (

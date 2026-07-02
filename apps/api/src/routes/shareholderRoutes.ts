@@ -338,6 +338,9 @@ shareholderRoutes.post("/", async (req, res) => {
   let kebele: string | null = null;
   let houseNo: string | null = null;
   let sourceOfFundsDeclaration: string | null = null;
+  let shareClassId: string | null = null;
+  let initialShares: number | null = null;
+  let purchaseDate: string | null = null;
 
   try {
     entityId = requireUuid(req.body?.entityId, "entityId");
@@ -418,6 +421,13 @@ shareholderRoutes.post("/", async (req, res) => {
       req.body?.sourceOfFundsDeclaration,
       "sourceOfFundsDeclaration"
     );
+    shareClassId = normalizeOptionalUuid(req.body?.shareClassId, "shareClassId");
+    initialShares = normalizeOptionalNumber(req.body?.initialShares, "initialShares");
+    purchaseDate = normalizeOptionalDateString(req.body?.purchaseDate, "purchaseDate");
+
+    if (shareClassId !== null && (initialShares === null || initialShares <= 0)) {
+      throw new Error("initialShares must be a positive number when shareClassId is provided");
+    }
   } catch (error) {
     return sendBadRequest(
       res,
@@ -615,6 +625,41 @@ shareholderRoutes.post("/", async (req, res) => {
       house_no: shareholder.house_no,
       source_of_funds_declaration: shareholder.source_of_funds_declaration,
     };
+
+    if (shareClassId !== null && initialShares !== null && initialShares > 0) {
+      const scResult = await client.query(
+        `SELECT share_class_id FROM share_class WHERE share_class_id = $1 AND entity_id = $2 AND status = 'active' LIMIT 1`,
+        [shareClassId, entityId]
+      );
+
+      if (scResult.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return sendBadRequest(res, "Share class not found or does not belong to this entity");
+      }
+
+      const ownershipResult = await client.query(
+        `
+        INSERT INTO share_ownership (shareholder_id, share_class_id, quantity, effective_date, status)
+        VALUES ($1, $2, $3, $4::date, 'active')
+        RETURNING id
+        `,
+        [shareholder.shareholder_id, shareClassId, initialShares, purchaseDate ?? null]
+      );
+
+      await client.query(
+        `
+        INSERT INTO audit_log (entity_id, actor_id, action, table_name, record_id, old_value_json, new_value_json, source_ip)
+        VALUES ($1, $2, 'share_ownership_created', 'share_ownership', $3, null, $4::jsonb, $5)
+        `,
+        [
+          entityId,
+          actorId,
+          ownershipResult.rows[0].id,
+          JSON.stringify({ shareholder_id: shareholder.shareholder_id, share_class_id: shareClassId, quantity: initialShares, purchase_date: purchaseDate }),
+          req.ip ?? null,
+        ]
+      );
+    }
 
     await client.query(
       `

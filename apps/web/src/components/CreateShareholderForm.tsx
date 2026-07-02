@@ -10,8 +10,15 @@ type ShareholderType = "individual" | "institution";
 type KycStatus = "not_started" | "pending" | "verified" | "expired";
 type RiskClassification = "low" | "medium" | "high";
 
+type ShareClass = {
+  share_class_id: string;
+  class_name: string;
+  par_value: number | null;
+};
+
 type CreateShareholderFormProps = {
   entityId: string | null;
+  shareClasses?: ShareClass[];
 };
 
 type FormState = {
@@ -28,6 +35,9 @@ type FormState = {
   weredaKk: string;
   kebele: string;
   houseNo: string;
+  shareClassId: string;
+  initialShares: string;
+  purchaseDate: string;
 };
 
 const initialFormState: FormState = {
@@ -44,6 +54,9 @@ const initialFormState: FormState = {
   weredaKk: "",
   kebele: "",
   houseNo: "",
+  shareClassId: "",
+  initialShares: "",
+  purchaseDate: "",
 };
 
 const fieldClass =
@@ -53,6 +66,7 @@ const labelClass = "space-y-2 text-sm font-semibold text-slate-700";
 
 export function CreateShareholderForm({
   entityId,
+  shareClasses = [],
 }: CreateShareholderFormProps) {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>(initialFormState);
@@ -81,6 +95,10 @@ export function CreateShareholderForm({
 
     try {
       const token = await getAccessToken();
+      const initialSharesParsed = formState.initialShares
+        ? parseFloat(formState.initialShares)
+        : undefined;
+
       await createShareholder({
         entityId,
         legalName: formState.legalName.trim(),
@@ -96,10 +114,13 @@ export function CreateShareholderForm({
         weredaKk: formState.weredaKk.trim() || undefined,
         kebele: formState.kebele.trim() || undefined,
         houseNo: formState.houseNo.trim() || undefined,
+        shareClassId: formState.shareClassId || undefined,
+        initialShares: initialSharesParsed,
+        purchaseDate: formState.purchaseDate || undefined,
       }, token);
 
       setFormState(initialFormState);
-      setMessage("Shareholder created. Registry refreshed.");
+      setMessage("Shareholder created and added to cap table.");
       router.refresh();
     } catch (createError) {
       setError(
@@ -112,6 +133,10 @@ export function CreateShareholderForm({
     }
   }
 
+  const selectedClass = shareClasses.find(
+    (sc) => sc.share_class_id === formState.shareClassId
+  );
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -123,7 +148,7 @@ export function CreateShareholderForm({
             Create Shareholder
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Add a controlled shareholder master record to the governance ledger.
+            Add a shareholder record and optionally record their initial share purchase.
           </p>
         </div>
       </div>
@@ -335,6 +360,86 @@ export function CreateShareholderForm({
           Proxy eligible
         </label>
       </div>
+
+      {shareClasses.length > 0 && (
+        <div className="mt-6">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Initial Share Purchase (Optional)
+            </span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <label className={labelClass}>
+              Share class
+              <select
+                value={formState.shareClassId}
+                onChange={(event) =>
+                  setFormState((current) => ({
+                    ...current,
+                    shareClassId: event.target.value,
+                  }))
+                }
+                className={fieldClass}
+              >
+                <option value="">— None / record shares later —</option>
+                {shareClasses.map((sc) => (
+                  <option key={sc.share_class_id} value={sc.share_class_id}>
+                    {sc.class_name}
+                    {sc.par_value != null ? ` (ETB ${sc.par_value} par)` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={labelClass}>
+              Number of shares purchased
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={formState.initialShares}
+                onChange={(event) =>
+                  setFormState((current) => ({
+                    ...current,
+                    initialShares: event.target.value,
+                  }))
+                }
+                disabled={!formState.shareClassId}
+                className={fieldClass}
+                placeholder="e.g. 100"
+              />
+            </label>
+
+            <label className={labelClass}>
+              Date of purchase
+              <input
+                type="date"
+                value={formState.purchaseDate}
+                onChange={(event) =>
+                  setFormState((current) => ({
+                    ...current,
+                    purchaseDate: event.target.value,
+                  }))
+                }
+                disabled={!formState.shareClassId}
+                className={fieldClass}
+              />
+            </label>
+          </div>
+
+          {formState.shareClassId && formState.initialShares && selectedClass?.par_value != null && (
+            <p className="mt-2 text-xs text-slate-500">
+              Total investment:{" "}
+              <span className="font-semibold text-slate-700">
+                ETB {(parseFloat(formState.initialShares) * selectedClass.par_value).toLocaleString()}
+              </span>
+              {" "}(at par value ETB {selectedClass.par_value} × {formState.initialShares} shares)
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button

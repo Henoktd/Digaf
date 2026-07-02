@@ -237,7 +237,7 @@ export default function SettingsPage() {
                   <p className="mb-3 text-xs text-slate-400">Appears on share certificates under the company name.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">City</label>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ከተማ / City</label>
                       <input
                         type="text"
                         value={city}
@@ -247,37 +247,37 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Woreda</label>
-                      <input
-                        type="text"
-                        value={wereda}
-                        onChange={(e) => setWereda(e.target.value)}
-                        placeholder="e.g. Woreda 03"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">K.K. (Kebele)</label>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ክፍለ ከተማ / K.K.</label>
                       <input
                         type="text"
                         value={kk}
                         onChange={(e) => setKk(e.target.value)}
-                        placeholder="e.g. 05"
+                        placeholder="e.g. Gulele"
                         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">House No.</label>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ወረዳ / Wereda</label>
+                      <input
+                        type="text"
+                        value={wereda}
+                        onChange={(e) => setWereda(e.target.value)}
+                        placeholder="e.g. 09"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">የቤት ቁጥር / House No.</label>
                       <input
                         type="text"
                         value={houseNo}
                         onChange={(e) => setHouseNo(e.target.value)}
-                        placeholder="e.g. 1234"
+                        placeholder="e.g. 157"
                         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">P.O. Box</label>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ፖ.ሣ.ቁ / P.O.Box</label>
                       <input
                         type="text"
                         value={poBox}

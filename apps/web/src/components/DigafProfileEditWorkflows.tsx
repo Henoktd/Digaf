@@ -338,6 +338,7 @@ function CoreDetailsForm({
     nationality: toInputValue(core.nationality),
     occupation: toInputValue(core.occupation),
     tinNumber: toInputValue(core.tin_number),
+    nationalIdFayda: toInputValue((core as any).national_id_fayda),
     primaryIdNumber: toInputValue(core.primary_id_number),
     mobileNumber: toInputValue(core.mobile_number),
     emailAddress: toInputValue(core.email_address),
@@ -372,6 +373,7 @@ function CoreDetailsForm({
         nationality: toOptional(formState.nationality),
         occupation: toOptional(formState.occupation),
         tinNumber: toOptional(formState.tinNumber),
+        nationalIdFayda: toOptional(formState.nationalIdFayda),
         primaryIdNumber: toOptional(formState.primaryIdNumber),
         mobileNumber: toOptional(formState.mobileNumber),
         emailAddress: toOptional(formState.emailAddress),
@@ -409,6 +411,7 @@ function CoreDetailsForm({
           ["Nationality", "nationality"],
           ["Occupation", "occupation"],
           ["TIN number", "tinNumber"],
+          ["Fayda National ID (12-digit FIN)", "nationalIdFayda"],
           ["Primary ID number", "primaryIdNumber"],
           ["Mobile number", "mobileNumber"],
           ["Email address", "emailAddress"],
@@ -560,9 +563,33 @@ function IdentityDocumentForm({
           </select>
         </label>
 
+        <label className={labelClass}>
+          ID type
+          <select
+            value={formState.idType}
+            onChange={(event) => {
+              const t = event.target.value;
+              setFormState((cur) => ({
+                ...cur,
+                idType: t,
+                issuingAuthority: t === "fayda_national_id" ? "NIDP — National ID Program of Ethiopia" : cur.issuingAuthority,
+                countryOfIssue: t === "fayda_national_id" ? "Ethiopia" : cur.countryOfIssue,
+              }));
+            }}
+            className={fieldClass}
+          >
+            <option value="">Select…</option>
+            <option value="fayda_national_id">Ethiopian National ID (Fayda)</option>
+            <option value="passport">Passport</option>
+            <option value="driving_license">Driving Licence</option>
+            <option value="kebele_id">Kebele ID</option>
+            <option value="refugee_id">Refugee ID</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+
         {[
-          ["ID type", "idType"],
-          ["ID number", "idNumber"],
+          ["ID number / FIN", "idNumber"],
           ["Issuing authority", "issuingAuthority"],
           ["Country of issue", "countryOfIssue"],
         ].map(([label, key]) => (
@@ -1660,7 +1687,7 @@ export function DigafProfileEditWorkflows({
 
         <SectionForm
           title="Capture Identification Document"
-          description="Append ID document metadata. File upload and SharePoint document linking remain a later workflow."
+          description="Capture the shareholder's identity document details including their Ethiopian National ID (Fayda) number."
           actorRole={actorRole}
           allowedRoles={workflowRoles.identity}
         >

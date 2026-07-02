@@ -192,6 +192,7 @@ export type ShareholderImportDryRunRow = {
   nationality?: string | null;
   occupation?: string | null;
   tinNumber?: string | null;
+  nationalIdFayda?: string | null;
   primaryIdNumber?: string | null;
   mobileNumber?: string | null;
   emailAddress?: string | null;

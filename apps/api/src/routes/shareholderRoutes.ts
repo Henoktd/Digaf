@@ -1026,6 +1026,7 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
   let nationality: string | null = null;
   let occupation: string | null = null;
   let tinNumber: string | null = null;
+  let nationalIdFayda: string | null = null;
   let primaryIdNumber: string | null = null;
   let mobileNumber: string | null = null;
   let emailAddress: string | null = null;
@@ -1053,6 +1054,7 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
     );
     occupation = normalizeOptionalString(req.body?.occupation, "occupation");
     tinNumber = normalizeOptionalString(req.body?.tinNumber, "tinNumber");
+    nationalIdFayda = normalizeOptionalString(req.body?.nationalIdFayda, "nationalIdFayda");
     primaryIdNumber = normalizeOptionalString(
       req.body?.primaryIdNumber,
       "primaryIdNumber"
@@ -1125,15 +1127,16 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
         nationality = COALESCE($5, nationality),
         occupation = COALESCE($6, occupation),
         tin_number = COALESCE($7, tin_number),
-        primary_id_number = COALESCE($8, primary_id_number),
-        mobile_number = COALESCE($9, mobile_number),
-        email_address = COALESCE($10, email_address),
-        physical_address = COALESCE($11, physical_address),
-        address_city = COALESCE($13, address_city),
-        wereda_kk = COALESCE($14, wereda_kk),
-        kebele = COALESCE($15, kebele),
-        house_no = COALESCE($16, house_no),
-        source_of_funds_declaration = COALESCE($12, source_of_funds_declaration),
+        national_id_fayda = COALESCE($8, national_id_fayda),
+        primary_id_number = COALESCE($9, primary_id_number),
+        mobile_number = COALESCE($10, mobile_number),
+        email_address = COALESCE($11, email_address),
+        physical_address = COALESCE($12, physical_address),
+        address_city = COALESCE($14, address_city),
+        wereda_kk = COALESCE($15, wereda_kk),
+        kebele = COALESCE($16, kebele),
+        house_no = COALESCE($17, house_no),
+        source_of_funds_declaration = COALESCE($13, source_of_funds_declaration),
         contact_details = COALESCE(contact_details, '{}'::jsonb) || jsonb_strip_nulls(
           jsonb_build_object(
             'phone', COALESCE($9, mobile_number, contact_details->>'phone'),
@@ -1152,6 +1155,7 @@ shareholderRoutes.put("/:shareholderId/core-details", async (req, res) => {
         nationality,
         occupation,
         tinNumber,
+        nationalIdFayda,
         primaryIdNumber,
         mobileNumber,
         emailAddress,

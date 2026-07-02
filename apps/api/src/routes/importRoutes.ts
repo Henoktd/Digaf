@@ -964,11 +964,11 @@ importRoutes.post("/shareholders/batches/:batchId/commit", async (req, res) => {
       const insertResult = await client.query(
         `INSERT INTO shareholder (
           entity_id, legal_name, type, status, kyc_status, gender, date_of_birth,
-          nationality, occupation, tin_number, primary_id_number, mobile_number,
+          nationality, occupation, tin_number, national_id_fayda, primary_id_number, mobile_number,
           email_address, physical_address, source_of_funds_declaration,
           risk_classification, shareholder_code, relationship_start_date
         ) VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,CURRENT_DATE
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,CURRENT_DATE
         ) RETURNING shareholder_id`,
         [
           resolvedEntityId,
@@ -981,6 +981,7 @@ importRoutes.post("/shareholders/batches/:batchId/commit", async (req, res) => {
           n.nationality ?? null,
           n.occupation ?? null,
           n.tinNumber ?? null,
+          n.nationalIdFayda ?? null,
           n.primaryIdNumber ?? null,
           n.mobileNumber ?? null,
           n.emailAddress ?? null,

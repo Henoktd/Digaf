@@ -31,6 +31,7 @@ const EXCEL_HEADER_MAP: Record<string, keyof ShareholderImportDryRunRow> = {
   "Nationality": "nationality",
   "Occupation": "occupation",
   "TIN Number": "tinNumber",
+  "Fayda National ID (12-digit FIN)": "nationalIdFayda",
   "National ID / Passport Number": "primaryIdNumber",
   "Mobile Number": "mobileNumber",
   "Email Address": "emailAddress",

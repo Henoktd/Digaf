@@ -17,28 +17,37 @@ export default function UpdatePasswordPage() {
     const supabase = createClient();
 
     async function init() {
-      // 1. Check if already logged in (e.g. admin opening link in same browser)
+      // 1. Already logged in
       const { data: existing } = await supabase.auth.getSession();
       if (existing.session) { setReady(true); return; }
 
-      // 2. Parse hash tokens placed by Supabase after invite/reset verification
-      //    e.g. #access_token=...&refresh_token=...&type=invite
-      const hash = window.location.hash.slice(1);
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      // 2. PKCE code in query params — modern Supabase appends ?code=xxx
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-          // Clean hash from URL bar
           window.history.replaceState(null, "", window.location.pathname);
           setReady(true);
           return;
         }
       }
 
-      // 3. Nothing worked — link is expired or already used
+      // 3. Hash tokens — legacy/implicit flow appends #access_token=xxx&refresh_token=xxx
+      const hash = window.location.hash.slice(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (!error) {
+          window.history.replaceState(null, "", window.location.pathname);
+          setReady(true);
+          return;
+        }
+      }
+
+      // 4. Nothing worked — link expired or already used
       router.replace("/login?error=link-expired");
     }
 

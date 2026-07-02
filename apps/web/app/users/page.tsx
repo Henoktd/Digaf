@@ -102,22 +102,18 @@ function CreateUserModal({
 }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("viewer");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirm) { setErr("Passwords do not match"); return; }
-    if (password.length < 8) { setErr("Password must be at least 8 characters"); return; }
     setLoading(true);
     setErr(null);
     try {
       const supabase = createClient();
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
-      const res = await createUserWithPassword(email.trim(), role, password, token) as { data: { id: string; email: string | null; role: string } };
+      const res = await createUserWithPassword(email.trim(), role, "", token) as { data: { id: string; email: string | null; role: string } };
       onSuccess({ ...res.data, last_sign_in_at: null, created_at: new Date().toISOString() });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to create user");
@@ -152,32 +148,9 @@ function CreateUserModal({
             ))}
           </select>
         </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Initial password</label>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Min. 8 characters"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Confirm password</label>
-          <input
-            type="password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Repeat password"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-        </div>
         {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
         <p className="text-xs text-slate-400">
-          No email is sent. Share the email and password with the user directly. They can change their password after logging in.
+          A temporary password will be auto-generated and emailed to the user. They must change it on first login.
         </p>
         <div className="flex justify-end gap-3 pt-1">
           <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">

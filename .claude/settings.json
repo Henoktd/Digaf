@@ -9,7 +9,17 @@
       "Bash(git -C c:/svh-governance-platform log origin/main..HEAD --oneline)",
       "Bash(git -C c:/svh-governance-platform add apps/api/src/routes/importRoutes.ts apps/api/src/utils/apiError.ts apps/web/src/lib/api.ts)",
       "Bash(git -C c:/svh-governance-platform commit -m 'Add import batch debug logging, surface API error details in UI *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Read(//tmp/**)",
+      "Bash(cygpath -w /tmp/mebra_list.json)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=\"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--svh-governance-platform\\\\d64c2810-6150-4847-bb7d-d4cbc7939349\\\\scratchpad\\\\cert_elegant.png\" --window-size=2600,1050 --force-device-scale-factor=2 \"file:///C:/Users/ADMINI~1/AppData/Local/Temp/claude/c--svh-governance-platform/d64c2810-6150-4847-bb7d-d4cbc7939349/scratchpad/cert_elegant.html\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=\"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--svh-governance-platform\\\\d64c2810-6150-4847-bb7d-d4cbc7939349\\\\scratchpad\\\\cert_elegant_zoom.png\" --window-size=1300,560 --force-device-scale-factor=3 \"file:///C:/Users/ADMINI~1/AppData/Local/Temp/claude/c--svh-governance-platform/d64c2810-6150-4847-bb7d-d4cbc7939349/scratchpad/cert_elegant.html\")",
+      "Bash(ls -la docs/)",
+      "Bash(cat apps/web/next.config.*)",
+      "Bash(cat package.json)",
+      "Bash(find infra *)",
+      "Bash(find packages *)",
+      "Bash(curl -s \"http://localhost:4099/api/certificates/b653448a-f4bb-4744-99ef-f5e985923c3a/print-preview\" -o \"C:/Users/ADMINI~1/AppData/Local/Temp/claude/c--svh-governance-platform/d64c2810-6150-4847-bb7d-d4cbc7939349/scratchpad/cert_namefix.html\" -w \"HTTP %{http_code}\\\\n\")"
     ]
   }
 }

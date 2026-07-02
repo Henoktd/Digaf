@@ -6,6 +6,7 @@ import {
   sendForbidden,
   sendServerError,
 } from "../utils/apiError";
+import { sendWelcomeEmail } from "../utils/email";
 
 export const userRoutes = Router();
 
@@ -68,26 +69,35 @@ userRoutes.get("/", async (req, res) => {
   }
 });
 
-// POST /api/users/create — create a user with a known password (no email required)
+function generateTempPassword(): string {
+  // Avoids ambiguous chars (0/O, 1/l/I) so the password is easy to read from an email
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let pwd = "";
+  for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  return pwd;
+}
+
+// POST /api/users/create — create a user, auto-generate a temp password, send welcome email
 userRoutes.post("/create", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
   if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
   if (!supabaseAdmin) return notConfigured(res);
 
-  const { email, role, password } = req.body ?? {};
+  const { email, role } = req.body ?? {};
   if (!email || typeof email !== "string") return sendBadRequest(res, "email is required");
   if (!role || typeof role !== "string") return sendBadRequest(res, "role is required");
   if (!ALLOWED_ROLES.includes(role as ActorRole)) {
     return sendBadRequest(res, `role must be one of: ${ALLOWED_ROLES.join(", ")}`);
   }
-  if (!password || typeof password !== "string") return sendBadRequest(res, "password is required");
-  if (password.length < 8) return sendBadRequest(res, "password must be at least 8 characters");
+
+  const tempPassword = generateTempPassword();
 
   try {
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password,
+      password: tempPassword,
       email_confirm: true,
+      user_metadata: { must_change_password: true },
     });
     if (error) return sendServerError(res, "Failed to create user", error);
 
@@ -97,6 +107,12 @@ userRoutes.post("/create", async (req, res) => {
     });
     if (roleError) {
       console.error("set_user_role after create failed:", roleError);
+    }
+
+    try {
+      await sendWelcomeEmail(email, tempPassword, getFrontendBaseUrl());
+    } catch (emailError) {
+      console.error("Welcome email failed (user still created):", emailError);
     }
 
     res.json({ data: { id: data.user.id, email: data.user.email ?? null, role } });

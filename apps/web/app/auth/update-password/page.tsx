@@ -63,7 +63,10 @@ export default function UpdatePasswordPage() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPass });
+      const { error } = await supabase.auth.updateUser({
+        password: newPass,
+        data: { must_change_password: false },
+      });
       if (error) throw error;
       setDone(true);
       setTimeout(() => router.replace("/"), 2000);

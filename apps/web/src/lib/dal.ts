@@ -14,6 +14,9 @@ export async function requireAuth() {
   if (!session) {
     redirect("/login");
   }
+  if (session.user.user_metadata?.must_change_password) {
+    redirect("/auth/update-password");
+  }
   return session;
 }
 

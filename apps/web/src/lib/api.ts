@@ -1551,13 +1551,13 @@ export async function inviteUser(
 export async function createUserWithPassword(
   email: string,
   role: string,
-  password: string,
+  _password: string,
   token?: string
 ) {
   return sendJsonRequest(
     `${API_BASE_URL}/api/users/create`,
     "POST",
-    { email, role, password },
+    { email, role },
     "Failed to create user",
     token
   );

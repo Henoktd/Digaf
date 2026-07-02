@@ -1,0 +1,4 @@
+ALTER TABLE entity ADD COLUMN IF NOT EXISTS authorized_capital NUMERIC(18,2);
+ALTER TABLE entity ADD COLUMN IF NOT EXISTS subscribed_capital NUMERIC(18,2);
+ALTER TABLE entity ADD COLUMN IF NOT EXISTS paid_up_capital NUMERIC(18,2);
+ALTER TABLE entity ADD COLUMN IF NOT EXISTS default_par_value NUMERIC(18,2);

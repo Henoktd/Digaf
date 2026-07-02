@@ -88,6 +88,23 @@ export async function fetchEntities(token?: string) {
   return sendGetRequest(`${API_BASE_URL}/api/entities`, token);
 }
 
+export async function updateEntityCapitals(
+  entityId: string,
+  data: {
+    authorized_capital?: number | null;
+    subscribed_capital?: number | null;
+    paid_up_capital?: number | null;
+    default_par_value?: number | null;
+  },
+  token?: string
+) {
+  return sendJsonRequest(`${API_BASE_URL}/api/entities/${entityId}`, "PATCH", data, "Failed to update entity capital figures", token);
+}
+
+export async function fetchShareholderCertificateDefaults(shareholderId: string, token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/shareholders/${shareholderId}/certificate-defaults`, token);
+}
+
 export async function fetchShareClasses(token?: string) {
   return sendGetRequest(`${API_BASE_URL}/api/share-classes`, token);
 }

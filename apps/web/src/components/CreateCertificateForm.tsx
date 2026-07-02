@@ -3,10 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
-import { createCertificate } from "@/src/lib/api";
+import { createCertificate, fetchShareholderCertificateDefaults } from "@/src/lib/api";
 import { useToast } from "@/src/components/Toast";
 
 type Shareholder = { shareholder_id: string; legal_name: string };
+
+type EntityCapitals = {
+  entity_id: string;
+  authorized_capital: string | null;
+  subscribed_capital: string | null;
+  paid_up_capital: string | null;
+  default_par_value: string | null;
+};
 
 function generateSerial() {
   const year = new Date().getFullYear();
@@ -14,18 +22,57 @@ function generateSerial() {
   return `DIGAF-CERT-${year}-${rand}`;
 }
 
-export function CreateCertificateForm({ shareholders }: { shareholders: Shareholder[] }) {
+export function CreateCertificateForm({
+  shareholders,
+  entityCapitals,
+}: {
+  shareholders: Shareholder[];
+  entityCapitals?: EntityCapitals | null;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [shareholderId, setShareholderId] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [quantityAutoFilled, setQuantityAutoFilled] = useState(false);
   const [serialNumber, setSerialNumber] = useState(generateSerial());
-  const [authorizedCapital, setAuthorizedCapital] = useState("");
-  const [subscribedCapital, setSubscribedCapital] = useState("");
-  const [paidUpCapital, setPaidUpCapital] = useState("");
-  const [parValue, setParValue] = useState("");
+  const [authorizedCapital, setAuthorizedCapital] = useState(entityCapitals?.authorized_capital ?? "");
+  const [subscribedCapital, setSubscribedCapital] = useState(entityCapitals?.subscribed_capital ?? "");
+  const [paidUpCapital, setPaidUpCapital] = useState(entityCapitals?.paid_up_capital ?? "");
+  const [parValue, setParValue] = useState(entityCapitals?.default_par_value ?? "");
+  const [parValueAutoFilled, setParValueAutoFilled] = useState(false);
+  const [loadingDefaults, setLoadingDefaults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleShareholderChange(id: string) {
+    setShareholderId(id);
+    setQuantityAutoFilled(false);
+    setParValueAutoFilled(false);
+    if (!id) return;
+
+    setLoadingDefaults(true);
+    try {
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const result = await fetchShareholderCertificateDefaults(id, token);
+      const defaults = result?.data;
+      if (defaults) {
+        if (defaults.quantity != null && Number(defaults.quantity) > 0) {
+          setQuantity(String(Number(defaults.quantity)));
+          setQuantityAutoFilled(true);
+        }
+        if (defaults.par_value != null) {
+          setParValue(String(Number(defaults.par_value)));
+          setParValueAutoFilled(true);
+        }
+      }
+    } catch {
+      // Non-fatal — user can fill manually
+    } finally {
+      setLoadingDefaults(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,8 +102,9 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
       router.refresh();
       setShareholderId("");
       setQuantity("");
+      setQuantityAutoFilled(false);
+      setParValueAutoFilled(false);
       setSerialNumber(generateSerial());
-      // Keep capital figures as defaults for the next certificate — they rarely change between issuances
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create certificate");
     } finally {
@@ -72,12 +120,10 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Shareholder
-          </label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Shareholder</label>
           <select
             value={shareholderId}
-            onChange={(e) => setShareholderId(e.target.value)}
+            onChange={(e) => handleShareholderChange(e.target.value)}
             required
             className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
           >
@@ -91,15 +137,19 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
             Number of Shares
+            {loadingDefaults && <span className="text-xs font-normal text-slate-400">Loading…</span>}
+            {quantityAutoFilled && !loadingDefaults && (
+              <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-xs font-normal text-indigo-600">Auto-filled</span>
+            )}
           </label>
           <input
             type="number"
             min="1"
             step="1"
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={(e) => { setQuantity(e.target.value); setQuantityAutoFilled(false); }}
             required
             placeholder="e.g. 1000"
             className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
@@ -107,9 +157,7 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Serial Number
-          </label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Serial Number</label>
           <div className="flex gap-2">
             <input
               type="text"
@@ -132,12 +180,13 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Capital Structure (Birr) — as of this certificate&apos;s issuance
+          {entityCapitals && (
+            <span className="ml-2 font-normal normal-case text-indigo-500">Pre-filled from entity settings</span>
+          )}
         </p>
         <div className="grid gap-4 sm:grid-cols-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Authorized Capital
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Authorized Capital</label>
             <input
               type="number"
               min="0"
@@ -149,9 +198,7 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Subscribed Capital
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Subscribed Capital</label>
             <input
               type="number"
               min="0"
@@ -163,9 +210,7 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Paid-up Capital
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Paid-up Capital</label>
             <input
               type="number"
               min="0"
@@ -177,15 +222,18 @@ export function CreateCertificateForm({ shareholders }: { shareholders: Sharehol
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Each Per Value of Birr
+            <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+              Par Value (Birr)
+              {parValueAutoFilled && (
+                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-xs font-normal text-indigo-600">Auto-filled</span>
+              )}
             </label>
             <input
               type="number"
               min="0"
               step="0.01"
               value={parValue}
-              onChange={(e) => setParValue(e.target.value)}
+              onChange={(e) => { setParValue(e.target.value); setParValueAutoFilled(false); }}
               placeholder="Optional"
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
             />

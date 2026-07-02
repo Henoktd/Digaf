@@ -2835,6 +2835,24 @@ shareholderRoutes.put("/:shareholderId/payment-profile", async (req, res) => {
   }
 });
 
+shareholderRoutes.get("/:shareholderId/certificate-defaults", async (req, res) => {
+  try {
+    const shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
+    const result = await pool.query(
+      `SELECT
+        COALESCE(SUM(so.quantity), 0) AS quantity,
+        MAX(sc.par_value) AS par_value
+      FROM share_ownership so
+      JOIN share_class sc ON sc.share_class_id = so.share_class_id
+      WHERE so.shareholder_id = $1 AND so.status = 'active'`,
+      [shareholderId]
+    );
+    res.json({ data: result.rows[0] ?? { quantity: 0, par_value: null } });
+  } catch (error) {
+    return sendServerError(res, "Failed to fetch certificate defaults", error);
+  }
+});
+
 shareholderRoutes.get("/:shareholderId", async (req, res) => {
   let shareholderId = "";
 

@@ -2,6 +2,7 @@ import {
   fetchCertificateEvents,
   fetchCertificateRenderData,
   fetchCertificates,
+  fetchEntities,
   fetchShareholders,
   getCertificateQrSvgUrl,
 } from "@/src/lib/api";
@@ -80,13 +81,21 @@ export default async function CertificatesPage({
   const params = searchParams ? await searchParams : {};
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const token = await getToken();
-  const [response, shareholdersResponse] = await Promise.all([
+  const [response, shareholdersResponse, entitiesResponse] = await Promise.all([
     fetchCertificates(token ?? undefined, page, 50),
     fetchShareholders(token ?? undefined),
+    fetchEntities(token ?? undefined),
   ]);
   const certificates: Certificate[] = response.data;
   const total: number = response.total ?? certificates.length;
   const shareholders = (shareholdersResponse.data ?? []) as { shareholder_id: string; legal_name: string }[];
+  const entityCapitals = (entitiesResponse.data?.[0] ?? null) as {
+    entity_id: string;
+    authorized_capital: string | null;
+    subscribed_capital: string | null;
+    paid_up_capital: string | null;
+    default_par_value: string | null;
+  } | null;
   const firstCertificate = certificates[0];
   const [eventResponse, renderDataResponse] = firstCertificate
     ? await Promise.all([
@@ -114,7 +123,7 @@ export default async function CertificatesPage({
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
             <h2 className="mb-4 text-lg font-bold text-slate-900">Create New Certificate</h2>
-            <CreateCertificateForm shareholders={shareholders} />
+            <CreateCertificateForm shareholders={shareholders} entityCapitals={entityCapitals} />
           </div>
 
           <CertificatesTable certificates={certificates} />

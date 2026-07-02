@@ -16,32 +16,33 @@ export default function UpdatePasswordPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    // onAuthStateChange fires for both:
-    // - existing cookie session (INITIAL_SESSION)
-    // - hash-based invite/reset tokens in the URL (SIGNED_IN / PASSWORD_RECOVERY)
-    // It must be set up BEFORE getSession() so no events are missed.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setReady(true);
+    async function init() {
+      // 1. Check if already logged in (e.g. admin opening link in same browser)
+      const { data: existing } = await supabase.auth.getSession();
+      if (existing.session) { setReady(true); return; }
+
+      // 2. Parse hash tokens placed by Supabase after invite/reset verification
+      //    e.g. #access_token=...&refresh_token=...&type=invite
+      const hash = window.location.hash.slice(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (!error) {
+          // Clean hash from URL bar
+          window.history.replaceState(null, "", window.location.pathname);
+          setReady(true);
+          return;
+        }
       }
-    });
 
-    // Also check immediately in case session is already established
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
+      // 3. Nothing worked — link is expired or already used
+      router.replace("/login?error=link-expired");
+    }
 
-    // If nothing fires after 5s the link is expired or invalid
-    const timeout = setTimeout(() => {
-      supabase.auth.getSession().then(({ data }) => {
-        if (!data.session) router.replace("/login?error=link-expired");
-      });
-    }, 5000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
+    init();
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {

@@ -1548,6 +1548,21 @@ export async function inviteUser(
   );
 }
 
+export async function createUserWithPassword(
+  email: string,
+  role: string,
+  password: string,
+  token?: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/users/create`,
+    "POST",
+    { email, role, password },
+    "Failed to create user",
+    token
+  );
+}
+
 export async function adminSetUserPassword(
   userId: string,
   password: string,

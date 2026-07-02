@@ -68,6 +68,43 @@ userRoutes.get("/", async (req, res) => {
   }
 });
 
+// POST /api/users/create — create a user with a known password (no email required)
+userRoutes.post("/create", async (req, res) => {
+  const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);
+  if (!roleCheck.ok) return sendForbidden(res, roleCheck.message);
+  if (!supabaseAdmin) return notConfigured(res);
+
+  const { email, role, password } = req.body ?? {};
+  if (!email || typeof email !== "string") return sendBadRequest(res, "email is required");
+  if (!role || typeof role !== "string") return sendBadRequest(res, "role is required");
+  if (!ALLOWED_ROLES.includes(role as ActorRole)) {
+    return sendBadRequest(res, `role must be one of: ${ALLOWED_ROLES.join(", ")}`);
+  }
+  if (!password || typeof password !== "string") return sendBadRequest(res, "password is required");
+  if (password.length < 8) return sendBadRequest(res, "password must be at least 8 characters");
+
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (error) return sendServerError(res, "Failed to create user", error);
+
+    const { error: roleError } = await supabaseAdmin.rpc("set_user_role", {
+      target_user_id: data.user.id,
+      new_role: role,
+    });
+    if (roleError) {
+      console.error("set_user_role after create failed:", roleError);
+    }
+
+    res.json({ data: { id: data.user.id, email: data.user.email ?? null, role } });
+  } catch (error) {
+    return sendServerError(res, "Failed to create user", error);
+  }
+});
+
 // POST /api/users/invite — invite a new user by email and set their role
 userRoutes.post("/invite", async (req, res) => {
   const roleCheck = requireRole(req.auth?.actorRole, ["governance_admin"]);

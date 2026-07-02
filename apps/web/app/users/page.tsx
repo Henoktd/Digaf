@@ -6,7 +6,7 @@ import {
   fetchUsers,
   updateUserRole,
   sendUserPasswordReset,
-  inviteUser,
+  createUserWithPassword,
   adminSetUserPassword,
   deleteUser,
 } from "@/src/lib/api";
@@ -91,9 +91,9 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
-// ─── Invite user modal ────────────────────────────────────────────────────────
+// ─── Create user modal ────────────────────────────────────────────────────────
 
-function InviteModal({
+function CreateUserModal({
   onClose,
   onSuccess,
 }: {
@@ -102,28 +102,32 @@ function InviteModal({
 }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("viewer");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (password !== confirm) { setErr("Passwords do not match"); return; }
+    if (password.length < 8) { setErr("Password must be at least 8 characters"); return; }
     setLoading(true);
     setErr(null);
     try {
       const supabase = createClient();
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
-      const res = await inviteUser(email.trim(), role, token) as { data: { id: string; email: string | null; role: string } };
+      const res = await createUserWithPassword(email.trim(), role, password, token) as { data: { id: string; email: string | null; role: string } };
       onSuccess({ ...res.data, last_sign_in_at: null, created_at: new Date().toISOString() });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed to invite user");
+      setErr(e instanceof Error ? e.message : "Failed to create user");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Modal title="Invite New User" onClose={onClose}>
+    <Modal title="Create New User" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
@@ -148,9 +152,32 @@ function InviteModal({
             ))}
           </select>
         </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700">Initial password</label>
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Min. 8 characters"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700">Confirm password</label>
+          <input
+            type="password"
+            required
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="Repeat password"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
         {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
         <p className="text-xs text-slate-400">
-          An invitation email will be sent. The user sets their own password via the link.
+          No email is sent. Share the email and password with the user directly. They can change their password after logging in.
         </p>
         <div className="flex justify-end gap-3 pt-1">
           <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
@@ -161,7 +188,7 @@ function InviteModal({
             disabled={loading}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {loading ? "Sending invite…" : "Send Invite"}
+            {loading ? "Creating…" : "Create User"}
           </button>
         </div>
       </form>
@@ -400,7 +427,7 @@ export default function UsersPage() {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
   // Modals
-  const [showInvite, setShowInvite] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [passwordTarget, setPasswordTarget] = useState<User | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
@@ -500,10 +527,10 @@ export default function UsersPage() {
                 {users.length} Users
               </div>
               <button
-                onClick={() => setShowInvite(true)}
+                onClick={() => setShowCreate(true)}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
               >
-                + Invite User
+                + Create User
               </button>
             </div>
           }
@@ -570,13 +597,13 @@ export default function UsersPage() {
         </section>
       </div>
 
-      {showInvite && (
-        <InviteModal
-          onClose={() => setShowInvite(false)}
+      {showCreate && (
+        <CreateUserModal
+          onClose={() => setShowCreate(false)}
           onSuccess={(newUser) => {
             setUsers((prev) => [...prev, newUser].sort((a, b) => (a.email ?? "").localeCompare(b.email ?? "")));
-            setShowInvite(false);
-            showToast(`Invite sent to ${newUser.email}.`, true);
+            setShowCreate(false);
+            showToast(`User ${newUser.email} created. Share their credentials manually.`, true);
           }}
         />
       )}

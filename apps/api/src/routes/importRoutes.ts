@@ -956,6 +956,14 @@ importRoutes.post("/shareholders/batches/:batchId/commit", async (req, res) => {
       resolvedEntityId = entityResult.rows[0].entity_id;
     }
 
+    // Pre-fetch active share classes for this entity so we can match by par value
+    const shareClassesResult = await client.query(
+      `SELECT share_class_id, par_value FROM share_class WHERE entity_id = $1 AND status = 'active' ORDER BY created_at ASC`,
+      [resolvedEntityId]
+    );
+    const shareClasses: { share_class_id: string; par_value: number | null }[] = shareClassesResult.rows;
+    const defaultShareClass = shareClasses[0] ?? null;
+
     const rows = rowsResult.rows;
     const createdIds: string[] = [];
 
@@ -997,6 +1005,24 @@ importRoutes.post("/shareholders/batches/:batchId/commit", async (req, res) => {
         `UPDATE shareholder_import_rows SET created_shareholder_id = $2 WHERE id = $1`,
         [row.id, newId]
       );
+
+      // Create share_ownership record if share purchase data is present
+      const qty = n.numberOfSharesPurchased;
+      if (qty && Number(qty) > 0 && shareClasses.length > 0) {
+        const parValue = n.parValuePerShare ? Number(n.parValuePerShare) : null;
+        const matchedClass = parValue !== null
+          ? (shareClasses.find((sc) => sc.par_value !== null && Number(sc.par_value) === parValue) ?? defaultShareClass)
+          : defaultShareClass;
+
+        if (matchedClass) {
+          const purchaseDate = n.dateOfPurchase ?? null;
+          await client.query(
+            `INSERT INTO share_ownership (shareholder_id, share_class_id, quantity, effective_date, status)
+             VALUES ($1, $2, $3, $4::date, 'active')`,
+            [newId, matchedClass.share_class_id, Number(qty), purchaseDate]
+          );
+        }
+      }
     }
 
     await client.query(

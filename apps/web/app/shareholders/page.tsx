@@ -6,6 +6,7 @@ import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { PaginationBar } from "@/src/components/PaginationBar";
 import { ExportCsvButton } from "@/src/components/ExportCsvButton";
+import { ExportExcelButton } from "@/src/components/ExportExcelButton";
 import { fetchEntities, fetchShareClasses, fetchShareholders } from "@/src/lib/api";
 import { getToken } from "@/src/lib/dal";
 
@@ -88,6 +89,7 @@ export default async function ShareholdersPage({
                 ]}
                 filename="shareholders-registry.csv"
               />
+              <ExportExcelButton />
             </div>
           }
         />

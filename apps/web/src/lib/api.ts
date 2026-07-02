@@ -95,10 +95,15 @@ export async function updateEntityCapitals(
     subscribed_capital?: number | null;
     paid_up_capital?: number | null;
     default_par_value?: number | null;
+    head_office_city?: string | null;
+    head_office_wereda?: string | null;
+    head_office_kk?: string | null;
+    head_office_house_no?: string | null;
+    head_office_po_box?: string | null;
   },
   token?: string
 ) {
-  return sendJsonRequest(`${API_BASE_URL}/api/entities/${entityId}`, "PATCH", data, "Failed to update entity capital figures", token);
+  return sendJsonRequest(`${API_BASE_URL}/api/entities/${entityId}`, "PATCH", data, "Failed to update entity settings", token);
 }
 
 export async function fetchShareholderCertificateDefaults(shareholderId: string, token?: string) {
@@ -180,6 +185,10 @@ export async function fetchIntegrationStatus(token?: string) {
 
 export async function fetchShareholders(token?: string, page = 1, limit = 50) {
   return sendGetRequest(`${API_BASE_URL}/api/shareholders?page=${page}&limit=${limit}`, token);
+}
+
+export async function fetchShareholdersExport(token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/shareholders/export`, token);
 }
 
 export type ShareholderImportDryRunRow = {

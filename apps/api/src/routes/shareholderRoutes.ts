@@ -311,6 +311,42 @@ shareholderRoutes.get("/", async (req, res) => {
   }
 });
 
+shareholderRoutes.get("/export", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        s.shareholder_id,
+        s.shareholder_code,
+        s.legal_name,
+        s.type,
+        s.gender,
+        s.date_of_birth,
+        s.nationality,
+        s.occupation,
+        s.tin_number,
+        s.primary_id_number,
+        s.mobile_number,
+        s.email_address,
+        s.physical_address,
+        s.source_of_funds_declaration,
+        s.kyc_status,
+        s.risk_classification,
+        s.status,
+        so.quantity AS number_of_shares_purchased,
+        sc.par_value AS par_value_per_share,
+        so.effective_date AS date_of_purchase,
+        sc.class_name AS share_class_name
+      FROM shareholder s
+      LEFT JOIN share_ownership so ON so.shareholder_id = s.shareholder_id AND so.status = 'active'
+      LEFT JOIN share_class sc ON sc.share_class_id = so.share_class_id
+      ORDER BY s.legal_name ASC
+    `);
+    res.json({ data: result.rows });
+  } catch (error) {
+    return sendServerError(res, "Failed to export shareholders", error);
+  }
+});
+
 shareholderRoutes.post("/", async (req, res) => {
   let entityId = "";
   let legalName = "";

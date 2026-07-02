@@ -30,6 +30,11 @@ export default function SettingsPage() {
   const [subCap, setSubCap] = useState("");
   const [paidCap, setPaidCap] = useState("");
   const [parVal, setParVal] = useState("");
+  const [city, setCity] = useState("");
+  const [wereda, setWereda] = useState("");
+  const [kk, setKk] = useState("");
+  const [houseNo, setHouseNo] = useState("");
+  const [poBox, setPoBox] = useState("");
   const [capsLoading, setCapsLoading] = useState(false);
   const [capsSaving, setCapsSaving] = useState(false);
 
@@ -49,6 +54,11 @@ export default function SettingsPage() {
           setSubCap(entity.subscribed_capital ?? "");
           setPaidCap(entity.paid_up_capital ?? "");
           setParVal(entity.default_par_value ?? "");
+          setCity(entity.head_office_city ?? "");
+          setWereda(entity.head_office_wereda ?? "");
+          setKk(entity.head_office_kk ?? "");
+          setHouseNo(entity.head_office_house_no ?? "");
+          setPoBox(entity.head_office_po_box ?? "");
         }
       } catch {
         // Non-fatal
@@ -74,10 +84,15 @@ export default function SettingsPage() {
           subscribed_capital: subCap ? Number(subCap) : null,
           paid_up_capital: paidCap ? Number(paidCap) : null,
           default_par_value: parVal ? Number(parVal) : null,
+          head_office_city: city || null,
+          head_office_wereda: wereda || null,
+          head_office_kk: kk || null,
+          head_office_house_no: houseNo || null,
+          head_office_po_box: poBox || null,
         },
         token
       );
-      showToast("Capital figures saved. New certificates will use these values.", true);
+      showToast("Entity settings saved. Certificates will use these values.", true);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to save", false);
     } finally {
@@ -163,61 +178,124 @@ export default function SettingsPage() {
         {/* Entity capital settings — governance_admin only */}
         {role === "governance_admin" && (
           <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">Entity Capital Figures</h2>
+            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">Entity Settings</h2>
             <p className="mb-5 text-xs text-slate-400">
-              These figures appear on every new share certificate. Update them whenever the entity&apos;s capital structure changes.
+              Capital figures and address appear on every new share certificate. Update them whenever the entity&apos;s details change.
             </p>
             {capsLoading ? (
               <p className="text-sm text-slate-400">Loading…</p>
             ) : (
-              <form onSubmit={handleSaveCapitals} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <form onSubmit={handleSaveCapitals} className="space-y-6">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Authorized Capital (Birr)</label>
-                  <input
-                    type="number" min="0" step="0.01"
-                    value={authCap}
-                    onChange={(e) => setAuthCap(e.target.value)}
-                    placeholder="e.g. 12000000"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Capital Structure</p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Authorized Capital (Birr)</label>
+                      <input
+                        type="number" min="0" step="0.01"
+                        value={authCap}
+                        onChange={(e) => setAuthCap(e.target.value)}
+                        placeholder="e.g. 12000000"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Subscribed Capital (Birr)</label>
+                      <input
+                        type="number" min="0" step="0.01"
+                        value={subCap}
+                        onChange={(e) => setSubCap(e.target.value)}
+                        placeholder="e.g. 23000000"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Paid-up Capital (Birr)</label>
+                      <input
+                        type="number" min="0" step="0.01"
+                        value={paidCap}
+                        onChange={(e) => setPaidCap(e.target.value)}
+                        placeholder="e.g. 33000000"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Default Par Value (Birr)</label>
+                      <input
+                        type="number" min="0" step="0.01"
+                        value={parVal}
+                        onChange={(e) => setParVal(e.target.value)}
+                        placeholder="e.g. 22"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Subscribed Capital (Birr)</label>
-                  <input
-                    type="number" min="0" step="0.01"
-                    value={subCap}
-                    onChange={(e) => setSubCap(e.target.value)}
-                    placeholder="e.g. 23000000"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Head Office Address</p>
+                  <p className="mb-3 text-xs text-slate-400">Appears on share certificates under the company name.</p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">City</label>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="e.g. Addis Ababa"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Woreda</label>
+                      <input
+                        type="text"
+                        value={wereda}
+                        onChange={(e) => setWereda(e.target.value)}
+                        placeholder="e.g. Woreda 03"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">K.K. (Kebele)</label>
+                      <input
+                        type="text"
+                        value={kk}
+                        onChange={(e) => setKk(e.target.value)}
+                        placeholder="e.g. 05"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">House No.</label>
+                      <input
+                        type="text"
+                        value={houseNo}
+                        onChange={(e) => setHouseNo(e.target.value)}
+                        placeholder="e.g. 1234"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">P.O. Box</label>
+                      <input
+                        type="text"
+                        value={poBox}
+                        onChange={(e) => setPoBox(e.target.value)}
+                        placeholder="e.g. 5678"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Paid-up Capital (Birr)</label>
-                  <input
-                    type="number" min="0" step="0.01"
-                    value={paidCap}
-                    onChange={(e) => setPaidCap(e.target.value)}
-                    placeholder="e.g. 33000000"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Default Par Value (Birr)</label>
-                  <input
-                    type="number" min="0" step="0.01"
-                    value={parVal}
-                    onChange={(e) => setParVal(e.target.value)}
-                    placeholder="e.g. 22"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
-                </div>
-                <div className="sm:col-span-2 lg:col-span-4">
                   <button
                     type="submit"
                     disabled={capsSaving}
                     className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                   >
-                    {capsSaving ? "Saving…" : "Save Capital Figures"}
+                    {capsSaving ? "Saving…" : "Save Entity Settings"}
                   </button>
                 </div>
               </form>

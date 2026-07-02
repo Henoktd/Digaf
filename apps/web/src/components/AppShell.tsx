@@ -132,7 +132,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="text-sm font-semibold text-slate-700">
                   Digaf Microcredit Provider SC
                 </p>
-                <p className="text-xs text-slate-400">Shareholder Governance Platform</p>
+                <p className="text-xs text-slate-400">Shareholder Registry & Compliance</p>
               </div>
             </div>
 

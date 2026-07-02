@@ -125,8 +125,8 @@ export default async function Home() {
             />
           }
           eyebrow="Digaf Governance Portal"
-          title="Digaf Shareholder Governance Platform"
-          description="Board-ready dashboard for shareholder governance, transfer controls, certificates, audit evidence, and SLA visibility."
+          title="Digaf"
+          description="Shareholder registry, KYC compliance, and certificate management for Digaf."
           badge={
             <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
               {formatNumber(summary.entity_count)} Entity

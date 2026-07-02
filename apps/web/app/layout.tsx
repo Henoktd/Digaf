@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Digaf Shareholder Governance Platform",
+  title: "Digaf",
   description:
-    "Shareholder governance and engagement portal for Digaf Microcredit Provider SC",
+    "Shareholder registry, KYC compliance, and certificate management for Digaf.",
   icons: {
     icon: "/logos/digaf-logo.svg",
     shortcut: "/logos/digaf-logo.svg",

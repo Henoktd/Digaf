@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
-const BRAND_NAME = "Digaf Shareholder Governance Platform";
+const BRAND_NAME = "Digaf";
 const LOGO_SRC = "/logos/digaf-logo.svg";
 
 type BrandLogoProps = {

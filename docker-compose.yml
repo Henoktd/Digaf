@@ -27,6 +27,11 @@ services:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    environment:
+      # Override at runtime so Server Components reach the API via the internal
+      # Docker network (http://api:4000) rather than the public URL baked in at
+      # build time, which is only reachable by the browser.
+      NEXT_PUBLIC_API_BASE_URL: http://api:4000
     restart: unless-stopped
     depends_on:
       - api

@@ -41,7 +41,7 @@ function getFrontendBaseUrl() {
 // "Site URL", which is why these links were landing on /login with no way
 // to set a password.
 function buildAuthRedirectTo() {
-  return `${getFrontendBaseUrl()}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`;
+  return `${getFrontendBaseUrl()}/auth/callback?next=/auth/update-password`;
 }
 
 function notConfigured(res: Parameters<typeof sendServerError>[0]) {

@@ -13,17 +13,37 @@ export default function UpdatePasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // Wait for the session to be established (callback route sets it via cookie)
   useEffect(() => {
     const supabase = createClient();
+
+    // Check for an already-established session first
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setReady(true);
-      } else {
-        // Session not found — link may be expired or callback wasn't visited
-        router.replace("/login?error=link-expired");
       }
     });
+
+    // Also listen for auth state change (handles cases where session is
+    // established asynchronously by the callback page)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setReady(true);
+      }
+    });
+
+    // If no session after 4s, assume the link is expired
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (!data.session) {
+          router.replace("/login?error=link-expired");
+        }
+      });
+    }, 4000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {

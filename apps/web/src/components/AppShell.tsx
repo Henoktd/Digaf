@@ -1,16 +1,13 @@
 import Link from "next/link";
 import { BrandLogo } from "@/src/components/BrandLogo";
 import { SessionWatcher } from "@/src/components/SessionWatcher";
-import { SideNavLinks, MobileNavLinks } from "@/src/components/NavLinks";
+import { SideNavLinks, type NavItem } from "@/src/components/NavLinks";
+import { MobileNavDrawer } from "@/src/components/MobileNavDrawer";
 import { getSession } from "@/src/lib/dal";
 import { logout } from "@/app/auth/actions";
 
 const ORG_NAME = "Digaf Microcredit Provider SC";
 const ORG_TAGLINE = "Shareholder Registry & Compliance";
-
-type NavItem =
-  | { type: "link"; href: string; label: string; indent?: boolean }
-  | { type: "section"; label: string };
 
 function buildNavItems(role: string | undefined): NavItem[] {
   const isAdmin = role === "governance_admin";
@@ -123,7 +120,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         {/* Top bar — mobile + desktop context header */}
         <header className="sticky top-0 z-10 max-w-full border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <MobileNavDrawer items={navItems} />
               <Link href="/" className="shrink-0 lg:hidden">
                 <BrandLogo
                   imageClassName="h-9 w-auto max-w-[8rem]"
@@ -155,11 +153,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               </form>
             </div>
           </div>
-
-          {/* Mobile nav pills */}
-          <nav className="-mx-4 mt-3 flex max-w-[100vw] gap-1.5 overflow-x-auto px-4 pb-1 lg:hidden">
-            <MobileNavLinks items={navItems} />
-          </nav>
         </header>
 
         {children}

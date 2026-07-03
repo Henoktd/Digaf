@@ -44,27 +44,3 @@ export function SideNavLinks({ items }: { items: NavItem[] }) {
     </>
   );
 }
-
-export function MobileNavLinks({ items }: { items: NavItem[] }) {
-  const pathname = usePathname();
-
-  return (
-    <>
-      {items
-        .filter((item): item is Extract<NavItem, { type: "link" }> => item.type === "link")
-        .map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
-              isActive(item.href, pathname)
-                ? "bg-indigo-600 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-    </>
-  );
-}

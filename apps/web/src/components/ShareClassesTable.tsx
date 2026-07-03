@@ -6,6 +6,7 @@ import { createClient } from "@/src/lib/supabase/client";
 import { useToast } from "@/src/components/Toast";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { formatDate } from "@/src/lib/dateUtils";
+import { fieldClass } from "@/src/components/ui/field";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
@@ -116,8 +117,7 @@ export function ShareClassesTable({ shareClasses }: { shareClasses: ShareClass[]
     }
   }
 
-  const inputClass =
-    "w-full rounded-lg border border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400";
+  const inputClass = fieldClass;
 
   if (shareClasses.length === 0) {
     return (

@@ -6,6 +6,8 @@ import { useRole } from "@/src/lib/useRole";
 import { fetchEntities, updateEntityCapitals } from "@/src/lib/api";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
+import { Button } from "@/src/components/ui/Button";
+import { fieldClass, labelClass } from "@/src/components/ui/field";
 
 const ROLE_LABELS: Record<string, string> = {
   governance_admin: "Governance Admin",
@@ -139,7 +141,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <PageContainer>
-        <div className="py-16 text-center text-sm text-slate-400">Loading…</div>
+        <div className="py-16 text-center text-sm text-slate-500">Loading…</div>
       </PageContainer>
     );
   }
@@ -154,7 +156,7 @@ export default function SettingsPage() {
         />
 
         {toast && (
-          <div className={`rounded-xl px-4 py-3 text-sm font-medium ${toast.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+          <div className={`rounded-xl px-4 py-3 text-sm font-medium ${toast.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
             {toast.msg}
           </div>
         )}
@@ -170,7 +172,7 @@ export default function SettingsPage() {
               <p className="font-semibold text-slate-900">
                 {role ? (ROLE_LABELS[role] ?? role.replace(/_/g, " ")) : "No role assigned"}
               </p>
-              <p className="text-xs text-slate-400">Contact a Governance Admin to change your role.</p>
+              <p className="text-xs text-slate-500">Contact a Governance Admin to change your role.</p>
             </div>
           </div>
         </section>
@@ -179,124 +181,120 @@ export default function SettingsPage() {
         {role === "governance_admin" && (
           <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
             <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">Entity Settings</h2>
-            <p className="mb-5 text-xs text-slate-400">
+            <p className="mb-5 text-xs text-slate-500">
               Capital figures and address appear on every new share certificate. Update them whenever the entity&apos;s details change.
             </p>
             {capsLoading ? (
-              <p className="text-sm text-slate-400">Loading…</p>
+              <p className="text-sm text-slate-500">Loading…</p>
             ) : (
               <form onSubmit={handleSaveCapitals} className="space-y-6">
                 <div>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Capital Structure</p>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Capital Structure</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Authorized Capital (Birr)</label>
+                      <label className={labelClass}>Authorized Capital (Birr)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={authCap}
                         onChange={(e) => setAuthCap(e.target.value)}
                         placeholder="e.g. 12000000"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Subscribed Capital (Birr)</label>
+                      <label className={labelClass}>Subscribed Capital (Birr)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={subCap}
                         onChange={(e) => setSubCap(e.target.value)}
                         placeholder="e.g. 23000000"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Paid-up Capital (Birr)</label>
+                      <label className={labelClass}>Paid-up Capital (Birr)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={paidCap}
                         onChange={(e) => setPaidCap(e.target.value)}
                         placeholder="e.g. 33000000"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Default Par Value (Birr)</label>
+                      <label className={labelClass}>Default Par Value (Birr)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={parVal}
                         onChange={(e) => setParVal(e.target.value)}
                         placeholder="e.g. 22"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Head Office Address</p>
-                  <p className="mb-3 text-xs text-slate-400">Appears on share certificates under the company name.</p>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Head Office Address</p>
+                  <p className="mb-3 text-xs text-slate-500">Appears on share certificates under the company name.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ከተማ / City</label>
+                      <label className={labelClass}>ከተማ / City</label>
                       <input
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder="e.g. Addis Ababa"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ክፍለ ከተማ / Sub-City</label>
+                      <label className={labelClass}>ክፍለ ከተማ / Sub-City</label>
                       <input
                         type="text"
                         value={kk}
                         onChange={(e) => setKk(e.target.value)}
                         placeholder="e.g. Gulele"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ወረዳ / Wereda</label>
+                      <label className={labelClass}>ወረዳ / Wereda</label>
                       <input
                         type="text"
                         value={wereda}
                         onChange={(e) => setWereda(e.target.value)}
                         placeholder="e.g. 09"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">የቤት ቁጥር / House No.</label>
+                      <label className={labelClass}>የቤት ቁጥር / House No.</label>
                       <input
                         type="text"
                         value={houseNo}
                         onChange={(e) => setHouseNo(e.target.value)}
                         placeholder="e.g. 157"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">ፖ.ሣ.ቁ / P.O.Box</label>
+                      <label className={labelClass}>ፖ.ሣ.ቁ / P.O.Box</label>
                       <input
                         type="text"
                         value={poBox}
                         onChange={(e) => setPoBox(e.target.value)}
                         placeholder="e.g. 5678"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        className={fieldClass}
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <button
-                    type="submit"
-                    disabled={capsSaving}
-                    className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-                  >
+                  <Button type="submit" disabled={capsSaving}>
                     {capsSaving ? "Saving…" : "Save Entity Settings"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
@@ -306,47 +304,43 @@ export default function SettingsPage() {
         {/* Change password */}
         <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
           <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">Change Password</h2>
-          <p className="mb-5 text-xs text-slate-400">Your new password must be at least 8 characters.</p>
+          <p className="mb-5 text-xs text-slate-500">Your new password must be at least 8 characters.</p>
 
           <form onSubmit={handleChangePassword} className="max-w-sm space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Current password</label>
+              <label className={labelClass}>Current password</label>
               <input
                 type="password"
                 required
                 value={current}
                 onChange={(e) => setCurrent(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">New password</label>
+              <label className={labelClass}>New password</label>
               <input
                 type="password"
                 required
                 minLength={8}
                 value={newPass}
                 onChange={(e) => setNewPass(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Confirm new password</label>
+              <label className={labelClass}>Confirm new password</label>
               <input
                 type="password"
                 required
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className={fieldClass}
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-            >
+            <Button type="submit" disabled={loading}>
               {loading ? "Saving…" : "Change Password"}
-            </button>
+            </Button>
           </form>
         </section>
       </div>

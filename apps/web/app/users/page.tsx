@@ -14,6 +14,8 @@ import { useRole } from "@/src/lib/useRole";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { EmptyState } from "@/src/components/EmptyState";
+import { Button, buttonClasses } from "@/src/components/ui/Button";
+import { fieldClass, labelClass } from "@/src/components/ui/field";
 
 type User = {
   id: string;
@@ -58,7 +60,7 @@ function formatDate(value: string | null) {
 function RoleBadge({ role }: { role: string | null }) {
   if (!role) {
     return (
-      <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+      <span className="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-600">
         No role
       </span>
     );
@@ -80,7 +82,8 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close dialog"
+            className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           >
             ✕
           </button>
@@ -126,43 +129,41 @@ function CreateUserModal({
     <Modal title="Create New User" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
+          <label htmlFor="create-user-email" className={labelClass}>Email address</label>
           <input
+            id="create-user-email"
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="user@digaf.com"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className={fieldClass}
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
+          <label htmlFor="create-user-role" className={labelClass}>Role</label>
           <select
+            id="create-user-role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className={fieldClass}
           >
             {ROLES.map((r) => (
               <option key={r} value={r}>{ROLE_LABELS[r]}</option>
             ))}
           </select>
         </div>
-        {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
-        <p className="text-xs text-slate-400">
+        {err && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{err}</p>}
+        <p className="text-xs text-slate-500">
           A temporary password will be auto-generated and emailed to the user. They must change it on first login.
         </p>
         <div className="flex justify-end gap-3 pt-1">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button type="submit" disabled={loading}>
             {loading ? "Creating…" : "Create User"}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>
@@ -208,43 +209,41 @@ function SetPasswordModal({
     <Modal title={`Set Password — ${user.email}`} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">New password</label>
+          <label htmlFor="set-password-new" className={labelClass}>New password</label>
           <input
+            id="set-password-new"
             type="password"
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Min. 8 characters"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className={fieldClass}
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Confirm password</label>
+          <label htmlFor="set-password-confirm" className={labelClass}>Confirm password</label>
           <input
+            id="set-password-confirm"
             type="password"
             required
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="Repeat password"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className={fieldClass}
           />
         </div>
-        {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
-        <p className="text-xs text-slate-400">
+        {err && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{err}</p>}
+        <p className="text-xs text-slate-500">
           Share the new password with the user securely. They can change it themselves in Settings.
         </p>
         <div className="flex justify-end gap-3 pt-1">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button type="submit" disabled={loading}>
             {loading ? "Setting password…" : "Set Password"}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>
@@ -289,18 +288,14 @@ function DeleteModal({
           <span className="font-semibold">{user.email}</span>? This cannot be undone.
           All their session data in Supabase Auth will be deleted.
         </p>
-        {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+        {err && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{err}</p>}
         <div className="flex justify-end gap-3 pt-1">
-          <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={confirm}
-            disabled={loading}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="danger" onClick={confirm} disabled={loading}>
             {loading ? "Removing…" : "Remove User"}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
@@ -348,8 +343,9 @@ function UserRow({
         <select
           defaultValue={user.role ?? ""}
           disabled={saving}
+          aria-label={`Change role for ${user.email ?? "user"}`}
           onChange={(e) => onRoleChange(user.id, e.target.value)}
-          className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
+          className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <option value="" disabled>Assign role…</option>
           {ROLES.map((r) => (
@@ -360,26 +356,32 @@ function UserRow({
       <td className="px-4 py-3 text-sm text-slate-500">{formatDate(user.last_sign_in_at)}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={!user.email || isSendingReset}
             onClick={() => user.email && onResetPassword(user.id, user.email)}
-            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
           >
             {isSendingReset ? "Sending…" : "Send Reset"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onSetPassword(user)}
-            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+            className="hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
           >
             Set Password
-          </button>
+          </Button>
           {!isSelf && (
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => onDelete(user)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+              className="text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
             >
               Remove
-            </button>
+            </Button>
           )}
         </div>
       </td>
@@ -472,7 +474,7 @@ export default function UsersPage() {
   if (roleLoading) {
     return (
       <PageContainer>
-        <div className="py-16 text-center text-sm text-slate-400">Loading…</div>
+        <div className="py-16 text-center text-sm text-slate-500">Loading…</div>
       </PageContainer>
     );
   }
@@ -480,7 +482,7 @@ export default function UsersPage() {
   if (role !== "governance_admin") {
     return (
       <PageContainer>
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           Access restricted. Only Governance Admins can manage users.
         </div>
       </PageContainer>
@@ -499,24 +501,19 @@ export default function UsersPage() {
               <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
                 {users.length} Users
               </div>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
-              >
-                + Create User
-              </button>
+              <Button onClick={() => setShowCreate(true)}>+ Create User</Button>
             </div>
           }
         />
 
         {toast && (
-          <div className={`rounded-xl px-4 py-3 text-sm font-medium ${toast.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+          <div className={`rounded-xl px-4 py-3 text-sm font-medium ${toast.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
             {toast.msg}
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}{" "}
             <button onClick={loadUsers} className="ml-2 underline hover:no-underline">
               Retry
@@ -526,7 +523,7 @@ export default function UsersPage() {
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
           {loading ? (
-            <div className="py-12 text-center text-sm text-slate-400">Loading users…</div>
+            <div className="py-12 text-center text-sm text-slate-500">Loading users…</div>
           ) : users.length === 0 && !error ? (
             <EmptyState
               title="No users yet"
@@ -563,7 +560,7 @@ export default function UsersPage() {
             </div>
           ) : null}
 
-          <p className="mt-4 text-xs text-slate-400">
+          <p className="mt-4 text-xs text-slate-500">
             Role changes update immediately in Supabase but only take effect for the user on their next login.
             Users can change their own password at any time in Settings.
           </p>

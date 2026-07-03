@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button, buttonClasses } from "@/src/components/ui/Button";
+import { fieldClass } from "@/src/components/ui/field";
 
 type Props = {
   isOpen: boolean;
@@ -30,15 +32,20 @@ export function ConfirmModal({
   if (!isOpen) return null;
 
   const confirmDisabled = requireReason && reason.trim() === "";
-  const confirmBg =
-    variant === "danger"
-      ? "bg-red-600 hover:bg-red-700 disabled:bg-red-300"
-      : "bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300";
+  const confirmClass =
+    variant === "danger" ? buttonClasses("danger") : buttonClasses("warning");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+      >
+        <h2 id="confirm-modal-title" className="text-lg font-bold text-slate-900">
+          {title}
+        </h2>
         <p className="mt-2 text-sm text-slate-600">{message}</p>
 
         {requireReason && (
@@ -46,22 +53,22 @@ export function ConfirmModal({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Enter reason..."
-            className="mt-4 w-full rounded-xl border border-slate-300 p-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            aria-label="Reason"
+            className={`mt-4 ${fieldClass}`}
             rows={3}
           />
         )}
 
         <div className="mt-5 flex justify-end gap-3">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => {
               setReason("");
               onCancel();
             }}
-            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             {cancelLabel}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => {
@@ -69,7 +76,7 @@ export function ConfirmModal({
               setReason("");
             }}
             disabled={confirmDisabled}
-            className={`rounded-full px-4 py-2 text-sm font-semibold text-white transition-colors ${confirmBg}`}
+            className={confirmClass}
           >
             {confirmLabel}
           </button>

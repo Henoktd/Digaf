@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { updateShareholderKyc } from "@/src/lib/api";
 import { createClient } from "@/src/lib/supabase/client";
+import { fieldClass, wrapLabelClass as labelClass } from "@/src/components/ui/field";
 
 type KycStatus = "not_started" | "pending" | "verified" | "expired";
 type RiskClassification = "low" | "medium" | "high";
@@ -23,10 +24,6 @@ type FormState = {
   decisionNotes: string;
 };
 
-const fieldClass =
-  "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200";
-
-const labelClass = "space-y-2 text-sm font-semibold text-slate-700";
 
 function toDateInputValue(value: string | null) {
   return value ? value.slice(0, 10) : "";

@@ -34,7 +34,18 @@ export function SkeletonCard({
 export function PageSkeleton() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-      <SkeletonCard rows={2} />
+      <div className="space-y-3 pb-2">
+        <SkeletonLine width="w-48" height="h-7" />
+        <SkeletonLine width="w-72" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+            <SkeletonLine width="w-24" height="h-3" />
+            <SkeletonLine width="w-16" height="h-8" />
+          </div>
+        ))}
+      </div>
       <SkeletonCard rows={5} />
       <SkeletonCard rows={4} />
     </div>

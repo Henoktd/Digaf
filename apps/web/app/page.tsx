@@ -4,10 +4,11 @@ import {
 } from "@/src/lib/api";
 import { getToken } from "@/src/lib/dal";
 import { EmptyState } from "@/src/components/EmptyState";
-import { BrandLogo } from "@/src/components/BrandLogo";
 import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
+import { RefreshButton } from "@/src/components/RefreshButton";
+import { StackedBar } from "@/src/components/StackedBar";
 import { StatusBadge } from "@/src/components/StatusBadge";
 
 type DashboardSummaryResponse = {
@@ -19,11 +20,6 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 2,
   }).format(Number(value || 0));
-}
-
-function pct(value: number, total: number) {
-  if (!total) return 0;
-  return Math.max(0, Math.min(100, Math.round((value / total) * 100)));
 }
 
 function formatLabel(value: string | null) {
@@ -43,10 +39,12 @@ export default async function Home() {
   const token = await getToken();
 
   let summary: DashboardSummary;
+  let loadFailed = false;
   try {
     const response: DashboardSummaryResponse = await fetchDashboardSummary(token);
     summary = response.data;
   } catch {
+    loadFailed = true;
     summary = {
       entity_count: 0,
       shareholder_count: 0,
@@ -77,7 +75,19 @@ export default async function Home() {
     };
   }
 
-  const kpis = [
+  const kycTone =
+    (summary.kyc_expired_count ?? 0) > 0
+      ? ("danger" as const)
+      : (summary.kyc_expiring_soon_count ?? 0) > 0
+        ? ("warning" as const)
+        : undefined;
+
+  const kpis: {
+    label: string;
+    value: number;
+    detail: string;
+    tone?: "success" | "warning" | "danger";
+  }[] = [
     {
       label: "Shareholders",
       value: summary.shareholder_count,
@@ -87,7 +97,7 @@ export default async function Home() {
       label: "KYC Status",
       value: summary.kyc_verified_count ?? 0,
       detail: `${formatNumber(summary.kyc_expired_count ?? 0)} expired · ${formatNumber(summary.kyc_expiring_soon_count ?? 0)} expiring soon`,
-      alert: (summary.kyc_expired_count ?? 0) > 0 || (summary.kyc_expiring_soon_count ?? 0) > 0,
+      tone: kycTone,
     },
     {
       label: "Certificates",
@@ -105,7 +115,7 @@ export default async function Home() {
       label: "Pending Approvals",
       value: summary.pending_approval_count,
       detail: `${formatNumber(summary.overdue_approval_count)} overdue`,
-      alert: (summary.overdue_approval_count ?? 0) > 0,
+      tone: (summary.overdue_approval_count ?? 0) > 0 ? "danger" : undefined,
     },
     {
       label: "Active Legal Holds",
@@ -118,14 +128,9 @@ export default async function Home() {
     <PageContainer>
       <div className="mx-auto max-w-7xl space-y-8">
         <PageHeader
-          brand={
-            <BrandLogo
-              imageClassName="h-14 w-auto max-w-full"
-              fallbackClassName="inline-block max-w-full break-words text-base font-bold leading-tight text-slate-900 sm:text-lg"
-            />
-          }
+          variant="page"
           eyebrow="Digaf Governance Portal"
-          title="Digaf"
+          title="Dashboard"
           description="Shareholder registry, KYC compliance, and certificate management for Digaf."
           badge={
             <div className="max-w-full break-words rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">
@@ -134,6 +139,18 @@ export default async function Home() {
           }
         />
 
+        {loadFailed && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3"
+          >
+            <p className="text-sm font-medium text-rose-800">
+              Dashboard data could not be loaded — the values below are empty, not real figures.
+            </p>
+            <RefreshButton label="Retry" />
+          </div>
+        )}
+
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {kpis.map((kpi) => (
             <KpiCard
@@ -141,121 +158,64 @@ export default async function Home() {
               label={kpi.label}
               value={formatNumber(kpi.value)}
               detail={kpi.detail}
-              tone={(kpi as { alert?: boolean }).alert ? "warning" : undefined}
+              tone={kpi.tone}
             />
           ))}
         </section>
 
         {/* Registry Health Charts */}
         <section>
-          <h2 className="mb-4 text-base font-bold uppercase tracking-wide text-slate-400">
+          <h2 className="mb-4 text-base font-bold uppercase tracking-wide text-slate-500">
             Registry Health
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            {/* KYC Compliance chart */}
-            {(() => {
-              const total = summary.shareholder_count;
-              const verified = summary.kyc_verified_count ?? 0;
-              const expiring = summary.kyc_expiring_soon_count ?? 0;
-              const expired = summary.kyc_expired_count ?? 0;
-              const other = Math.max(0, total - verified - expiring - expired);
-              return (
-                <article className="rounded-2xl bg-white p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-700">KYC Compliance</p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {verified} verified of {total} shareholders
-                  </p>
-                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 flex gap-px">
-                    <div className="h-full bg-emerald-500" style={{ width: `${pct(verified, total)}%` }} />
-                    <div className="h-full bg-amber-400" style={{ width: `${pct(expiring, total)}%` }} />
-                    <div className="h-full bg-rose-500" style={{ width: `${pct(expired, total)}%` }} />
-                    <div className="h-full bg-slate-200" style={{ width: `${pct(other, total)}%` }} />
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                    {[
-                      { label: "Verified", value: verified, color: "bg-emerald-500" },
-                      { label: "Expiring", value: expiring, color: "bg-amber-400" },
-                      { label: "Expired", value: expired, color: "bg-rose-500" },
-                      { label: "No KYC", value: other, color: "bg-slate-200" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="flex items-center gap-1.5">
-                        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
-                        <span className="text-xs text-slate-500">{label}</span>
-                        <span className="ml-auto text-xs font-semibold text-slate-700">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              );
-            })()}
-
-            {/* Certificate Status chart */}
-            {(() => {
-              const total = summary.certificate_count;
-              const issued = summary.issued_certificate_count;
-              const revoked = summary.revoked_certificate_count;
-              const draft = Math.max(0, total - issued - revoked);
-              return (
-                <article className="rounded-2xl bg-white p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-700">Certificate Pipeline</p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {issued} issued of {total} total
-                  </p>
-                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 flex gap-px">
-                    <div className="h-full bg-emerald-500" style={{ width: `${pct(issued, total)}%` }} />
-                    <div className="h-full bg-sky-400" style={{ width: `${pct(draft, total)}%` }} />
-                    <div className="h-full bg-rose-500" style={{ width: `${pct(revoked, total)}%` }} />
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                    {[
-                      { label: "Issued", value: issued, color: "bg-emerald-500" },
-                      { label: "Draft", value: draft, color: "bg-sky-400" },
-                      { label: "Revoked", value: revoked, color: "bg-rose-500" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="flex items-center gap-1.5">
-                        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
-                        <span className="text-xs text-slate-500">{label}</span>
-                        <span className="ml-auto text-xs font-semibold text-slate-700">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              );
-            })()}
-
-            {/* Approval Pipeline chart */}
-            {(() => {
-              const approved = summary.approved_approval_count;
-              const pending = summary.pending_approval_count;
-              const overdue = summary.overdue_approval_count;
-              const total = approved + pending + overdue;
-              return (
-                <article className="rounded-2xl bg-white p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-700">Approval Pipeline</p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {pending} pending · {overdue} overdue
-                  </p>
-                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 flex gap-px">
-                    <div className="h-full bg-emerald-500" style={{ width: `${pct(approved, total)}%` }} />
-                    <div className="h-full bg-amber-400" style={{ width: `${pct(pending, total)}%` }} />
-                    <div className="h-full bg-rose-500" style={{ width: `${pct(overdue, total)}%` }} />
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                    {[
-                      { label: "Approved", value: approved, color: "bg-emerald-500" },
-                      { label: "Pending", value: pending, color: "bg-amber-400" },
-                      { label: "Overdue", value: overdue, color: "bg-rose-500" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="flex items-center gap-1.5">
-                        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
-                        <span className="text-xs text-slate-500">{label}</span>
-                        <span className="ml-auto text-xs font-semibold text-slate-700">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              );
-            })()}
+            <StackedBar
+              title="KYC Compliance"
+              subtitle={`${summary.kyc_verified_count ?? 0} verified of ${summary.shareholder_count} shareholders`}
+              segments={[
+                { label: "Verified", value: summary.kyc_verified_count ?? 0, colorClass: "bg-emerald-500" },
+                { label: "Expiring", value: summary.kyc_expiring_soon_count ?? 0, colorClass: "bg-amber-400" },
+                { label: "Expired", value: summary.kyc_expired_count ?? 0, colorClass: "bg-rose-500" },
+                {
+                  label: "No KYC",
+                  value: Math.max(
+                    0,
+                    summary.shareholder_count -
+                      (summary.kyc_verified_count ?? 0) -
+                      (summary.kyc_expiring_soon_count ?? 0) -
+                      (summary.kyc_expired_count ?? 0)
+                  ),
+                  colorClass: "bg-slate-200",
+                },
+              ]}
+            />
+            <StackedBar
+              title="Certificate Pipeline"
+              subtitle={`${summary.issued_certificate_count} issued of ${summary.certificate_count} total`}
+              segments={[
+                { label: "Issued", value: summary.issued_certificate_count, colorClass: "bg-emerald-500" },
+                {
+                  label: "Draft",
+                  value: Math.max(
+                    0,
+                    summary.certificate_count -
+                      summary.issued_certificate_count -
+                      summary.revoked_certificate_count
+                  ),
+                  colorClass: "bg-sky-400",
+                },
+                { label: "Revoked", value: summary.revoked_certificate_count, colorClass: "bg-rose-500" },
+              ]}
+            />
+            <StackedBar
+              title="Approval Pipeline"
+              subtitle={`${summary.pending_approval_count} pending · ${summary.overdue_approval_count} overdue`}
+              segments={[
+                { label: "Approved", value: summary.approved_approval_count, colorClass: "bg-emerald-500" },
+                { label: "Pending", value: summary.pending_approval_count, colorClass: "bg-amber-400" },
+                { label: "Overdue", value: summary.overdue_approval_count, colorClass: "bg-rose-500" },
+              ]}
+            />
           </div>
         </section>
 
@@ -293,7 +253,7 @@ export default async function Home() {
               <KpiCard
                 label="Overdue Approvals"
                 value={formatNumber(summary.overdue_approval_count)}
-                tone={summary.overdue_approval_count > 0 ? "warning" : "neutral"}
+                tone={summary.overdue_approval_count > 0 ? "danger" : "neutral"}
               />
             </div>
           </article>
@@ -325,7 +285,7 @@ export default async function Home() {
                 <tbody>
                   {summary.top_ownership_rows.length > 0 ? (
                     summary.top_ownership_rows.map((row) => (
-                      <tr key={row.shareholder_name}>
+                      <tr key={row.shareholder_name} className="transition-colors hover:bg-slate-50">
                         <td className="border-b border-slate-100 px-4 py-3 font-medium">
                           {row.shareholder_name}
                         </td>
@@ -381,7 +341,10 @@ export default async function Home() {
                 <tbody>
                   {summary.recent_audit_actions.length > 0 ? (
                     summary.recent_audit_actions.map((action) => (
-                      <tr key={`${action.actor_id}-${action.action}-${action.timestamp_utc}`}>
+                      <tr
+                        key={`${action.actor_id}-${action.action}-${action.timestamp_utc}`}
+                        className="transition-colors hover:bg-slate-50"
+                      >
                         <td className="border-b border-slate-100 px-4 py-3">
                           {action.actor_id}
                         </td>
@@ -438,7 +401,10 @@ export default async function Home() {
                 <tbody>
                   {summary.sla_snapshot.length > 0 ? (
                     summary.sla_snapshot.map((item, index) => (
-                      <tr key={`${item.request_type}-${item.stage}-${index}`}>
+                      <tr
+                        key={`${item.request_type}-${item.stage}-${index}`}
+                        className="transition-colors hover:bg-slate-50"
+                      >
                         <td className="border-b border-slate-100 px-4 py-3 capitalize">
                           {formatLabel(item.request_type)}
                         </td>

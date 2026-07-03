@@ -5,6 +5,9 @@ import { SideNavLinks, MobileNavLinks } from "@/src/components/NavLinks";
 import { getSession } from "@/src/lib/dal";
 import { logout } from "@/app/auth/actions";
 
+const ORG_NAME = "Digaf Microcredit Provider SC";
+const ORG_TAGLINE = "Shareholder Registry & Compliance";
+
 type NavItem =
   | { type: "link"; href: string; label: string; indent?: boolean }
   | { type: "section"; label: string };
@@ -64,8 +67,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col overflow-y-auto bg-white lg:flex"
-             style={{ boxShadow: "inset -1px 0 0 0 rgb(226 232 240)" }}>
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col overflow-y-auto border-r border-slate-200 bg-white lg:flex">
         {/* Brand */}
         <div className="flex-shrink-0 px-5 pt-6 pb-4">
           <Link href="/" className="inline-flex max-w-full">
@@ -74,7 +76,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               fallbackClassName="block max-w-full break-words text-base font-bold leading-tight text-slate-900"
             />
           </Link>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Internal Governance Portal
           </p>
         </div>
@@ -92,7 +94,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-slate-700">{userEmail}</p>
-              <p className={`text-[11px] capitalize ${hasRole ? "text-slate-400" : "font-semibold text-red-500"}`}>
+              <p className={`text-[11px] capitalize ${hasRole ? "text-slate-500" : "font-semibold text-rose-500"}`}>
                 {userRole.replace(/_/g, " ")}
               </p>
             </div>
@@ -129,10 +131,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 />
               </Link>
               <div className="hidden min-w-0 lg:block">
-                <p className="text-sm font-semibold text-slate-700">
-                  Digaf Microcredit Provider SC
-                </p>
-                <p className="text-xs text-slate-400">Shareholder Registry & Compliance</p>
+                <p className="text-sm font-semibold text-slate-700">{ORG_NAME}</p>
+                <p className="text-xs text-slate-500">{ORG_TAGLINE}</p>
               </div>
             </div>
 
@@ -141,7 +141,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="max-w-[14rem] truncate text-xs font-medium text-slate-700">
                   {userEmail}
                 </p>
-                <p className={`text-[11px] capitalize ${hasRole ? "text-slate-400" : "font-semibold text-red-500"}`}>
+                <p className={`text-[11px] capitalize ${hasRole ? "text-slate-500" : "font-semibold text-rose-500"}`}>
                   {userRole.replace(/_/g, " ")}
                 </p>
               </div>

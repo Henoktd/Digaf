@@ -174,7 +174,7 @@ export default async function LegalHoldsPage() {
 
                 <tbody>
                   {legalHolds.map((hold) => (
-                    <tr key={hold.id}>
+                    <tr key={hold.id} className="transition-colors hover:bg-slate-50">
                       <td className="border-b border-slate-100 px-4 py-3 font-medium capitalize">
                         {formatLabel(hold.hold_type)}
                       </td>

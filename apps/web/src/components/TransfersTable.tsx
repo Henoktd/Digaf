@@ -4,7 +4,9 @@ import { useState } from "react";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { TransferActions } from "@/src/components/TransferActions";
 import { ConfirmModal } from "@/src/components/ConfirmModal";
+import { EmptyState } from "@/src/components/EmptyState";
 import { useToast } from "@/src/components/Toast";
+import { fieldClass } from "@/src/components/ui/field";
 import { cancelTransfer } from "@/src/lib/api";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -79,7 +81,8 @@ export function TransfersTable({ transfers }: { transfers: Transfer[] }) {
           placeholder="Search by transferor or transferee name…"
           value={searchQ}
           onChange={(e) => setSearchQ(e.target.value)}
-          className="w-full max-w-sm rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+          aria-label="Search transfers"
+          className={`max-w-sm ${fieldClass}`}
         />
         <span className="text-xs text-slate-500">
           {filtered.length} of {transfers.length}
@@ -126,8 +129,15 @@ export function TransfersTable({ transfers }: { transfers: Transfer[] }) {
             </tbody>
           </table>
         ) : (
-          <div className="px-4 py-12 text-center text-sm text-slate-400">
-            {transfers.length === 0 ? "No transfers found." : "No transfers match your search."}
+          <div className="p-4">
+            <EmptyState
+              title={transfers.length === 0 ? "No transfers found" : "No transfers match your search"}
+              description={
+                transfers.length === 0
+                  ? "Transfers appear here once they are created."
+                  : "Try a different transferor or transferee name."
+              }
+            />
           </div>
         )}
       </div>

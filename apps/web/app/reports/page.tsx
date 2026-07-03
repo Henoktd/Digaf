@@ -3,6 +3,7 @@ import { getToken } from "@/src/lib/dal";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { PrintButton } from "@/src/components/PrintButton";
+import { EmptyState } from "@/src/components/EmptyState";
 
 function fmt(v: number | string | null) {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v || 0));
@@ -112,11 +113,8 @@ export default async function ReportsPage() {
           <h2 className="mb-4 text-base font-bold uppercase tracking-wide text-slate-500">3. Capital Structure (Issued Certificates)</h2>
           <ReportTable
             headers={["Share Class", "Issued Shares"]}
-            rows={
-              Object.keys(certsByClass).length > 0
-                ? Object.entries(certsByClass).map(([cls, qty]) => [cls, fmt(qty)])
-                : [["No issued certificates", "0"]]
-            }
+            rows={Object.entries(certsByClass).map(([cls, qty]) => [cls, fmt(qty)])}
+            emptyTitle="No issued certificates"
           />
         </section>
 
@@ -161,7 +159,7 @@ export default async function ReportsPage() {
           </div>
         </section>
 
-        <p className="pb-6 text-center text-xs text-slate-400">
+        <p className="pb-6 text-center text-xs text-slate-500">
           Digaf Microcredit Provider SC — Internal Governance Report — {today()}
         </p>
       </div>
@@ -172,7 +170,7 @@ export default async function ReportsPage() {
 type Tone = "green" | "red" | "amber" | "neutral";
 const toneMap: Record<Tone, string> = {
   green: "bg-emerald-50 text-emerald-900",
-  red: "bg-red-50 text-red-900",
+  red: "bg-rose-50 text-rose-900",
   amber: "bg-amber-50 text-amber-900",
   neutral: "bg-slate-50 text-slate-900",
 };
@@ -180,7 +178,7 @@ const toneMap: Record<Tone, string> = {
 function StatBox({ label, value, tone = "neutral" }: { label: string; value: string; tone?: Tone }) {
   return (
     <div className={`rounded-xl p-4 ${toneMap[tone]}`}>
-      <p className="text-xs font-semibold uppercase tracking-wide opacity-60">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
     </div>
   );
@@ -190,14 +188,23 @@ function ReportTable({
   headers,
   rows,
   className = "",
+  emptyTitle = "No records found",
 }: {
   headers: string[];
   rows: (string | React.JSX.Element)[][];
   className?: string;
+  emptyTitle?: string;
 }) {
+  if (rows.length === 0) {
+    return (
+      <div className={className}>
+        <EmptyState title={emptyTitle} />
+      </div>
+    );
+  }
   return (
     <div className={`overflow-x-auto rounded-xl border border-slate-200 ${className}`}>
-      <table className="w-full border-collapse text-left text-sm">
+      <table className="w-full min-w-[400px] border-collapse text-left text-sm">
         <thead className="bg-slate-50">
           <tr>
             {headers.map((h) => (
@@ -207,7 +214,7 @@ function ReportTable({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i}>
+            <tr key={i} className="transition-colors hover:bg-slate-50">
               {row.map((cell, j) => (
                 <td key={j} className="border-b border-slate-100 px-4 py-2.5 text-sm text-slate-800">{cell}</td>
               ))}

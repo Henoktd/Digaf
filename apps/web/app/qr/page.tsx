@@ -121,11 +121,11 @@ export default async function QrVerifyPage({ searchParams }: QrPageProps) {
           </p>
 
           {errorMessage ? (
-            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
-              <h2 className="text-lg font-semibold text-red-700">
+            <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <h2 className="text-lg font-semibold text-rose-700">
                 Verification Error
               </h2>
-              <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
+              <p className="mt-2 text-sm text-rose-700">{errorMessage}</p>
             </div>
           ) : (
             <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">

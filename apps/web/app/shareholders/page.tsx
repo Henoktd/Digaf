@@ -117,7 +117,7 @@ export default async function ShareholdersPage({
 
                 <tbody>
                   {shareholders.map((shareholder) => (
-                    <tr key={shareholder.shareholder_id}>
+                    <tr key={shareholder.shareholder_id} className="transition-colors hover:bg-slate-50">
                       <td className="border-b border-slate-100 px-4 py-3 font-medium">
                         <Link
                           href={`/shareholders/${shareholder.shareholder_id}`}

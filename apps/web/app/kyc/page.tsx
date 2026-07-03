@@ -192,7 +192,7 @@ function KycSection({
             {shareholders.map((s) => {
               const days = s.kyc_expiry ? daysUntil(s.kyc_expiry) : null;
               return (
-                <tr key={s.shareholder_id}>
+                <tr key={s.shareholder_id} className="transition-colors hover:bg-slate-50">
                   <td className="border-b border-slate-100 px-4 py-3 font-medium text-slate-900">
                     {s.legal_name}
                   </td>

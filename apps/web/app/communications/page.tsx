@@ -170,7 +170,7 @@ export default async function CommunicationsPage() {
 
                 <tbody>
                   {communications.map((communication) => (
-                    <tr key={communication.id}>
+                    <tr key={communication.id} className="transition-colors hover:bg-slate-50">
                       <td className="border-b border-slate-100 px-4 py-3 font-medium capitalize">
                         {formatLabel(communication.type)}
                       </td>

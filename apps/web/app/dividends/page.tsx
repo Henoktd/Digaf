@@ -90,7 +90,7 @@ export default async function DividendsPage() {
                 </thead>
                 <tbody>
                   {declarations.map((d) => (
-                    <tr key={d.id}>
+                    <tr key={d.id} className="transition-colors hover:bg-slate-50">
                       <td className="border-b border-slate-100 px-4 py-3 font-medium">{fmtDate(d.record_date)}</td>
                       <td className="border-b border-slate-100 px-4 py-3">{d.share_class_name ?? "All classes"}</td>
                       <td className="border-b border-slate-100 px-4 py-3 font-mono">{fmt(d.amount_per_share)}</td>

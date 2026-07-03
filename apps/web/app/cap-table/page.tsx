@@ -68,7 +68,7 @@ export default async function CapTablePage() {
 
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.shareholder_id}>
+                  <tr key={row.shareholder_id} className="transition-colors hover:bg-slate-50">
                     <td className="border-b border-slate-100 px-4 py-3 font-medium">
                       {row.shareholder_name}
                     </td>

@@ -124,7 +124,6 @@ export default async function SlaMonitorPage() {
 
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           {slaItems.length > 0 ? (
-            <div className="overflow-x-auto">
               <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50">
                   <tr>
@@ -142,7 +141,7 @@ export default async function SlaMonitorPage() {
 
                 <tbody>
                   {slaItems.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.id} className="transition-colors hover:bg-slate-50">
                       <td className="border-b border-slate-100 px-4 py-3 font-medium capitalize">
                         {formatLabel(item.request_type)}
                       </td>
@@ -184,7 +183,6 @@ export default async function SlaMonitorPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
           ) : (
             <div className="p-4">
               <EmptyState title="No SLA-tracked approval requests found" />

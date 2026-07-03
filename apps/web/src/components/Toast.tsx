@@ -40,7 +40,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-80 max-w-[calc(100vw-2rem)]">
+      <div
+        role="status"
+        aria-live="polite"
+        className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-80 max-w-[calc(100vw-2rem)]"
+      >
         {toasts.map((t) => (
           <ToastBubble key={t.id} item={t} onDismiss={dismiss} />
         ))}
@@ -67,8 +71,8 @@ function ToastBubble({
 
   const base = "flex items-start gap-3 rounded-xl px-4 py-3 text-sm shadow-lg border";
   const variants: Record<ToastVariant, string> = {
-    success: `${base} bg-green-50 border-green-200 text-green-900`,
-    error: `${base} bg-red-50 border-red-200 text-red-900`,
+    success: `${base} bg-emerald-50 border-emerald-200 text-emerald-900`,
+    error: `${base} bg-rose-50 border-rose-200 text-rose-900`,
     info: `${base} bg-white border-slate-200 text-slate-800`,
   };
 
@@ -79,9 +83,9 @@ function ToastBubble({
   };
 
   const iconColors: Record<ToastVariant, string> = {
-    success: "bg-green-500 text-white",
-    error: "bg-red-500 text-white",
-    info: "bg-slate-400 text-white",
+    success: "bg-emerald-500 text-white",
+    error: "bg-rose-500 text-white",
+    info: "bg-slate-500 text-white",
   };
 
   return (
@@ -94,7 +98,8 @@ function ToastBubble({
       <span className="flex-1 leading-snug">{item.message}</span>
       <button
         onClick={() => onDismiss(item.id)}
-        className="flex-none text-xs opacity-50 hover:opacity-100 mt-0.5"
+        aria-label="Dismiss notification"
+        className="flex-none rounded text-xs opacity-50 hover:opacity-100 mt-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:opacity-100"
       >
         ✕
       </button>

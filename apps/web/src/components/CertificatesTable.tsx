@@ -117,7 +117,7 @@ export function CertificatesTable({ certificates }: { certificates: Certificate[
             </tbody>
           </table>
         ) : (
-          <div className="px-4 py-12 text-center text-sm text-slate-400">
+          <div className="px-4 py-12 text-center text-sm text-slate-500">
             {certificates.length === 0
               ? "No certificates found."
               : "No certificates match your search."}

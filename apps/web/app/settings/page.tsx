@@ -192,8 +192,9 @@ export default function SettingsPage() {
                   <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Capital Structure</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
-                      <label className={labelClass}>Authorized Capital (Birr)</label>
+                      <label htmlFor="entity-auth-cap" className={labelClass}>Authorized Capital (Birr)</label>
                       <input
+                        id="entity-auth-cap"
                         type="number" min="0" step="0.01"
                         value={authCap}
                         onChange={(e) => setAuthCap(e.target.value)}
@@ -202,8 +203,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Subscribed Capital (Birr)</label>
+                      <label htmlFor="entity-sub-cap" className={labelClass}>Subscribed Capital (Birr)</label>
                       <input
+                        id="entity-sub-cap"
                         type="number" min="0" step="0.01"
                         value={subCap}
                         onChange={(e) => setSubCap(e.target.value)}
@@ -212,8 +214,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Paid-up Capital (Birr)</label>
+                      <label htmlFor="entity-paid-cap" className={labelClass}>Paid-up Capital (Birr)</label>
                       <input
+                        id="entity-paid-cap"
                         type="number" min="0" step="0.01"
                         value={paidCap}
                         onChange={(e) => setPaidCap(e.target.value)}
@@ -222,8 +225,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Default Par Value (Birr)</label>
+                      <label htmlFor="entity-par-val" className={labelClass}>Default Par Value (Birr)</label>
                       <input
+                        id="entity-par-val"
                         type="number" min="0" step="0.01"
                         value={parVal}
                         onChange={(e) => setParVal(e.target.value)}
@@ -239,8 +243,9 @@ export default function SettingsPage() {
                   <p className="mb-3 text-xs text-slate-500">Appears on share certificates under the company name.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                      <label className={labelClass}>ከተማ / City</label>
+                      <label htmlFor="entity-city" className={labelClass}>ከተማ / City</label>
                       <input
+                        id="entity-city"
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
@@ -249,8 +254,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>ክፍለ ከተማ / Sub-City</label>
+                      <label htmlFor="entity-subcity" className={labelClass}>ክፍለ ከተማ / Sub-City</label>
                       <input
+                        id="entity-subcity"
                         type="text"
                         value={kk}
                         onChange={(e) => setKk(e.target.value)}
@@ -259,8 +265,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>ወረዳ / Wereda</label>
+                      <label htmlFor="entity-wereda" className={labelClass}>ወረዳ / Wereda</label>
                       <input
+                        id="entity-wereda"
                         type="text"
                         value={wereda}
                         onChange={(e) => setWereda(e.target.value)}
@@ -269,8 +276,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>የቤት ቁጥር / House No.</label>
+                      <label htmlFor="entity-house-no" className={labelClass}>የቤት ቁጥር / House No.</label>
                       <input
+                        id="entity-house-no"
                         type="text"
                         value={houseNo}
                         onChange={(e) => setHouseNo(e.target.value)}
@@ -279,8 +287,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>ፖ.ሣ.ቁ / P.O.Box</label>
+                      <label htmlFor="entity-po-box" className={labelClass}>ፖ.ሣ.ቁ / P.O.Box</label>
                       <input
+                        id="entity-po-box"
                         type="text"
                         value={poBox}
                         onChange={(e) => setPoBox(e.target.value)}
@@ -308,8 +317,9 @@ export default function SettingsPage() {
 
           <form onSubmit={handleChangePassword} className="max-w-sm space-y-4">
             <div>
-              <label className={labelClass}>Current password</label>
+              <label htmlFor="pw-current" className={labelClass}>Current password</label>
               <input
+                id="pw-current"
                 type="password"
                 required
                 value={current}
@@ -318,8 +328,9 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>New password</label>
+              <label htmlFor="pw-new" className={labelClass}>New password</label>
               <input
+                id="pw-new"
                 type="password"
                 required
                 minLength={8}
@@ -329,8 +340,9 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>Confirm new password</label>
+              <label htmlFor="pw-confirm" className={labelClass}>Confirm new password</label>
               <input
+                id="pw-confirm"
                 type="password"
                 required
                 value={confirm}

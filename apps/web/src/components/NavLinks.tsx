@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type NavItem =
+export type NavItem =
   | { type: "link"; href: string; label: string; indent?: boolean }
   | { type: "section"; label: string };
 
@@ -21,7 +21,7 @@ export function SideNavLinks({ items }: { items: NavItem[] }) {
         item.type === "section" ? (
           <p
             key={i}
-            className="px-3 pb-1 pt-5 text-[11px] font-bold uppercase tracking-widest text-slate-400 first:pt-0"
+            className="px-3 pb-1 pt-5 text-[11px] font-bold uppercase tracking-widest text-slate-500 first:pt-0"
           >
             {item.label}
           </p>

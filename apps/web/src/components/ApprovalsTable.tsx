@@ -224,7 +224,7 @@ export function ApprovalsTable({ approvals }: { approvals: Approval[] }) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
                   No approvals match the current filter.
                 </td>
               </tr>

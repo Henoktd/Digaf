@@ -96,7 +96,7 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
             </tbody>
           </table>
         ) : (
-          <div className="px-4 py-12 text-center text-sm text-slate-400">
+          <div className="px-4 py-12 text-center text-sm text-slate-500">
             {logs.length === 0 ? "No audit logs found." : "No logs match your search."}
           </div>
         )}

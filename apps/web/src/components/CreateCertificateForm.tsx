@@ -139,7 +139,7 @@ export function CreateCertificateForm({
         <div>
           <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
             Number of Shares
-            {loadingDefaults && <span className="text-xs font-normal text-slate-400">Loading…</span>}
+            {loadingDefaults && <span className="text-xs font-normal text-slate-500">Loading…</span>}
             {quantityAutoFilled && !loadingDefaults && (
               <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-xs font-normal text-indigo-600">Auto-filled</span>
             )}
@@ -178,7 +178,7 @@ export function CreateCertificateForm({
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Capital Structure (Birr) — as of this certificate&apos;s issuance
           {entityCapitals && (
             <span className="ml-2 font-normal normal-case text-indigo-500">Pre-filled from entity settings</span>

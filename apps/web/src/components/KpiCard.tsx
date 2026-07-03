@@ -8,7 +8,7 @@ const accentClasses: Record<KpiTone, string> = {
 };
 
 const labelClasses: Record<KpiTone, string> = {
-  neutral: "text-slate-400",
+  neutral: "text-slate-500",
   success: "text-emerald-600",
   warning: "text-amber-600",
   danger:  "text-rose-600",

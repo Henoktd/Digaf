@@ -76,7 +76,7 @@ export function DocumentsTable({ documents }: { documents: DocumentReference[] }
                     {doc.legal_hold_status ? (
                       <StatusBadge status={doc.legal_hold_status} />
                     ) : (
-                      <span className="text-slate-400">None</span>
+                      <span className="text-slate-500">None</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-slate-500">
@@ -100,7 +100,7 @@ export function DocumentsTable({ documents }: { documents: DocumentReference[] }
             </tbody>
           </table>
         ) : (
-          <div className="px-4 py-12 text-center text-sm text-slate-400">
+          <div className="px-4 py-12 text-center text-sm text-slate-500">
             {documents.length === 0
               ? "No documents found."
               : "No documents match your search."}

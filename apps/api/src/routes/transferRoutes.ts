@@ -729,6 +729,16 @@ transferRoutes.post("/", async (req, res) => {
 
     const transfer = transferResult.rows[0];
 
+    // SLA target comes from sla_config (editable on the SLA Configuration
+    // page); falls back to 5 days when no row is configured.
+    const slaConfigResult = await client.query(
+      `SELECT target_days FROM sla_config
+       WHERE entity_id = $1 AND process_type = 'share_transfer'
+       LIMIT 1`,
+      [input.entityId]
+    );
+    const slaTargetDays = Number(slaConfigResult.rows[0]?.target_days) || 5;
+
     const approvalResult = await client.query(
       `
       INSERT INTO approval_request (
@@ -749,7 +759,7 @@ transferRoutes.post("/", async (req, res) => {
         $3,
         'pending',
         $4,
-        now() + interval '5 days'
+        now() + ($5 * interval '1 day')
       )
       RETURNING
         id,
@@ -763,7 +773,7 @@ transferRoutes.post("/", async (req, res) => {
         sla_due_date,
         created_at
       `,
-      [input.entityId, transfer.id, checker1ApproverId, actorId]
+      [input.entityId, transfer.id, checker1ApproverId, actorId, slaTargetDays]
     );
 
     const approvalRequest = approvalResult.rows[0];

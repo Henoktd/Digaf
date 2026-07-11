@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "dev": "tsx watch src/server.ts",
     "build": "echo 'no build step'",
     "start": "tsx src/server.ts"
@@ -19,8 +19,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "pg": "^8.21.0",
     "nodemailer": "^6.10.1",
+    "pg": "^8.21.0",
     "qrcode": "^1.5.4",
     "tsx": "^4.22.3",
     "zod": "^4.4.3"
@@ -31,6 +31,7 @@
     "@types/node": "^25.9.1",
     "@types/nodemailer": "^6.4.17",
     "@types/qrcode": "^1.5.6",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }

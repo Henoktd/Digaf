@@ -13,6 +13,23 @@ function createTransport() {
   });
 }
 
+export async function sendMail(options: {
+  to: string | string[];
+  subject: string;
+  text: string;
+  html: string;
+}) {
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const transport = createTransport();
+  await transport.sendMail({
+    from: `Digaf <${from}>`,
+    to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+    subject: options.subject,
+    text: options.text,
+    html: options.html,
+  });
+}
+
 export async function sendWelcomeEmail(to: string, tempPassword: string, frontendUrl: string) {
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
   const transport = createTransport();

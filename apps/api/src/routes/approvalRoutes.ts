@@ -331,6 +331,24 @@ approvalRoutes.post("/:approvalId/reject", async (req, res) => {
   }
 });
 
+// GET /api/approvals/pending-count — lightweight badge count for the top bar
+approvalRoutes.get("/pending-count", async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+        COUNT(*) FILTER (WHERE status = 'pending' AND sla_due_date < now())::int AS overdue
+      FROM approval_request
+    `);
+    res.json({ data: result.rows[0] ?? { pending: 0, overdue: 0 } });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to fetch pending count",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 approvalRoutes.get("/", async (_req, res) => {
   try {
     const result = await pool.query(`

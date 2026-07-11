@@ -22,6 +22,7 @@ import { boardResolutionRoutes } from "./routes/boardResolutionRoutes";
 import { slaConfigRoutes } from "./routes/slaConfigRoutes";
 import { dividendRoutes } from "./routes/dividendRoutes";
 import { userRoutes } from "./routes/userRoutes";
+import { startMonthlyReportScheduler } from "./scheduler/monthlyReport";
 
 dotenv.config();
 
@@ -40,7 +41,7 @@ const rateLimitStore = new Map<string, number[]>();
 function createRateLimiter(windowMs: number, max: number) {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const forwarded = (req.headers["x-forwarded-for"] as string) || "";
-    const ip = forwarded.split(",")[0].trim() || (req.socket as { remoteAddress?: string } | null)?.remoteAddress || "unknown";
+    const ip = (forwarded.split(",")[0] ?? "").trim() || (req.socket as { remoteAddress?: string } | null)?.remoteAddress || "unknown";
     const now = Date.now();
     const cutoff = now - windowMs;
     const hits = (rateLimitStore.get(ip) ?? []).filter((t) => t > cutoff);
@@ -54,11 +55,26 @@ function createRateLimiter(windowMs: number, max: number) {
   };
 }
 
-const generalLimiter = createRateLimiter(60_000, 60);
+// General limit is per-IP; an office behind one NAT IP shares the bucket,
+// so it must comfortably exceed one user's burst.
+const generalLimiter = createRateLimiter(60_000, 300);
 const importLimiter = createRateLimiter(60_000, 20);
 const verifyLimiter = createRateLimiter(60_000, 30);
 
 const app = express();
+app.disable("x-powered-by");
+
+// Security headers
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  if (process.env.BEHIND_TLS === "true") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  next();
+});
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",")
   .map((origin) => origin.trim())
@@ -78,7 +94,8 @@ app.use(
       })
     : cors()
 );
-app.use(express.json());
+// 5mb accommodates large shareholder import batches; everything else is tiny
+app.use(express.json({ limit: "5mb" }));
 
 const port = process.env.PORT || 4000;
 
@@ -162,6 +179,11 @@ app.use("/api/board-resolutions", boardResolutionRoutes);
 app.use("/api/sla-config", slaConfigRoutes);
 app.use("/api/dividends", dividendRoutes);
 app.use("/api/users", userRoutes);
+
+// Monthly board report — only runs when recipients are configured
+if (process.env.REPORT_RECIPIENTS) {
+  startMonthlyReportScheduler();
+}
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {

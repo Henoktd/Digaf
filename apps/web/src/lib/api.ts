@@ -1502,6 +1502,30 @@ export async function testPowerAutomateWebhook(token: string) {
   ) as Promise<{ success: boolean; statusCode?: number; error?: string }>;
 }
 
+export async function fetchPendingApprovalCount(token?: string) {
+  return sendGetRequest(
+    `${API_BASE_URL}/api/approvals/pending-count`,
+    token
+  ) as Promise<{ data: { pending: number; overdue: number } }>;
+}
+
+export type ShareholderSearchHit = {
+  shareholder_id: string;
+  legal_name: string;
+  shareholder_code: string | null;
+  primary_id_number: string | null;
+  mobile_number: string | null;
+  kyc_status: string | null;
+  status: string | null;
+};
+
+export async function searchShareholders(query: string, token?: string) {
+  return sendGetRequest(
+    `${API_BASE_URL}/api/shareholders/search?q=${encodeURIComponent(query)}`,
+    token
+  ) as Promise<{ data: ShareholderSearchHit[] }>;
+}
+
 export async function fetchUsers(token?: string) {
   return sendGetRequest(`${API_BASE_URL}/api/users`, token);
 }

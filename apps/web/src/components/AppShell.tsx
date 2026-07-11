@@ -2,6 +2,8 @@ import Link from "next/link";
 import { SessionWatcher } from "@/src/components/SessionWatcher";
 import { SideNavLinks, type NavItem } from "@/src/components/NavLinks";
 import { MobileNavDrawer } from "@/src/components/MobileNavDrawer";
+import { CommandPalette } from "@/src/components/CommandPalette";
+import { fetchPendingApprovalCount } from "@/src/lib/api";
 import { getSession } from "@/src/lib/dal";
 import { logout } from "@/app/auth/actions";
 
@@ -59,6 +61,16 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const userRole = assignedRole ?? "No role assigned";
   const hasRole = Boolean(assignedRole);
   const navItems = buildNavItems(assignedRole);
+
+  let pendingApprovals = 0;
+  let overdueApprovals = 0;
+  try {
+    const counts = await fetchPendingApprovalCount(session.access_token);
+    pendingApprovals = counts.data.pending ?? 0;
+    overdueApprovals = counts.data.overdue ?? 0;
+  } catch {
+    // Badge is best-effort; never block the shell on it
+  }
 
   const initials = userEmail.slice(0, 2).toUpperCase();
 
@@ -137,7 +149,27 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             <span className="truncate font-medium text-slate-900">{ORG_TAGLINE}</span>
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+            <CommandPalette items={navItems} />
+            <Link
+              href="/approvals"
+              aria-label={`Approvals: ${pendingApprovals} pending${overdueApprovals ? `, ${overdueApprovals} overdue` : ""}`}
+              className="relative grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+            >
+              <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+                <path d="M8 2a4 4 0 0 0-4 4c0 3-1.2 4-1.2 4h10.4S12 9 12 6a4 4 0 0 0-4-4z" />
+                <path d="M6.8 13.5a1.3 1.3 0 0 0 2.4 0" />
+              </svg>
+              {pendingApprovals > 0 && (
+                <span
+                  className={`absolute -right-1.5 -top-1.5 grid min-w-[18px] place-items-center rounded-full px-1 text-[10px] font-semibold text-white ${
+                    overdueApprovals > 0 ? "bg-rose-500" : "bg-indigo-500"
+                  }`}
+                >
+                  {pendingApprovals > 99 ? "99+" : pendingApprovals}
+                </span>
+              )}
+            </Link>
             <div className="flex items-center gap-2.5 border-l border-slate-200 pl-3 sm:pl-4">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-indigo-600 text-[12.5px] font-semibold text-white">
                 {initials}

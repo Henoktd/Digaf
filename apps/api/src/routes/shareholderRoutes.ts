@@ -311,6 +311,43 @@ shareholderRoutes.get("/", async (req, res) => {
   }
 });
 
+// GET /api/shareholders/search?q= — lightweight lookup for the global
+// command palette. Matches name, ID number, phone, or shareholder code.
+shareholderRoutes.get("/search", async (req, res) => {
+  const q = String(req.query.q ?? "").trim();
+  if (q.length < 2) {
+    res.json({ data: [] });
+    return;
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT
+        s.shareholder_id,
+        s.legal_name,
+        s.shareholder_code,
+        s.primary_id_number,
+        s.mobile_number,
+        s.kyc_status,
+        s.status
+      FROM shareholder s
+      WHERE s.legal_name ILIKE $1
+         OR s.primary_id_number ILIKE $1
+         OR s.mobile_number ILIKE $1
+         OR s.shareholder_code ILIKE $1
+      ORDER BY s.legal_name ASC
+      LIMIT 10`,
+      [`%${q}%`]
+    );
+    res.json({ data: result.rows });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to search shareholders",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 shareholderRoutes.get("/export", async (req, res) => {
   try {
     const result = await pool.query(`

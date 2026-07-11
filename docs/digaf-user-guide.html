@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Digaf Platform — User Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #1e293b;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+    background: #4f46e5;
+    color: #fff;
+    page-break-after: always;
+  }
+  .cover-logo {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  .cover-tagline {
+    font-size: 14px;
+    color: #c7d2fe;
+    margin-bottom: 60px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .cover p {
+    font-size: 14px;
+    color: #c7d2fe;
+    max-width: 400px;
+    margin-bottom: 60px;
+  }
+  .cover-footer {
+    font-size: 12px;
+    color: #a5b4fc;
+  }
+
+  /* ── Content pages ── */
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 40px;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: avoid; }
+
+  /* ── Section header ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #4f46e5;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 24px 0 8px;
+  }
+  p { margin-bottom: 10px; color: #334155; }
+  ul { margin: 8px 0 12px 20px; }
+  li { margin-bottom: 6px; color: #334155; }
+
+  /* ── Step boxes ── */
+  .steps { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 4px solid #4f46e5;
+  }
+  .step-num {
+    min-width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step-body strong { display: block; font-size: 13px; margin-bottom: 3px; color: #1e293b; }
+  .step-body span { font-size: 12px; color: #64748b; }
+
+  /* ── Feature cards ── */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+  }
+  .card-icon { font-size: 20px; margin-bottom: 8px; }
+  .card strong { display: block; font-size: 13px; color: #1e293b; margin-bottom: 4px; }
+  .card span { font-size: 12px; color: #64748b; }
+
+  /* ── Role table ── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+  th {
+    background: #4f46e5;
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* ── Note / tip box ── */
+  .note {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 12px;
+    color: #78350f;
+  }
+  .tip {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 12px;
+    color: #1e40af;
+  }
+
+  /* ── Running header on content pages ── */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .page-header span { font-weight: 700; color: #4f46e5; }
+
+  /* ── Print ── */
+  @media print {
+    body { font-size: 12px; }
+    .cover { min-height: 100vh; }
+    .page { padding: 36px 32px; }
+    .cards { grid-template-columns: 1fr 1fr; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-logo">Digaf</div>
+  <div class="cover-tagline">Shareholder Registry, KYC Compliance &amp; Certificate Management</div>
+
+  <h1>User Guide</h1>
+  <p>A step-by-step guide to using the Digaf Shareholder Registry Platform</p>
+
+  <div class="cover-footer">
+    Confidential — For Internal Use Only &nbsp;·&nbsp; 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 1 — Overview -->
+<div class="page">
+  <div class="page-header"><span>Digaf</span> User Guide &nbsp;·&nbsp; Platform Overview</div>
+
+  <div class="section-label">Introduction</div>
+  <h2>What is the Digaf Platform?</h2>
+
+  <p>
+    The Digaf Shareholder Registry Platform is a secure, web-based system for managing Digaf's
+    complete shareholder records. It covers everything from the initial registration of shareholders
+    to KYC compliance checks, share certificate generation, dividend tracking, and audit logging.
+  </p>
+  <p>
+    All records are stored in a central database accessible only to authorised users.
+    Every action taken in the system is logged for compliance and audit purposes.
+  </p>
+
+  <h3>What can the platform do?</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">👥</div>
+      <strong>Shareholder Registry</strong>
+      <span>Maintain complete records of all shareholders including personal details, shares held, and transfer history.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">📋</div>
+      <strong>KYC Compliance</strong>
+      <span>Track identity verification status for each shareholder and manage compliance documents.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">📜</div>
+      <strong>Share Certificates</strong>
+      <span>Generate and print official share certificates for shareholders with one click.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <strong>Cap Table</strong>
+      <span>View a real-time breakdown of share ownership, classes, and capital structure.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">💰</div>
+      <strong>Dividends</strong>
+      <span>Record and track dividend distributions to shareholders.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">📁</div>
+      <strong>Audit Log</strong>
+      <span>Every action in the system is logged with the user, date, and details for full traceability.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <strong>Share Transfers</strong>
+      <span>Record the transfer of shares between shareholders with full history.</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">👤</div>
+      <strong>User Management</strong>
+      <span>Create user accounts, assign roles, and control who can access what in the system.</span>
+    </div>
+  </div>
+
+  <div class="tip">
+    <strong>Platform URL:</strong> http://196.190.220.15 — Access the platform from any browser on any device connected to the network.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 2 — First Login -->
+<div class="page">
+  <div class="page-header"><span>Digaf</span> User Guide &nbsp;·&nbsp; Getting Started</div>
+
+  <div class="section-label">Getting Started</div>
+  <h2>First Login &amp; Setting Your Password</h2>
+
+  <p>
+    When your account is created by the administrator, you will receive a welcome email
+    containing your temporary password. Follow the steps below to log in and set your own password.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Open your welcome email</strong>
+        <span>You will receive an email from digaf-noreply@sol-ventures.com with your login credentials: the platform URL, your email address, and a temporary password.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Go to the platform URL</strong>
+        <span>Open a browser and navigate to http://196.190.220.15</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Sign in with your temporary password</strong>
+        <span>Enter your email address and the temporary password from the welcome email, then click Sign In.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>Set your own password</strong>
+        <span>The platform will immediately ask you to set a new password. Choose something secure (at least 8 characters). You will not be able to use the platform until this step is complete.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <strong>You're in</strong>
+        <span>After setting your password you will be taken to the main dashboard. Your temporary password is now deactivated.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Forgot your password?</strong> Contact your system administrator to reset it. They can set a new password for your account from the User Management section.
+  </div>
+
+  <h3>Changing your password later</h3>
+  <p>
+    To change your password at any time after your first login, go to:
+    <br /><strong>http://196.190.220.15/auth/update-password</strong>
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 3 — Roles -->
+<div class="page">
+  <div class="page-header"><span>Digaf</span> User Guide &nbsp;·&nbsp; User Roles</div>
+
+  <div class="section-label">Access Control</div>
+  <h2>User Roles &amp; Permissions</h2>
+
+  <p>
+    Every user in the platform is assigned a role that controls what they can see and do.
+    Roles are assigned by the Governance Admin when your account is created.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>What they can do</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Governance Admin</strong></td>
+        <td>Full access to all features. Can create and manage users, change settings, and perform all operations.</td>
+      </tr>
+      <tr>
+        <td><strong>Maker</strong></td>
+        <td>Can create and submit records (shareholders, transfers, certificates) for review and approval.</td>
+      </tr>
+      <tr>
+        <td><strong>Checker 1</strong></td>
+        <td>Reviews and approves records submitted by the Maker. First level of approval.</td>
+      </tr>
+      <tr>
+        <td><strong>Checker 2</strong></td>
+        <td>Second level of approval for records already approved by Checker 1.</td>
+      </tr>
+      <tr>
+        <td><strong>Compliance Officer</strong></td>
+        <td>Manages KYC verification and compliance-related actions. Can view all records.</td>
+      </tr>
+      <tr>
+        <td><strong>Viewer</strong></td>
+        <td>Read-only access. Can view records and reports but cannot make any changes.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="tip">
+    Your role is shown in the sidebar when you are logged in. If you need a different level of access, contact your Governance Admin.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 4 — Shareholders -->
+<div class="page">
+  <div class="page-header"><span>Digaf</span> User Guide &nbsp;·&nbsp; Key Features</div>
+
+  <div class="section-label">Core Features</div>
+  <h2>Shareholders, Certificates &amp; KYC</h2>
+
+  <h3>Viewing Shareholders</h3>
+  <p>
+    Go to <strong>Shareholders</strong> in the left sidebar to see the full list of registered shareholders.
+    You can search by name or ID number. Click on any shareholder's name to open their full profile,
+    which shows their personal details, shares held, transfer history, KYC status, and certificates.
+  </p>
+
+  <h3>Adding a New Shareholder</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Click "+ Add Shareholder"</strong>
+        <span>This button is at the top right of the Shareholders page.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Fill in the shareholder's details</strong>
+        <span>Enter their full name (English and Amharic), ID number, address, and share details.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Submit for approval</strong>
+        <span>The record goes through the Maker → Checker 1 → Checker 2 approval workflow before it is finalised.</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Generating a Share Certificate</h3>
+  <p>
+    Open a shareholder's profile and click <strong>"Generate Certificate"</strong>. The certificate
+    is produced instantly in PDF format and can be printed directly from the browser.
+    The certificate includes the shareholder's name, share details, and the company's
+    authorised/subscribed/paid-up capital.
+  </p>
+
+  <h3>KYC Compliance</h3>
+  <p>
+    The <strong>KYC</strong> section shows the verification status of each shareholder.
+    A Compliance Officer can mark shareholders as verified, pending, or requiring additional
+    documents. The status is visible on the shareholder's profile and on the KYC dashboard.
+  </p>
+
+  <div class="note">
+    <strong>Bulk Import:</strong> If you have a large number of shareholders to add, they can be
+    imported all at once from an Excel file using the <strong>Imports</strong> section.
+    Contact the administrator for the correct file format.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 5 — Settings & Support -->
+<div class="page">
+  <div class="page-header"><span>Digaf</span> User Guide &nbsp;·&nbsp; Settings &amp; Support</div>
+
+  <div class="section-label">Administration</div>
+  <h2>Settings &amp; Support</h2>
+
+  <h3>Company Settings</h3>
+  <p>
+    The <strong>Settings</strong> page (accessible to Governance Admin only) is where the company's
+    capital information is configured. This information appears on share certificates and reports.
+  </p>
+  <ul>
+    <li><strong>Authorized Capital</strong> — the maximum capital the company is authorised to issue</li>
+    <li><strong>Subscribed Capital</strong> — the amount shareholders have agreed to pay</li>
+    <li><strong>Paid-up Capital</strong> — the amount actually paid by shareholders</li>
+    <li><strong>Par Value</strong> — the face value of each individual share</li>
+    <li><strong>Company Address</strong> — City, Sub-City, Woreda, House No., P.O. Box</li>
+  </ul>
+
+  <h3>User Management</h3>
+  <p>
+    Governance Admins can go to <strong>Users</strong> in the sidebar to:
+  </p>
+  <ul>
+    <li>Create new user accounts (a welcome email with a temporary password is sent automatically)</li>
+    <li>Assign or change a user's role</li>
+    <li>Reset a user's password directly</li>
+    <li>Remove a user from the platform</li>
+  </ul>
+
+  <h3>Audit Log</h3>
+  <p>
+    Every action performed in the system — creating a record, approving a transfer, generating a
+    certificate — is recorded in the <strong>Audit Log</strong> with the user's name, the date and
+    time, and what was changed. This log cannot be edited or deleted.
+  </p>
+
+  <div style="background:#f1f5f9;border-radius:10px;padding:20px 24px;margin-top:28px;">
+    <div class="section-label" style="margin-bottom:6px;">Support</div>
+    <p style="margin-bottom:8px;font-size:13px;color:#1e293b;font-weight:700;">Need help? Contact your system administrator.</p>
+    <p style="font-size:12px;color:#64748b;margin:0;">
+      If you encounter a problem, cannot access a feature, or need your password reset,
+      please reach out to the Governance Admin or the IT team.
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -53,15 +53,20 @@ export function MobileNavDrawer({ items }: { items: NavItem[] }) {
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
-            className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-xl"
+            className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#0E1F19] shadow-xl"
           >
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <p className="text-sm font-bold text-slate-900">Menu</p>
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#17A673] to-[#0D6B4F] text-sm font-bold text-white">
+                  D
+                </span>
+                <p className="text-sm font-semibold text-white">Digaf</p>
+              </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close navigation"
-                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                className="rounded-lg p-1.5 text-[#9DB3A8] hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#17A673]"
               >
                 ✕
               </button>

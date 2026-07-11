@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BrandLogo } from "@/src/components/BrandLogo";
 import { SessionWatcher } from "@/src/components/SessionWatcher";
 import { SideNavLinks, type NavItem } from "@/src/components/NavLinks";
 import { MobileNavDrawer } from "@/src/components/MobileNavDrawer";
@@ -61,21 +60,27 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const hasRole = Boolean(assignedRole);
   const navItems = buildNavItems(assignedRole);
 
+  const initials = userEmail.slice(0, 2).toUpperCase();
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col overflow-y-auto border-r border-slate-200 bg-white lg:flex">
+      {/* Desktop sidebar — dark green */}
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col overflow-y-auto bg-[#0E1F19] lg:flex">
         {/* Brand */}
-        <div className="flex-shrink-0 px-5 pt-6 pb-4">
-          <Link href="/" className="inline-flex max-w-full">
-            <BrandLogo
-              imageClassName="h-12 w-auto max-w-full"
-              fallbackClassName="block max-w-full break-words text-base font-bold leading-tight text-slate-900"
-            />
+        <div className="flex-shrink-0 px-5 pb-4 pt-6">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#17A673] to-[#0D6B4F] text-[15px] font-bold text-white">
+              D
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[15px] font-semibold tracking-tight text-[#F2F5F3]">
+                Digaf
+              </span>
+              <span className="block text-[10.5px] uppercase tracking-[0.08em] text-[#5F7A6E]">
+                Share Registry
+              </span>
+            </span>
           </Link>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Internal Governance Portal
-          </p>
         </div>
 
         {/* Nav */}
@@ -84,14 +89,14 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User footer */}
-        <div className="flex-shrink-0 border-t border-slate-100 px-4 py-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-              {userEmail.charAt(0).toUpperCase()}
+        <div className="flex-shrink-0 border-t border-white/10 px-4 py-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1C3A2E] text-xs font-semibold text-[#7BC4A4]">
+              {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-slate-700">{userEmail}</p>
-              <p className={`text-[11px] capitalize ${hasRole ? "text-slate-500" : "font-semibold text-rose-500"}`}>
+              <p className="truncate text-[12.5px] font-medium text-[#E5EBE8]">{userEmail}</p>
+              <p className={`truncate text-[11px] capitalize ${hasRole ? "text-[#5F7A6E]" : "font-semibold text-rose-400"}`}>
                 {userRole.replace(/_/g, " ")}
               </p>
             </div>
@@ -99,14 +104,14 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mt-3 flex gap-2">
             <Link
               href="/settings"
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-medium text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+              className="flex-1 rounded-lg border border-white/10 px-3 py-1.5 text-center text-xs font-medium text-[#9DB3A8] transition-colors hover:bg-white/5 hover:text-white"
             >
               Settings
             </Link>
             <form action={logout} className="flex-1">
               <button
                 type="submit"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+                className="w-full rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-[#9DB3A8] transition-colors hover:bg-white/5 hover:text-white"
               >
                 Sign out
               </button>
@@ -117,41 +122,43 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content area */}
       <div className="min-w-0 lg:pl-64">
-        {/* Top bar — mobile + desktop context header */}
-        <header className="sticky top-0 z-10 max-w-full border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <MobileNavDrawer items={navItems} />
-              <Link href="/" className="shrink-0 lg:hidden">
-                <BrandLogo
-                  imageClassName="h-9 w-auto max-w-[8rem]"
-                  fallbackClassName="block max-w-[10rem] break-words text-sm font-bold leading-tight text-slate-900"
-                />
-              </Link>
-              <div className="hidden min-w-0 lg:block">
-                <p className="text-sm font-semibold text-slate-700">{ORG_NAME}</p>
-                <p className="text-xs text-slate-500">{ORG_TAGLINE}</p>
-              </div>
-            </div>
+        {/* Top bar */}
+        <header className="sticky top-0 z-10 flex h-14 max-w-full items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-7">
+          <MobileNavDrawer items={navItems} />
+          <Link href="/" className="flex shrink-0 items-center gap-2 lg:hidden">
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#17A673] to-[#0D6B4F] text-[13px] font-bold text-white">
+              D
+            </span>
+            <span className="text-sm font-semibold text-slate-900">Digaf</span>
+          </Link>
+          <div className="hidden min-w-0 items-center gap-2 text-[13px] text-slate-500 lg:flex">
+            <span className="truncate">{ORG_NAME}</span>
+            <span className="text-slate-300">/</span>
+            <span className="truncate font-medium text-slate-900">{ORG_TAGLINE}</span>
+          </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <div className="hidden text-right sm:block">
-                <p className="max-w-[14rem] truncate text-xs font-medium text-slate-700">
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            <div className="flex items-center gap-2.5 border-l border-slate-200 pl-3 sm:pl-4">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-indigo-600 text-[12.5px] font-semibold text-white">
+                {initials}
+              </div>
+              <div className="hidden sm:block">
+                <p className="max-w-[14rem] truncate text-[13px] font-semibold leading-tight text-slate-900">
                   {userEmail}
                 </p>
-                <p className={`text-[11px] capitalize ${hasRole ? "text-slate-500" : "font-semibold text-rose-500"}`}>
+                <p className={`truncate text-[11.5px] capitalize leading-tight ${hasRole ? "text-slate-500" : "font-semibold text-rose-600"}`}>
                   {userRole.replace(/_/g, " ")}
                 </p>
               </div>
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                >
-                  Sign out
-                </button>
-              </form>
             </div>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
         </header>
 

@@ -1,11 +1,19 @@
 type StatusTone = "neutral" | "success" | "warning" | "danger" | "info";
 
 const toneClasses: Record<StatusTone, string> = {
-  neutral: "bg-slate-200 text-slate-700 ring-slate-200",
-  success: "bg-emerald-100 text-emerald-800 ring-emerald-200",
-  warning: "bg-amber-100 text-amber-800 ring-amber-200",
-  danger: "bg-rose-100 text-rose-800 ring-rose-200",
-  info: "bg-sky-100 text-sky-800 ring-sky-200",
+  neutral: "bg-slate-100 text-slate-600",
+  success: "bg-emerald-50 text-emerald-700",
+  warning: "bg-amber-50 text-amber-700",
+  danger: "bg-rose-50 text-rose-700",
+  info: "bg-sky-50 text-sky-700",
+};
+
+const dotClasses: Record<StatusTone, string> = {
+  neutral: "bg-slate-400",
+  success: "bg-emerald-500",
+  warning: "bg-amber-400",
+  danger: "bg-rose-500",
+  info: "bg-sky-500",
 };
 
 const statusToneMap: Record<string, StatusTone> = {
@@ -61,8 +69,12 @@ export function StatusBadge({
 
   return (
     <span
-      className={`inline-flex max-w-full items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ring-1 ${toneClasses[resolvedTone]} ${className}`}
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-[3px] text-xs font-medium capitalize ${toneClasses[resolvedTone]} ${className}`}
     >
+      <span
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClasses[resolvedTone]}`}
+        aria-hidden="true"
+      />
       <span className="truncate">
         {prefix ? `${prefix}: ` : ""}
         {displayLabel}

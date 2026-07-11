@@ -22,17 +22,17 @@ export function PageHeader({
   // Inline page heading — no card, no shadow. Used on all inner pages.
   if (variant === "page") {
     return (
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 flex-1">
           {eyebrow ? (
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-indigo-500">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-indigo-600">
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="break-words text-2xl font-bold text-slate-900 sm:text-3xl">
+          <h1 className="break-words text-[21px] font-semibold tracking-tight text-slate-900">
             {title}
           </h1>
-          <p className="mt-1.5 max-w-2xl break-words text-sm text-slate-500">
+          <p className="mt-1 max-w-2xl break-words text-[13.5px] text-slate-500">
             {description}
           </p>
           {notice ? (

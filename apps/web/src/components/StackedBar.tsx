@@ -9,6 +9,8 @@ function pct(value: number, total: number) {
   return Math.max(0, Math.min(100, Math.round((value / total) * 100)));
 }
 
+// A single health row: label + detail, thin segmented track, compact legend.
+// Designed to stack inside a card section (see dashboard "Registry health").
 export function StackedBar({
   title,
   subtitle,
@@ -21,10 +23,12 @@ export function StackedBar({
   const total = segments.reduce((sum, s) => sum + s.value, 0);
 
   return (
-    <article className="rounded-2xl bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-slate-700">{title}</p>
-      <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
-      <div className="mt-4 flex h-2.5 gap-px overflow-hidden rounded-full bg-slate-100">
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+        <p className="text-[13px] font-medium text-slate-900">{title}</p>
+        <p className="text-xs text-slate-500 tabular-nums">{subtitle}</p>
+      </div>
+      <div className="flex h-[7px] gap-px overflow-hidden rounded-full bg-slate-100">
         {segments.map((s) => (
           <div
             key={s.label}
@@ -33,15 +37,15 @@ export function StackedBar({
           />
         ))}
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {segments.map((s) => (
-          <div key={s.label} className="flex items-center gap-1.5">
-            <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${s.colorClass}`} />
-            <span className="text-xs text-slate-500">{s.label}</span>
-            <span className="ml-auto text-xs font-semibold text-slate-700">{s.value}</span>
-          </div>
+          <span key={s.label} className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+            <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${s.colorClass}`} />
+            {s.label}
+            <span className="font-medium text-slate-700 tabular-nums">{s.value}</span>
+          </span>
         ))}
       </div>
-    </article>
+    </div>
   );
 }

@@ -1,18 +1,124 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #f6f7f5;
+  --foreground: #1b211e;
+}
+
+/*
+ * Digaf design system — deep-green fintech palette.
+ * The stock Tailwind scales are remapped so the semantic classes used
+ * across the app (indigo = brand, slate = neutrals, emerald/amber/rose =
+ * status) render the Digaf palette without per-page changes.
+ */
+@theme {
+  /* Brand green (mapped over indigo) */
+  --color-indigo-50: #eaf4ef;
+  --color-indigo-100: #d7eae1;
+  --color-indigo-200: #b5d8c9;
+  --color-indigo-300: #82bca4;
+  --color-indigo-400: #3e9c7c;
+  --color-indigo-500: #17a673;
+  --color-indigo-600: #0d6b4f;
+  --color-indigo-700: #0a5940;
+  --color-indigo-800: #084a36;
+  --color-indigo-900: #06392a;
+  --color-indigo-950: #0e1f19;
+
+  /* Warm green-gray neutrals (mapped over slate) */
+  --color-slate-50: #f6f7f5;
+  --color-slate-100: #f1f3f1;
+  --color-slate-200: #e6e9e6;
+  --color-slate-300: #dde2dd;
+  --color-slate-400: #8a948e;
+  --color-slate-500: #6b7671;
+  --color-slate-600: #4a544e;
+  --color-slate-700: #2b342f;
+  --color-slate-800: #222a26;
+  --color-slate-900: #1b211e;
+  --color-slate-950: #121714;
+
+  /* Success */
+  --color-emerald-50: #e7f3ed;
+  --color-emerald-100: #d2e9dd;
+  --color-emerald-200: #a9d6c0;
+  --color-emerald-300: #6fbf9a;
+  --color-emerald-400: #2fae78;
+  --color-emerald-500: #149960;
+  --color-emerald-600: #0f7f51;
+  --color-emerald-700: #0b6b45;
+  --color-emerald-800: #095538;
+  --color-emerald-900: #07452e;
+
+  /* Warning */
+  --color-amber-50: #fbf1dc;
+  --color-amber-100: #f7e7c5;
+  --color-amber-200: #efd49b;
+  --color-amber-300: #e4b95a;
+  --color-amber-400: #d99a1b;
+  --color-amber-500: #c98d14;
+  --color-amber-600: #a97310;
+  --color-amber-700: #8a5b00;
+  --color-amber-800: #6e4900;
+  --color-amber-900: #573a00;
+
+  /* Danger */
+  --color-rose-50: #fbeae7;
+  --color-rose-100: #f7d9d4;
+  --color-rose-200: #efb7ad;
+  --color-rose-300: #e28d7f;
+  --color-rose-400: #d8604f;
+  --color-rose-500: #cc4437;
+  --color-rose-600: #ba3b2e;
+  --color-rose-700: #a83226;
+  --color-rose-800: #8c2a20;
+  --color-rose-900: #712219;
+
+  /* Legacy red/green classes alias to the same status colors */
+  --color-red-50: #fbeae7;
+  --color-red-100: #f7d9d4;
+  --color-red-200: #efb7ad;
+  --color-red-300: #e28d7f;
+  --color-red-400: #d8604f;
+  --color-red-500: #cc4437;
+  --color-red-600: #ba3b2e;
+  --color-red-700: #a83226;
+  --color-red-800: #8c2a20;
+  --color-red-900: #712219;
+  --color-green-50: #e7f3ed;
+  --color-green-100: #d2e9dd;
+  --color-green-200: #a9d6c0;
+  --color-green-400: #2fae78;
+  --color-green-500: #149960;
+  --color-green-600: #0f7f51;
+  --color-green-700: #0b6b45;
+  --color-green-800: #095538;
+
+  /* Info (steel blue, mapped over sky) */
+  --color-sky-50: #e7ebf5;
+  --color-sky-100: #d6ddee;
+  --color-sky-200: #b7c3e0;
+  --color-sky-300: #8fa1c9;
+  --color-sky-400: #6b7fad;
+  --color-sky-500: #52689b;
+  --color-sky-600: #465c8f;
+  --color-sky-700: #3b5488;
+  --color-sky-800: #30456f;
+  --color-sky-900: #263756;
+
+  /* Cards render at 12px radius across the app */
+  --radius-2xl: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "Cascadia Code", Menlo, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
 }

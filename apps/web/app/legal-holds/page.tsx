@@ -5,6 +5,8 @@ import { KpiCard } from "@/src/components/KpiCard";
 import { PageContainer } from "@/src/components/PageContainer";
 import { PageHeader } from "@/src/components/PageHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
+import { ImposeLegalHoldButton } from "@/src/components/ImposeLegalHoldButton";
+import { LegalHoldActions } from "@/src/components/LegalHoldActions";
 
 type LegalHold = {
   id: string;
@@ -18,14 +20,27 @@ type LegalHold = {
   imposed_at: string;
   reason: string;
   status: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  release_requested_by: string | null;
+  release_requested_at: string | null;
   lifted_by: string | null;
   lifted_at: string | null;
+  decision_notes: string | null;
   authority_reference: string | null;
   transfer_freeze_id: string | null;
   freeze_type: string | null;
   freeze_status: string | null;
   freeze_reason: string | null;
   freeze_imposed_at: string | null;
+};
+
+const STATUS_TONE: Record<string, "danger" | "warning" | "neutral" | undefined> = {
+  active: "danger",
+  pending_approval: "warning",
+  pending_lift: "warning",
+  rejected: "neutral",
+  lifted: "neutral",
 };
 
 function formatLabel(value: string | null) {
@@ -48,6 +63,9 @@ export default async function LegalHoldsPage() {
   const response = await fetchLegalHolds(token ?? undefined);
   const legalHolds: LegalHold[] = response.data;
   const activeHolds = legalHolds.filter((hold) => hold.status === "active");
+  const pendingCount = legalHolds.filter(
+    (hold) => hold.status === "pending_approval" || hold.status === "pending_lift"
+  ).length;
   const activeFreezeCount = new Set(
     legalHolds
       .filter((hold) => hold.freeze_status === "active")
@@ -62,15 +80,11 @@ export default async function LegalHoldsPage() {
           variant="page"
           title="Legal Hold Management"
           description="Track legal holds, regulatory review freezes, and preservation controls for shareholder governance records."
-          badge={
-            <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
-              Read-only
-            </div>
-          }
+          badge={<ImposeLegalHoldButton />}
         />
 
         <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
+        <div className="mb-8 grid gap-4 md:grid-cols-4">
           <KpiCard
             label="Total Holds"
             value={legalHolds.length}
@@ -81,6 +95,12 @@ export default async function LegalHoldsPage() {
             value={activeHolds.length}
             detail="Preservation active"
             tone={activeHolds.length > 0 ? "danger" : "neutral"}
+          />
+          <KpiCard
+            label="Pending Action"
+            value={pendingCount}
+            detail="Awaiting approval"
+            tone={pendingCount > 0 ? "warning" : "neutral"}
           />
           <KpiCard
             label="Active Freezes"
@@ -121,7 +141,7 @@ export default async function LegalHoldsPage() {
                       </h3>
                     </div>
 
-                    <StatusBadge status="active" tone="danger" />
+                    <StatusBadge status={hold.status} tone={STATUS_TONE[hold.status]} />
                   </div>
 
                   <dl className="space-y-3 text-sm">
@@ -158,7 +178,7 @@ export default async function LegalHoldsPage() {
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           {legalHolds.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Hold Type</th>
@@ -169,6 +189,7 @@ export default async function LegalHoldsPage() {
                     <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Imposed By</th>
                     <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Imposed At</th>
                     <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Freeze</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
                   </tr>
                 </thead>
 
@@ -185,10 +206,7 @@ export default async function LegalHoldsPage() {
                         {hold.reason}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        <StatusBadge
-                          status={hold.status}
-                          tone={hold.status === "active" ? "danger" : undefined}
-                        />
+                        <StatusBadge status={hold.status} tone={STATUS_TONE[hold.status]} />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
                         <span className="break-words">
@@ -218,6 +236,14 @@ export default async function LegalHoldsPage() {
                             {hold.freeze_reason || "No active freeze"}
                           </span>
                         </div>
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <LegalHoldActions
+                          holdId={hold.id}
+                          status={hold.status}
+                          imposedBy={hold.imposed_by}
+                          releaseRequestedBy={hold.release_requested_by}
+                        />
                       </td>
                     </tr>
                   ))}

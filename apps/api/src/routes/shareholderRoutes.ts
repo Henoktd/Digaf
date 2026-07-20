@@ -2957,6 +2957,33 @@ shareholderRoutes.put("/:shareholderId/payment-profile", async (req, res) => {
   }
 });
 
+// GET /:shareholderId/ownership-positions — active share_ownership rows with
+// available (unencumbered) balance, used to select a position when
+// registering a lien/pledge.
+shareholderRoutes.get("/:shareholderId/ownership-positions", async (req, res) => {
+  try {
+    const shareholderId = requireUuid(req.params.shareholderId, "shareholderId");
+    const result = await pool.query(
+      `SELECT
+        so.id AS share_ownership_id,
+        so.share_class_id,
+        sc.class_name AS share_class_name,
+        so.quantity,
+        so.pledged_quantity,
+        so.encumbered_quantity,
+        (so.quantity - so.pledged_quantity - so.encumbered_quantity) AS available_quantity
+      FROM share_ownership so
+      JOIN share_class sc ON sc.share_class_id = so.share_class_id
+      WHERE so.shareholder_id = $1 AND so.status = 'active'
+      ORDER BY sc.class_name ASC`,
+      [shareholderId]
+    );
+    res.json({ data: result.rows });
+  } catch (error) {
+    return sendServerError(res, "Failed to fetch ownership positions", error);
+  }
+});
+
 shareholderRoutes.get("/:shareholderId/certificate-defaults", async (req, res) => {
   try {
     const shareholderId = requireUuid(req.params.shareholderId, "shareholderId");

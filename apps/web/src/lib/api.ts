@@ -1225,6 +1225,74 @@ export async function fetchLegalHolds(token?: string) {
   return sendGetRequest(`${API_BASE_URL}/api/legal-holds`, token);
 }
 
+export async function proposeLegalHold(
+  data: { shareholderId: string; holdType: string; reason: string; authorityReference?: string },
+  token?: string
+) {
+  return sendJsonRequest(
+    `${API_BASE_URL}/api/legal-holds`,
+    "POST",
+    data,
+    "Failed to propose legal hold",
+    token
+  );
+}
+
+export async function approveLegalHold(id: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/legal-holds/${id}/approve`, "POST", {}, "Failed to approve legal hold", token);
+}
+
+export async function rejectLegalHold(id: string, decisionNotes: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/legal-holds/${id}/reject`, "POST", { decisionNotes }, "Failed to reject legal hold", token);
+}
+
+export async function requestLegalHoldLift(id: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/legal-holds/${id}/request-lift`, "POST", {}, "Failed to request lift", token);
+}
+
+export async function approveLegalHoldLift(id: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/legal-holds/${id}/approve-lift`, "POST", {}, "Failed to approve lift", token);
+}
+
+export async function rejectLegalHoldLift(id: string, decisionNotes: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/legal-holds/${id}/reject-lift`, "POST", { decisionNotes }, "Failed to reject lift", token);
+}
+
+export async function fetchShareholderOwnershipPositions(shareholderId: string, token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/shareholders/${shareholderId}/ownership-positions`, token);
+}
+
+export async function fetchLiens(token?: string) {
+  return sendGetRequest(`${API_BASE_URL}/api/liens`, token);
+}
+
+export async function proposeLien(
+  data: { shareOwnershipId: string; lienType: string; quantity: number; reason: string; authorityReference?: string },
+  token?: string
+) {
+  return sendJsonRequest(`${API_BASE_URL}/api/liens`, "POST", data, "Failed to propose lien", token);
+}
+
+export async function approveLien(id: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/liens/${id}/approve`, "POST", {}, "Failed to approve lien", token);
+}
+
+export async function rejectLien(id: string, decisionNotes: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/liens/${id}/reject`, "POST", { decisionNotes }, "Failed to reject lien", token);
+}
+
+export async function requestLienRelease(id: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/liens/${id}/request-release`, "POST", {}, "Failed to request release", token);
+}
+
+export async function approveLienRelease(id: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/liens/${id}/approve-release`, "POST", {}, "Failed to approve release", token);
+}
+
+export async function rejectLienRelease(id: string, decisionNotes: string, token?: string) {
+  return sendJsonRequest(`${API_BASE_URL}/api/liens/${id}/reject-release`, "POST", { decisionNotes }, "Failed to reject release", token);
+}
+
 export async function fetchCommunications(token?: string) {
   return sendGetRequest(`${API_BASE_URL}/api/communications`, token);
 }

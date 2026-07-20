@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Digaf Registry — Compliance Readiness Pack</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #1B211E; line-height: 1.6; background: #fff; }
+
+  .cover {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 70px 60px; background: #0E1F19; color: #fff; page-break-after: always;
+  }
+  .cover .tag { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #7BC4A4; margin-bottom: 18px; }
+  .cover h1 { font-size: 34px; font-weight: 700; line-height: 1.25; max-width: 560px; }
+  .cover .sub { margin-top: 18px; font-size: 14px; color: #B7CFC3; max-width: 520px; }
+  .cover .meta { margin-top: 70px; font-size: 12px; color: #7BC4A4; }
+  .cover .meta div { margin-bottom: 4px; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 50px 44px; page-break-after: always; }
+  .page:last-child { page-break-after: avoid; }
+
+  h2 { font-size: 20px; font-weight: 700; color: #0E1F19; margin-bottom: 6px; }
+  h3 { font-size: 14px; font-weight: 700; color: #0E1F19; margin: 22px 0 8px; }
+  .section-label { font-size: 10.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0D6B4F; margin-bottom: 6px; }
+  p { margin-bottom: 10px; color: #2B342F; }
+  ul, ol { margin: 6px 0 12px 20px; }
+  li { margin-bottom: 5px; color: #2B342F; }
+
+  .callout {
+    border-left: 4px solid #0D6B4F; background: #F1F7F4; border-radius: 6px;
+    padding: 12px 16px; margin: 14px 0; font-size: 12.5px; color: #0E1F19;
+  }
+  .callout.warn { border-left-color: #C98D14; background: #FBF1DC; color: #573A00; }
+  .callout.gap { border-left-color: #A83226; background: #FBEAE7; color: #712219; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  th { background: #0E1F19; color: #fff; padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: 0.3px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #E6E9E6; vertical-align: top; }
+  tr:nth-child(even) td { background: #F8FAF8; }
+
+  .status { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 2px 9px; white-space: nowrap; }
+  .status.done { background: #E7F3ED; color: #0B6B45; }
+  .status.progress { background: #FBF1DC; color: #8A5B00; }
+  .status.planned { background: #F1F3F1; color: #4A544E; }
+
+  .page-header { display: flex; justify-content: space-between; font-size: 10.5px; color: #94A3A0; border-bottom: 1px solid #E6E9E6; padding-bottom: 8px; margin-bottom: 26px; }
+  .page-header b { color: #0D6B4F; }
+
+  .footer-note { margin-top: 30px; padding-top: 14px; border-top: 1px solid #E6E9E6; font-size: 10.5px; color: #8A948E; }
+
+  @media print {
+    .cover { min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ COVER ══════════════════════════ -->
+<div class="cover">
+  <div class="tag">Digaf Shareholder Registry Platform</div>
+  <h1>Compliance &amp; Governance<br/>Readiness Pack</h1>
+  <p class="sub">
+    Prepared to support the review of the registry and its operating procedures against
+    applicable National Bank of Ethiopia (NBE) requirements and corporate governance
+    obligations, as requested prior to adoption as Digaf's official shareholder register.
+  </p>
+  <div class="meta">
+    <div>Prepared for: Legal &amp; Compliance Review (Gidi)</div>
+    <div>Requested by: Mekdem</div>
+    <div>Version 1.0 — July 2026</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ PAGE: Purpose & how to read ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Purpose &amp; Scope</span></div>
+
+  <div class="section-label">Purpose</div>
+  <h2>What this document is</h2>
+  <p>
+    This pack supports the review requested before the Digaf Shareholder Registry Platform is
+    adopted as the company's official shareholder register. It maps each area of regulatory and
+    governance obligation to the specific control or feature in the platform that addresses it,
+    states plainly what is already operational, and is explicit about anything still in progress.
+  </p>
+  <p>
+    This document does not substitute for Legal &amp; Compliance's own assessment against the
+    current text of NBE directives and the Commercial Code. It is a working aid to make that
+    review faster — every claim here should be independently verified against the applicable
+    regulation by the reviewing team.
+  </p>
+
+  <div class="callout warn">
+    <strong>Important:</strong> this document describes the platform's technical and procedural
+    capabilities. It is not a legal opinion. Specific NBE directive numbers and thresholds
+    (ownership concentration limits, fit-and-proper criteria, reporting formats, etc.) should be
+    confirmed by Legal &amp; Compliance against the current regulatory text, as these are
+    updated periodically by the National Bank of Ethiopia.
+  </div>
+
+  <h3>How this pack is organised</h3>
+  <ul>
+    <li><strong>Section 1</strong> — Statutory share register requirements</li>
+    <li><strong>Section 2</strong> — Governance controls (segregation of duties)</li>
+    <li><strong>Section 3</strong> — KYC, AML and beneficial ownership</li>
+    <li><strong>Section 4</strong> — Data security and business continuity</li>
+    <li><strong>Section 5</strong> — Audit trail and record retention</li>
+    <li><strong>Section 6</strong> — Known gaps and in-progress items</li>
+    <li><strong>Section 7</strong> — Operating procedures Digaf should formally adopt on paper</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 1 ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 1 — Statutory Register</span></div>
+
+  <div class="section-label">Section 1</div>
+  <h2>Statutory Share Register Requirements</h2>
+  <p>
+    Ethiopian company law requires a share company to maintain a register recording each
+    shareholder's identity, their shareholding, and the history of transfers. The platform's
+    core registry is built directly around this requirement.
+  </p>
+
+  <table>
+    <thead><tr><th style="width:38%">Requirement</th><th style="width:38%">Platform capability</th><th style="width:24%">Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Register of shareholders with identity and shareholding details</td>
+        <td>Shareholder Registry module — legal name (English &amp; Amharic), ID/passport number, contact details, shares held, share class</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Record of share transfers</td>
+        <td>Transfers module with transferor/transferee, share quantity, price, stamp duty calculation, and full history per shareholder</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Capital structure disclosure (authorized / subscribed / paid-up)</td>
+        <td>Company Settings holds authorized, subscribed and paid-up capital, and par value per share; reflected on certificates and reports</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Share certificates</td>
+        <td>Certificate generation with company seal, bilingual text, capital details, and QR-code public verification</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Capitalization table / ownership concentration view</td>
+        <td>Cap Table module: ownership percentages, pledged/encumbered shares, and concentration analytics (top-5, top-10, HHI index)</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 2 ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 2 — Governance Controls</span></div>
+
+  <div class="section-label">Section 2</div>
+  <h2>Governance Controls — Segregation of Duties</h2>
+  <p>
+    Sound governance practice, and NBE expectations for regulated financial institutions
+    generally, call for segregation of duties on any action that changes ownership or
+    compliance records — no single person should be able to both create and approve a
+    change unchecked.
+  </p>
+
+  <h3>The maker-checker control</h3>
+  <p>
+    The platform implements a maker-checker control on share transfers and other governance
+    actions: a <strong>Preparer</strong> submits a change, which requires sequential approval
+    by a <strong>Reviewer</strong> and then an <strong>Approver</strong> before it takes
+    effect. No individual can approve their own submission.
+  </p>
+
+  <table>
+    <thead><tr><th style="width:30%">Role</th><th style="width:50%">Function</th><th style="width:20%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Governance Admin</td><td>Full administrative access; manages users, roles, and company settings</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Preparer (Maker)</td><td>Creates and submits shareholder, transfer, and certificate records</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Reviewer (Checker 1)</td><td>First-level review and approval of submitted records</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Approver (Checker 2)</td><td>Final approval before a record takes effect</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Compliance Officer</td><td>Manages KYC verification and compliance status independently of transaction processing</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Viewer</td><td>Read-only access for board members and auditors</td><td><span class="status done">Active</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>SLA and escalation controls</h3>
+  <p>
+    Each approval stage carries a configurable target turnaround time (default 5 business days
+    for transfers). Items exceeding this target are flagged as overdue on the dashboard and
+    escalate to the assigned recipient role — preventing pending approvals from stalling
+    unnoticed.
+  </p>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 3 ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 3 — KYC &amp; AML</span></div>
+
+  <div class="section-label">Section 3</div>
+  <h2>KYC, AML and Beneficial Ownership</h2>
+
+  <table>
+    <thead><tr><th style="width:38%">Requirement area</th><th style="width:38%">Platform capability</th><th style="width:24%">Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Identity verification per shareholder</td>
+        <td>KYC status field (verified / pending / expired) per shareholder, with expiry tracking and a dedicated compliance dashboard</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Identity document retention</td>
+        <td>Identity document checklist and document reference storage per shareholder profile</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Beneficial ownership disclosure</td>
+        <td>Beneficial ownership records linked to each shareholder for entities/legal persons</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Re-verification / periodic KYC refresh</td>
+        <td>KYC expiry dates trigger "expiring soon" and "expired" states on the dashboard and shareholder list, prompting re-verification</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Government ID verification against a national registry</td>
+        <td>Not yet integrated. Currently relies on manually recorded ID numbers and documents reviewed by the Compliance Officer</td>
+        <td><span class="status planned">Not started</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    National ID (Fayda) integration was scoped as a future enhancement that would allow ID
+    numbers to be verified automatically against the national identity system at the point of
+    registration. It has not been started and requires API access to be arranged with the
+    relevant authority. It is not a blocker to using the platform today.
+  </div>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 4 ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 4 — Security &amp; Continuity</span></div>
+
+  <div class="section-label">Section 4</div>
+  <h2>Data Security and Business Continuity</h2>
+
+  <table>
+    <thead><tr><th style="width:38%">Control</th><th style="width:38%">Implementation</th><th style="width:24%">Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Encrypted access (HTTPS/TLS)</td>
+        <td>Platform served exclusively over HTTPS at equity.digaf.et with a trusted certificate; all plain-HTTP requests are redirected automatically</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Authentication</td>
+        <td>Individual accounts with enforced password policy; new accounts require a mandatory password change on first login; passwords are never stored or transmitted in plain text</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Role-based access control</td>
+        <td>Every user is assigned exactly one governance role; access to each module is restricted by role at the application level</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Database backups</td>
+        <td>Automated nightly database backup with 14-day retention on the hosting server</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Offsite backup copy</td>
+        <td>Every nightly backup is additionally emailed to a dedicated Office 365 mailbox, giving a geographically separate copy independent of the hosting server</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Service monitoring</td>
+        <td>Automated health checks every 5 minutes with self-healing restart of any unresponsive service</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Network-level protections</td>
+        <td>API rate limiting, request size limits, and standard security headers (HSTS, X-Frame-Options, etc.)</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Disaster recovery procedure (documented, tested restore)</td>
+        <td>Backup exists; a written, tested restoration procedure has not yet been formally documented</td>
+        <td><span class="status progress">In progress</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 5 ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 5 — Audit Trail</span></div>
+
+  <div class="section-label">Section 5</div>
+  <h2>Audit Trail and Record Retention</h2>
+
+  <table>
+    <thead><tr><th style="width:38%">Requirement</th><th style="width:38%">Platform capability</th><th style="width:24%">Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Immutable log of all changes to registry data</td>
+        <td>Every create, update, and approval action is written to an append-only audit log capturing the actor, timestamp, action, and affected record — visible in the Audit Log module</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Traceability of approvals</td>
+        <td>Each approval request records the preparer, reviewer, and approver identities and timestamps at every stage</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Retention policy</td>
+        <td>Registry and audit data are retained indefinitely by default (no automatic deletion). A formal written retention policy stating the required retention period has not yet been adopted</td>
+        <td><span class="status progress">In progress</span></td>
+      </tr>
+      <tr>
+        <td>Periodic reporting to management</td>
+        <td>Automated monthly summary report (shareholder count, KYC status, certificates, overdue approvals) emailed to designated recipients</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 6 — Gaps ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 6 — Known Gaps</span></div>
+
+  <div class="section-label">Section 6</div>
+  <h2>Known Gaps and In-Progress Items</h2>
+  <p>
+    Presented plainly so Legal &amp; Compliance can weigh them directly. None are believed to
+    block day-to-day use of the registry; all are recommended to be closed before or shortly
+    after formal adoption.
+  </p>
+
+  <div class="callout gap">
+    <strong>Documented disaster recovery procedure</strong> — a written, tested step-by-step
+    restoration procedure should be produced and kept alongside the backups.
+  </div>
+  <div class="callout gap">
+    <strong>Formal data retention policy</strong> — a one-page policy statement on how long
+    registry and audit records are retained should be adopted and referenced from this pack.
+  </div>
+  <div class="callout gap">
+    <strong>Written operating procedures</strong> — the platform enforces the maker-checker
+    control technically; Digaf should formally document the underlying business process on
+    paper (see Section 7) so the control is auditable independent of the software.
+  </div>
+  <div class="callout gap">
+    <strong>National ID verification</strong> — not yet integrated; identity is currently
+    verified manually by the Compliance Officer against submitted documents.
+  </div>
+</div>
+
+<!-- ══════════════════════════ PAGE: Section 7 — SOPs ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> Compliance Readiness Pack</span><span>Section 7 — Procedures to Adopt</span></div>
+
+  <div class="section-label">Section 7</div>
+  <h2>Operating Procedures Recommended for Formal Adoption</h2>
+  <p>
+    A compliant registry is a combination of software controls and documented business
+    process. The following short procedures are recommended for Digaf to formally approve,
+    even briefly, so the platform's technical controls are backed by an on-paper policy:
+  </p>
+
+  <ol>
+    <li><strong>User access procedure</strong> — who may request a new platform account, who approves the request (Governance Admin), and the process for revoking access when someone leaves their role.</li>
+    <li><strong>Shareholder registration procedure</strong> — required documents before a new shareholder is registered, and who verifies them (Compliance Officer) before KYC is marked verified.</li>
+    <li><strong>Share transfer approval procedure</strong> — formalizes the existing Preparer → Reviewer → Approver flow as an approved business process, naming who may hold each role.</li>
+    <li><strong>Record correction procedure</strong> — how an error in the registry is corrected once approved, ensuring corrections are also logged and approved rather than edited silently.</li>
+    <li><strong>Data retention and backup policy</strong> — states the retention period for registry records and confirms the nightly backup and (once complete) offsite copy procedure.</li>
+    <li><strong>Incident response procedure</strong> — who is notified and what steps are taken if unauthorized access or a data issue is suspected.</li>
+  </ol>
+
+  <div class="callout">
+    Each of these can be a single page. Digaf's Legal &amp; Compliance team may already have
+    templates for several of these from other systems — the goal is consistency with the
+    platform's actual technical behaviour, not new invention.
+  </div>
+
+  <div class="footer-note">
+    Digaf Shareholder Registry Platform — Compliance Readiness Pack v1.0 — Prepared July 2026.
+    This document should be reviewed and updated as the platform evolves and as NBE
+    requirements are confirmed by Legal &amp; Compliance.
+  </div>
+</div>
+
+</body>
+</html>

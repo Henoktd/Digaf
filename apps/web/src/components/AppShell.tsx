@@ -27,6 +27,7 @@ function buildNavItems(role: string | undefined): NavItem[] {
     { type: "link", href: "/transfers", label: "Transfers" },
     { type: "link", href: "/dividends", label: "Dividend Register" },
     { type: "link", href: "/approvals", label: "Approvals" },
+    { type: "link", href: "/liens", label: "Liens & Pledges" },
     { type: "link", href: "/legal-holds", label: "Legal Holds" },
     { type: "link", href: "/board-resolutions", label: "Board Resolutions" },
 

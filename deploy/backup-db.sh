@@ -23,3 +23,8 @@ fi
 find "$BACKUP_DIR" -name "digaf_governance_*.sql.gz" -mtime +"$RETENTION_DAYS" -delete
 
 echo "Backup OK: digaf_governance_${STAMP}.sql.gz (${SIZE} bytes)"
+
+# Offsite copy — emailed via the platform's existing Office 365 account.
+# Best-effort: a failure here must not fail the local backup that already succeeded.
+python3 /home/digaf/email-backup.py "$BACKUP_DIR/digaf_governance_${STAMP}.sql.gz" \
+  || echo "WARNING: offsite email backup failed — local backup is still safe" >&2

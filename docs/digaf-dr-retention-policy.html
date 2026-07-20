@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Digaf Registry — Disaster Recovery &amp; Data Retention Policy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #1B211E; line-height: 1.6; background: #fff; }
+
+  .cover {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 70px 60px; background: #0E1F19; color: #fff; page-break-after: always;
+  }
+  .cover .tag { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #7BC4A4; margin-bottom: 18px; }
+  .cover h1 { font-size: 32px; font-weight: 700; line-height: 1.25; max-width: 560px; }
+  .cover .sub { margin-top: 18px; font-size: 14px; color: #B7CFC3; max-width: 520px; }
+  .cover .meta { margin-top: 70px; font-size: 12px; color: #7BC4A4; }
+  .cover .meta div { margin-bottom: 4px; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 50px 44px; page-break-after: always; }
+  .page:last-child { page-break-after: avoid; }
+
+  h2 { font-size: 20px; font-weight: 700; color: #0E1F19; margin-bottom: 6px; }
+  h3 { font-size: 14px; font-weight: 700; color: #0E1F19; margin: 22px 0 8px; }
+  .section-label { font-size: 10.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0D6B4F; margin-bottom: 6px; }
+  p { margin-bottom: 10px; color: #2B342F; }
+  ul, ol { margin: 6px 0 12px 20px; }
+  li { margin-bottom: 5px; color: #2B342F; }
+
+  .callout { border-left: 4px solid #0D6B4F; background: #F1F7F4; border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 12.5px; color: #0E1F19; }
+  .callout.warn { border-left-color: #C98D14; background: #FBF1DC; color: #573A00; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  th { background: #0E1F19; color: #fff; padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: 0.3px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #E6E9E6; vertical-align: top; }
+  tr:nth-child(even) td { background: #F8FAF8; }
+
+  .step { display: flex; gap: 14px; align-items: flex-start; background: #F8FAF8; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; border-left: 3px solid #0D6B4F; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #0D6B4F; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step div.body strong { display: block; font-size: 13px; color: #0E1F19; }
+  .step div.body span { font-size: 12px; color: #4A544E; }
+
+  .page-header { display: flex; justify-content: space-between; font-size: 10.5px; color: #94A3A0; border-bottom: 1px solid #E6E9E6; padding-bottom: 8px; margin-bottom: 26px; }
+  .page-header b { color: #0D6B4F; }
+  .footer-note { margin-top: 30px; padding-top: 14px; border-top: 1px solid #E6E9E6; font-size: 10.5px; color: #8A948E; }
+
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .sig-block label { font-size: 10px; font-weight: 600; color: #475569; }
+  .sig-line { border-bottom: 1.5px solid #cbd5e1; padding-top: 30px; }
+
+  @media print { .cover { min-height: 100vh; } a { color: inherit; text-decoration: none; } }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="tag">Digaf Shareholder Registry Platform</div>
+  <h1>Disaster Recovery &amp;<br/>Data Retention Policy</h1>
+  <p class="sub">
+    Defines how registry data is protected against loss, how it is restored in the event of
+    an incident, and how long records are retained. Prepared to accompany the Compliance
+    Readiness Pack for the platform's adoption review.
+  </p>
+  <div class="meta">
+    <div>Prepared for: Legal &amp; Compliance Review</div>
+    <div>Version 1.0 — July 2026</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ PAGE 1 — Backup & DR ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> DR &amp; Retention Policy</span><span>Section 1 — Backup &amp; Disaster Recovery</span></div>
+
+  <div class="section-label">Section 1</div>
+  <h2>Backup and Disaster Recovery</h2>
+
+  <h3>What is backed up, and how often</h3>
+  <table>
+    <thead><tr><th style="width:28%">Item</th><th style="width:72%">Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Frequency</td><td>Every night at 02:00 (Africa/Addis_Ababa time), automatically, with no manual step required</td></tr>
+      <tr><td>Scope</td><td>A complete export of the registry database — every shareholder, shareholding, transfer, certificate, KYC record, lien, legal hold, approval, and audit log entry</td></tr>
+      <tr><td>Local retention</td><td>Kept on the hosting server for 14 days on a rolling basis; older local copies are automatically removed</td></tr>
+      <tr><td>Offsite copy</td><td>Each nightly backup is additionally sent as an email attachment to a dedicated mailbox independent of the hosting server, so a copy survives even total loss of the server itself</td></tr>
+      <tr><td>Integrity check</td><td>Every backup is verified to be a non-trivial size immediately after creation; a suspiciously small or failed backup is flagged rather than silently kept</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Recovery procedure</h3>
+  <p>In the event the platform or its database is lost, corrupted, or otherwise needs to be restored:</p>
+
+  <div class="step"><div class="step-num">1</div><div class="body"><strong>Identify the most recent good backup</strong><span>Local backups are on the server at /home/digaf/backups; the offsite copy is in the designated mailbox, one email per night, most recent at the top.</span></div></div>
+  <div class="step"><div class="step-num">2</div><div class="body"><strong>Provision a database</strong><span>A fresh PostgreSQL instance is started (on the existing server if the database alone was affected, or on a new server if the whole VM was lost).</span></div></div>
+  <div class="step"><div class="step-num">3</div><div class="body"><strong>Restore the backup</strong><span>The chosen backup file is loaded into the new database using the standard PostgreSQL restore command, recreating every table exactly as it was at backup time.</span></div></div>
+  <div class="step"><div class="step-num">4</div><div class="body"><strong>Point the application at the restored database</strong><span>The platform's configuration is updated to connect to the restored database, and the application is restarted.</span></div></div>
+  <div class="step"><div class="step-num">5</div><div class="body"><strong>Verify</strong><span>An administrator logs in, confirms the shareholder count and a sample of recent transactions match expectations, and checks the audit log for the last recorded actions before the incident.</span></div></div>
+
+  <div class="callout warn">
+    <strong>Recovery Point Objective (RPO):</strong> up to 24 hours of data (the time since the
+    last nightly backup) in the worst case. <strong>Recovery Time Objective (RTO):</strong>
+    the restore procedure above is designed to be completed within a few hours by someone
+    with server access and basic PostgreSQL familiarity.
+  </div>
+
+  <h3>Recommended: periodic restore test</h3>
+  <p>
+    A backup that has never been restored is unverified. It is recommended that the
+    restore procedure above be performed at least once, against a throwaway test database,
+    to confirm it works end to end — not merely that backup files exist.
+  </p>
+</div>
+
+<!-- ══════════════════════════ PAGE 2 — Retention ══════════════════════════ -->
+<div class="page">
+  <div class="page-header"><span><b>Digaf</b> DR &amp; Retention Policy</span><span>Section 2 — Data Retention</span></div>
+
+  <div class="section-label">Section 2</div>
+  <h2>Data Retention Policy</h2>
+
+  <p>
+    The shareholder register is a statutory corporate record. This section states how long
+    the platform retains it and related governance data.
+  </p>
+
+  <table>
+    <thead><tr><th style="width:34%">Record type</th><th style="width:42%">Retention</th><th style="width:24%">Basis</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Shareholder register (shareholders, shareholdings, transfers, certificates)</td>
+        <td>Retained permanently — no automatic deletion. Records remain even after a shareholder disposes of all shares, preserving historical ownership</td>
+        <td>Statutory register requirement</td>
+      </tr>
+      <tr>
+        <td>KYC records and identity documents</td>
+        <td>Retained permanently alongside the associated shareholder record</td>
+        <td>AML/KYC recordkeeping practice</td>
+      </tr>
+      <tr>
+        <td>Liens, pledges, and legal holds (including released/lifted ones)</td>
+        <td>Retained permanently — a released lien or lifted hold remains visible in its historical state, never deleted</td>
+        <td>Legal traceability</td>
+      </tr>
+      <tr>
+        <td>Audit log</td>
+        <td>Retained permanently; the log is append-only and cannot be edited or deleted through the application</td>
+        <td>Audit trail integrity</td>
+      </tr>
+      <tr>
+        <td>Database backups</td>
+        <td>14 days on the hosting server (rolling); the offsite emailed copy persists in the recipient mailbox subject to that mailbox's own retention settings</td>
+        <td>Operational recovery window</td>
+      </tr>
+      <tr>
+        <td>User account access logs (sign-ins)</td>
+        <td>Retained by the authentication provider for the life of the account</td>
+        <td>Security monitoring</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Principle:</strong> nothing in the shareholder register or audit trail is ever
+    hard-deleted by the platform. Corrections are made by recording a new, approved change —
+    never by editing or removing history. This is what allows the audit log to remain a
+    complete and trustworthy record.
+  </div>
+
+  <h3>Review</h3>
+  <p>
+    This policy should be reviewed by Legal &amp; Compliance annually, or whenever NBE
+    retention requirements for shareholder registers or AML records are updated.
+  </p>
+
+  <div class="sig-grid">
+    <div class="sig-block"><label>Reviewed by</label><div class="sig-line"></div></div>
+    <div class="sig-block"><label>Date</label><div class="sig-line"></div></div>
+  </div>
+
+  <div class="footer-note">
+    Digaf Shareholder Registry Platform — Disaster Recovery &amp; Data Retention Policy v1.0 — July 2026.
+  </div>
+</div>
+
+</body>
+</html>

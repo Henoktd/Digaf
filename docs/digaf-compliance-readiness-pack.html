@@ -70,7 +70,7 @@
   <div class="meta">
     <div>Prepared for: Legal &amp; Compliance Review (Gidi)</div>
     <div>Requested by: Mekdem</div>
-    <div>Version 1.0 — July 2026</div>
+    <div>Version 1.1 — July 2026</div>
   </div>
 </div>
 
@@ -150,7 +150,7 @@
       </tr>
       <tr>
         <td>Capitalization table / ownership concentration view</td>
-        <td>Cap Table module: ownership percentages, pledged/encumbered shares, and concentration analytics (top-5, top-10, HHI index)</td>
+        <td>Cap Table module: ownership percentages, pledged/encumbered share balances (kept current by the Liens &amp; Pledges workflow — see Section 2), and concentration analytics (top-5, top-10, HHI index)</td>
         <td><span class="status done">Operational</span></td>
       </tr>
     </tbody>
@@ -173,18 +173,19 @@
   <h3>The maker-checker control</h3>
   <p>
     The platform implements a maker-checker control on share transfers and other governance
-    actions: a <strong>Preparer</strong> submits a change, which requires sequential approval
-    by a <strong>Reviewer</strong> and then an <strong>Approver</strong> before it takes
-    effect. No individual can approve their own submission.
+    actions: a <strong>Maker</strong> submits a change, which requires approval by a
+    <strong>Checker</strong> (or, for transfers, sequential approval by Checker 1 then
+    Checker 2) before it takes effect. No individual can approve their own submission —
+    this is enforced at the application layer, not just by convention.
   </p>
 
   <table>
     <thead><tr><th style="width:30%">Role</th><th style="width:50%">Function</th><th style="width:20%">Status</th></tr></thead>
     <tbody>
-      <tr><td>Governance Admin</td><td>Full administrative access; manages users, roles, and company settings</td><td><span class="status done">Active</span></td></tr>
-      <tr><td>Preparer (Maker)</td><td>Creates and submits shareholder, transfer, and certificate records</td><td><span class="status done">Active</span></td></tr>
-      <tr><td>Reviewer (Checker 1)</td><td>First-level review and approval of submitted records</td><td><span class="status done">Active</span></td></tr>
-      <tr><td>Approver (Checker 2)</td><td>Final approval before a record takes effect</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Governance Admin</td><td>Full administrative access; manages users, roles, and company settings; acts as approver for liens and legal holds</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Maker</td><td>Creates and submits shareholder, transfer, certificate, lien, and legal hold records</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Checker 1</td><td>First-level review and approval of submitted transfer records</td><td><span class="status done">Active</span></td></tr>
+      <tr><td>Checker 2</td><td>Final approval before a transfer record takes effect</td><td><span class="status done">Active</span></td></tr>
       <tr><td>Compliance Officer</td><td>Manages KYC verification and compliance status independently of transaction processing</td><td><span class="status done">Active</span></td></tr>
       <tr><td>Viewer</td><td>Read-only access for board members and auditors</td><td><span class="status done">Active</span></td></tr>
     </tbody>
@@ -197,6 +198,47 @@
     escalate to the assigned recipient role — preventing pending approvals from stalling
     unnoticed.
   </p>
+
+  <h3>Mapping to the governance directive's workflow checklist</h3>
+  <p>
+    The Governance directive requesting this review specified a minimum set of required
+    workflows. Each is addressed directly below:
+  </p>
+  <table>
+    <thead><tr><th style="width:46%">Required workflow</th><th style="width:34%">Platform capability</th><th style="width:20%">Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Shareholder onboarding, verification and KYC validation</td>
+        <td>Add Shareholder flow plus bulk Excel import; KYC status, expiry tracking, and Compliance Officer verification</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Share issuance, transfers and cancellations with appropriate approval workflows</td>
+        <td>Transfers module — Maker submits, Checker 1 then Checker 2 approve before the transfer takes effect</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Registration and release of liens, pledges and other legal encumbrances over shares</td>
+        <td>Liens &amp; Pledges module — Maker registers a lien/pledge against a specific share position; a Governance Admin other than the requester must approve before shares are marked encumbered, and the same control applies to releasing it</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Recording of court orders, probate matters, freezes and other legal restrictions</td>
+        <td>Legal Hold Management module — Maker proposes a hold against a shareholder record with reason and authority reference; a Governance Admin other than the requester must approve before it becomes active, and lifting follows the same two-person control</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Maintenance of complete audit trails for every change made to the register</td>
+        <td>Append-only Audit Log capturing actor, action, timestamp, and before/after values for every governance action, including lien and legal hold decisions</td>
+        <td><span class="status done">Operational</span></td>
+      </tr>
+      <tr>
+        <td>Appropriate maker-checker controls, authorization levels and document retention requirements</td>
+        <td>Maker-checker enforced server-side across transfers, liens, and legal holds; role-based authorization levels; document retention — see Section 6</td>
+        <td><span class="status done">Operational (retention policy in progress)</span></td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <!-- ══════════════════════════ PAGE: Section 3 ══════════════════════════ -->
@@ -292,8 +334,8 @@
       </tr>
       <tr>
         <td>Disaster recovery procedure (documented, tested restore)</td>
-        <td>Backup exists; a written, tested restoration procedure has not yet been formally documented</td>
-        <td><span class="status progress">In progress</span></td>
+        <td>Documented in the accompanying Disaster Recovery &amp; Data Retention Policy, including recovery point/time objectives</td>
+        <td><span class="status done">Operational</span></td>
       </tr>
     </tbody>
   </table>
@@ -316,13 +358,13 @@
       </tr>
       <tr>
         <td>Traceability of approvals</td>
-        <td>Each approval request records the preparer, reviewer, and approver identities and timestamps at every stage</td>
+        <td>Each approval request records the maker, checker, and approver identities and timestamps at every stage, including lien and legal hold decisions</td>
         <td><span class="status done">Operational</span></td>
       </tr>
       <tr>
         <td>Retention policy</td>
-        <td>Registry and audit data are retained indefinitely by default (no automatic deletion). A formal written retention policy stating the required retention period has not yet been adopted</td>
-        <td><span class="status progress">In progress</span></td>
+        <td>Formal retention periods for every record type are stated in the accompanying Disaster Recovery &amp; Data Retention Policy</td>
+        <td><span class="status done">Operational</span></td>
       </tr>
       <tr>
         <td>Periodic reporting to management</td>
@@ -345,18 +387,17 @@
     after formal adoption.
   </p>
 
-  <div class="callout gap">
-    <strong>Documented disaster recovery procedure</strong> — a written, tested step-by-step
-    restoration procedure should be produced and kept alongside the backups.
-  </div>
-  <div class="callout gap">
-    <strong>Formal data retention policy</strong> — a one-page policy statement on how long
-    registry and audit records are retained should be adopted and referenced from this pack.
+  <div class="callout">
+    <strong>Resolved — Disaster recovery procedure and data retention policy.</strong>
+    Both are now documented in the accompanying <em>Disaster Recovery &amp; Data Retention
+    Policy</em> (v1.0), covering the backup schedule, step-by-step restore procedure,
+    recovery objectives, and retention periods for every record type.
   </div>
   <div class="callout gap">
     <strong>Written operating procedures</strong> — the platform enforces the maker-checker
-    control technically; Digaf should formally document the underlying business process on
-    paper (see Section 7) so the control is auditable independent of the software.
+    control technically for transfers, liens, and legal holds; Digaf should formally document
+    the underlying business process on paper (see Section 7) so the control is auditable
+    independent of the software.
   </div>
   <div class="callout gap">
     <strong>National ID verification</strong> — not yet integrated; identity is currently
@@ -379,7 +420,8 @@
   <ol>
     <li><strong>User access procedure</strong> — who may request a new platform account, who approves the request (Governance Admin), and the process for revoking access when someone leaves their role.</li>
     <li><strong>Shareholder registration procedure</strong> — required documents before a new shareholder is registered, and who verifies them (Compliance Officer) before KYC is marked verified.</li>
-    <li><strong>Share transfer approval procedure</strong> — formalizes the existing Preparer → Reviewer → Approver flow as an approved business process, naming who may hold each role.</li>
+    <li><strong>Share transfer approval procedure</strong> — formalizes the existing Maker → Checker 1 → Checker 2 flow as an approved business process, naming who may hold each role.</li>
+    <li><strong>Lien/pledge and legal hold procedure</strong> — names who may act as Maker and who as the approving Governance Admin for registering or releasing a lien, and for imposing or lifting a legal hold.</li>
     <li><strong>Record correction procedure</strong> — how an error in the registry is corrected once approved, ensuring corrections are also logged and approved rather than edited silently.</li>
     <li><strong>Data retention and backup policy</strong> — states the retention period for registry records and confirms the nightly backup and (once complete) offsite copy procedure.</li>
     <li><strong>Incident response procedure</strong> — who is notified and what steps are taken if unauthorized access or a data issue is suspected.</li>
@@ -392,7 +434,7 @@
   </div>
 
   <div class="footer-note">
-    Digaf Shareholder Registry Platform — Compliance Readiness Pack v1.0 — Prepared July 2026.
+    Digaf Shareholder Registry Platform — Compliance Readiness Pack v1.1 — Prepared July 2026.
     This document should be reviewed and updated as the platform evolves and as NBE
     requirements are confirmed by Legal &amp; Compliance.
   </div>
